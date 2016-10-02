@@ -1,0 +1,177 @@
+extends layout
+
+head
+
+body
+  block content
+    div.head
+      h1= title
+      p Welcome to #{title}
+    div.section
+      ul#messages
+      form.chat(action="")
+        input#chatinput(autocomplete="on")
+        button Send
+    script.
+
+      var socket = io();
+
+      $('.chat').submit(function() {
+        if ($("#chatinput").val() != "") {
+          socket.emit('chat message', $('#chatinput').val());
+          $('#chatinput').val('');
+        }
+        return false;
+      });
+
+      $('.station').submit(function () {
+        socket.emit('passengers', $('#stations').val()+":"+$('#boarding').val()+":"+$('#alighting').val());
+        //$('#boarding').val(''); //$('#alighting').val('');
+        return false;
+      });
+
+      socket.on('chat message', function (msg) {
+        var bError = msg.search(/error|excep/i) == -1? false: true;
+
+        d3.select('#messages').append("li")
+                .text(msg)
+                .style("color", function() { return bError? "red": "black"; });
+
+        var scrollable = d3.select("#messages");
+        scrollable.property("scrollTop", scrollable.property("scrollHeight"));
+        //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
+      });
+
+      socket.on('help', function (msg) {
+        var messages = d3.select('#messages');
+        for (var topic in msg) {
+          messages.append("li")
+                  .text(topic + ":  " + msg[topic])
+                  .style("color", "midnightblue");
+        }
+
+        var scrollable = d3.select("#messages");
+        scrollable.property("scrollTop", scrollable.property("scrollHeight"));
+        //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
+      });
+
+      socket.on('socketlist', function (msg) {
+        var messages = d3.select('#messages');
+        if (!Array.isArray(msg))
+          return;
+        for (var i = 0; i < msg.length; i++) {
+          messages.append("li")
+                  .text(i + ": " + msg[i])
+                  .style("color", "midnightblue");
+        }
+
+        var scrollable = d3.select("#messages");
+        scrollable.property("scrollTop", scrollable.property("scrollHeight"));
+        //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
+      });
+      socket.on('trains', function (msg) {
+        var messages = d3.select('#messages');
+        if (!Array.isArray(msg))
+          return;
+        for (var i = 0; i < msg.length; i++) {
+          messages.append("li")
+                  .text(i + ": " + msg[i])
+                  .style("color", "midnightblue");
+        }
+
+        var scrollable = d3.select("#messages");
+        scrollable.property("scrollTop", scrollable.property("scrollHeight"));
+        //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
+      });
+      socket.on('range', function (msg) {
+        var messages = d3.select('#messages');
+        msg.startTime = new Date(parseInt(msg.startTime)).toString().split(' GMT')[0];
+        msg.stopTime = new Date(parseInt(msg.stopTime)).toString().split(' GMT')[0];
+
+        for (var prop in msg) {
+          messages.append("li")
+                  .text(prop + ": " + msg[prop])
+                  .style("color", "midnightblue");
+        }
+
+        var scrollable = d3.select("#messages");
+        scrollable.property("scrollTop", scrollable.property("scrollHeight"));
+        //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
+      });
+
+      socket.on('Log', function (msg) {
+        var bError = msg.search(/error|excep/i) == -1 ? false : true;
+        d3.select('#messages').append("li")
+                .text(msg)
+                .style("color", function () {
+                  return bError ? "red" : "black";
+                });
+
+        var scrollable = d3.select("#messages");
+        scrollable.property("scrollTop", scrollable.property("scrollHeight"));
+        //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
+      });
+
+      socket.on('demo_passengers', function (msg) {
+        iFirst = msg.indexOf(":");
+        iLast = msg.lastIndexOf(":");
+        var stations = iFirst == 0 ? "" : msg.slice(0, iFirst);
+        var boarding = msg.slice(iFirst+1,iLast);
+        var alighting = msg.slice(iLast+1,msg.length+1);
+        var stationList = stations == "" ? 0 : stations.split(' ').map(Number);
+        var boardingList = boarding.split(" ").map(Number);
+        var alightingList = alighting.split(" ").map(Number);
+        var jsonArray = [];
+        for (i=0; i<stationList.length;i++) {
+          var trainStop = {};
+          trainStop["stationID"] = stationList[i];
+          trainStop["boarding"] = boardingList[i];
+          trainStop["alighting"] = alightingList[i];
+          trainStop["cy"] = 200;
+          jsonArray.push(trainStop);
+        }
+        var paxCircles = d3.select("svg").selectAll("circle")
+                .data(jsonArray)
+                .style("fill", "orange")
+                .attr("r", function(d) {return d.boarding+d.alighting; })
+                .attr("cx", function(d) { return d.stationID*50; })
+                .attr("cy", function (d) { d.cy -= 20; return d.cy; });
+        paxCircles.enter().append("circle")
+                .style("fill", "steelblue")
+                .attr("r", function(d) { return 2*(d.boarding+d.alighting); })
+                .attr("cx", function(d) { return d.stationID*50; })
+                .attr("cy", function(d) { return d.cy; });
+        paxCircles.exit()
+                .transition()
+                .delay(1500)
+                .each("start", function() { d3.select(this).style("fill", "green"); })
+                .style("fill", "red")
+                .remove();
+
+        var paxText = d3.select("svg").selectAll("text")
+                .data(jsonArray)
+                .attr("x", function (d) { return d.stationID*50; })
+                .attr("y", function (d) { return d.cy; })
+                .attr("stroke", "black")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "20px")
+                .text(function (d) { return d.stationID; });
+        paxText.enter().append("text")
+                .attr("x", function (d) { return d.stationID*50; })
+                .attr("y", function (d) { return d.cy; })
+                .attr("stroke", "black")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "20px")
+                .text("I am entering!");
+        paxText.exit()
+                .text("Leaving...")
+                .transition()
+                .delay(1000)
+                .each("start", function () { d3.select(this).style("stroke", "blue"); })
+                .style("stroke", "pink")
+                .remove();
+
+        d3.selectAll("li").style("color", function () {
+          return "hsl(" + Math.random() * 360 + ",100%,50%)";
+        });
+      });

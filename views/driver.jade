@@ -1,0 +1,2126 @@
+//
+//   Created by christianthindberg on 02/03/16.
+//    initial copy from http://bl.ocks.org/nicola/69730fc4180246b0d56d
+
+extends layout
+
+head
+
+body
+    block content
+        div#bardivlines
+            svg#barchartlines
+        div#bardivstations
+            svg#barchartstations
+        div#ownmodulediv
+            svg#ownmodules
+        div#ownmoduleheader Vognsett
+        div.lineRectangle#line1(style={background: 'cornflowerblue', left: "12.5em"}) 1
+        div.lineRectangle#line2(style={background: 'coral', left: "15em"}) 2
+        div.lineRectangle#line3(style={background: 'mediumorchid', left: "17.5em"}) 3
+        div.lineRectangle#line4(style={background: 'mediumblue', left: "20em"}) 4
+        div.lineRectangle#line5(style={background: 'mediumseagreen', left: "22.5em"}) 5
+        form#options
+            label.settingslabel Valg
+            label.settingslabel Passasjerer
+                input#paxchbox.checker(type='checkbox' name='Pax' checked=false value="Pax")
+            label.settingslabel Splitt spor
+                input#splittrackschbox.checker(type='checkbox' name='Presisjonsvisning' checked=false value="Presisjonsvisning")
+            label.settingslabel Stasjoner
+                input#stationschbox.checker(type='checkbox' name='Stasjoner' checked=true value="Stasjoner")
+            label.settingslabel Sporveksler
+                input#trackswitchchbox.checker(type='checkbox' name='Sporveksler' checked=true value="Sporveksler")
+            label.settingslabel Sporfelt
+                input#berthchbox.checker(type='checkbox' name='Sporfelt' checked=false value="Sporfelt")
+            label.settingslabel Kjørevei
+                input#railroadchbox.checker(type='checkbox' name='Kjørevei' checked=true value="Kjørevei")
+            label.settingslabel Vogner
+                input#ownmoduleschbox.checker(type='checkbox' name='OwnModules' checked=false value="OwnModules")
+        div#clockTime
+        div#lastPaxReceived Siste av/påstigning: --
+        div#sumPax Passasjerer hittil i dag: --
+        div#nowTrains Tog i trafikk nå: --
+        div#nowAPC Tog med passasjertelling: --
+        div#circleinfo
+        div#map
+            svg#svgdriver
+        html.
+            <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+                <defs>
+                    <pattern id="diagonal-stripe-1" patternUnits="userSpaceOnUse" width="10" height="10">
+                        <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScvPgogIDxwYXRoIGQ9J00tMSwxIGwyLC0yCiAgICAgICAgICAgTTAsMTAgbDEwLC0xMAogICAgICAgICAgIE05LDExIGwyLC0yJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz4KPC9zdmc+Cg==" x="0" y="0" width="10" height="10">
+                        </image>
+                    </pattern>
+                </defs>
+            </svg>
+            <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+                <defs>
+                    <pattern id="horizontal-stripe-5" patternUnits="userSpaceOnUse" width="10" height="10">
+                        <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScgLz4KICA8cmVjdCB4PScwJyB5PScwJyB3aWR0aD0nMTAnIGhlaWdodD0nNScgZmlsbD0nYmxhY2snIC8+Cjwvc3ZnPg==" x="0" y="0" width="10" height="10">
+                        </image>
+                    </pattern>
+                </defs>
+            </svg>
+            <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+                <defs>
+                    <pattern id="vertical-stripe-1" patternUnits="userSpaceOnUse" width="10" height="10">
+                        <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScgLz4KICA8cmVjdCB4PScwJyB5PScwJyB3aWR0aD0nMScgaGVpZ2h0PScxMCcgZmlsbD0nYmxhY2snIC8+Cjwvc3ZnPg==" x="0" y="0" width="10" height="10">
+                        </image>
+                    </pattern>
+                </defs>
+            </svg>
+        script.
+
+            // Special terms used:
+            // OwnModule: the term used by Siemens to denote the serial number of a metro car
+            // Pidas ID: the number used by Siemens to identify a metro Station
+
+            // server time _or_ cts-time if history playback
+            var localTic = 0;
+
+            //
+            // Set up drawing area
+            //
+
+            // width and height of drawing area in pixels
+            var wCanvas = 0, hCanvas = 0;
+            var margin = {top: 40, right: 40, bottom: 40, left: 40};
+
+            // max and min lat/lng considering overall train infrastructure (berths, track switches & stations)
+            var minLat = 0, minLng = 0, maxLat = 0, maxLng = 0, centerLat = 0, centerLng = 0;
+
+            // max and min lat/lng stations
+            var minLatStations = 1000, minLngStations = 1000;
+            var maxLatStations = 0, maxLngStations = 0;
+
+            // max and min lat/lng berths
+            var minLatBerths = 1000, minLngBerths = 1000;
+            var maxLatBerths = 0, maxLngBerths = 0;
+
+            var minLatEndBerths = 1000, minLngEndBerths = 1000;
+            var maxLatEndBerths = 0, maxLngEndBerths = 0;
+
+            // no need for min and max for track switches as they are not at the edges
+
+            // how many pixels to offset berth positions/tracks.
+            // The berths are very close to each other, need to add offset otherwise berths are drawn on top of each other
+            var trackOffset = d3.select("#splittrackschbox").property('checked') ? 20 : 0;
+            var showDestination = true;
+
+
+            // D3 scales, i.e variables that will point to conversion functions from "real world" coordinates (in our case gps) to screen pixels
+            var x = null, y = null;
+
+            // D3 variables that will point to functions for drawing the axis
+            var xAxis = null, yAxis = null;
+
+            // variable to hold latest zoom translation and scale
+            var zoom = null;
+
+            // Our Canvas
+            var vis = null;
+
+            // Tooltip
+            var toolTip = null;
+
+            // For debugging
+            var ctsOKObject = null;
+
+
+            var initCanvas = function () {
+                wCanvas = window.innerWidth - margin.left - margin.right;
+                hCanvas = window.innerHeight - margin.top - margin.bottom;
+                vis = d3.select("#svgdriver")
+                  .attr("width", "100%")
+                  .attr("height", "100%")
+                    .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                // Add tooltip element
+                toolTip = d3.select("#map").append("div")  // Note: appending "div" to "svg" does not work, i.e.select("#svgdriver").append("div") does not work
+                        .attr("class", "tooltip")
+                        .style("opacity", 0);
+                // experiment: make everything twice its size
+                //vis.attr("transform", "translate(" + [0,0] + ")" + " scale(" +2  + ")");
+            }; // initCanvas()
+
+            var setStationsMaxLatLng = function (data) {
+                minLatStations = d3.min(data, function(d) {return d.platformlat});
+                minLngStations = d3.min(data, function(d) {return d.platformlng});
+                maxLatStations = d3.max(data, function(d) {return d.platformlat});
+                maxLngStations = d3.max(data, function(d) {return d.platformlng});
+            }; // setStationsMaxLatLng()
+
+            var setBerthsMaxLatLng = function (data) {
+                minLatBerths = d3.min(data, function(d) {return d.Startlat});
+                minLngBerths = d3.min(data, function(d) {return d.Startlng});
+                maxLatBerths = d3.max(data, function(d) {return d.Startlat});
+                maxLngBerths = d3.max(data, function(d) {return d.Startlng});
+            }; // setBerthsMaxLatLng()
+
+            var setEndBerthsMinMax = function (data) {
+                minLatEndBerths = d3.min(data, function(d) {return d.Startlat});
+                minLngEndBerths = d3.min(data, function(d) {return d.Startlng});
+                maxLatEndBerths = d3.max(data, function(d) {return d.Startlat});
+                maxLngEndBerths = d3.max(data, function(d) {return d.Startlng});
+            }; // setBerthsMaxLatLng()
+
+            var setScales = function () {
+                if (maxLng == 0 || maxLat == 0)
+                    return; // have not received Berths or Stations yet
+
+                // Set up the scales
+                x = d3.scale.linear()
+                    .domain([minLng, maxLng])
+                    .range([0, wCanvas]);
+
+                y = d3.scale.linear()
+                    .domain([minLat, maxLat])
+                    .range([hCanvas, 0]);
+
+                // Set up the axis
+                xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient("bottom")
+                    .tickSize(-hCanvas);
+
+                yAxis = d3.svg.axis()
+                        .scale(y)
+                        .orient("left")
+                        .ticks(5)
+                        .tickSize(-wCanvas);
+
+                // Set up what will happen when zooming
+
+                zoom = d3.behavior.zoom()
+                        .x(x) // ajdusts the domain upon zooming
+                        .y(y)
+                        //.scaleExtent([1, 10])
+                        .on("zoom", zoomed)
+                        .on("zoomstart", zoomstart);
+                d3.select("#svgdriver").call(zoom);
+            }; // setScales()
+
+
+            //
+            // DRAWING SECTION
+            //
+
+
+            var isMobile = {
+                Android: function () {
+                    return navigator.userAgent.match(/Android/i);
+                },
+                BlackBerry: function () {
+                    return navigator.userAgent.match(/BlackBerry/i);
+                },
+                iOS: function () {
+                    return navigator.userAgent.match(/iPhone|iPod/i); // |iPad
+                },
+                Opera: function () {
+                    return navigator.userAgent.match(/Opera Mini/i);
+                },
+                Windows: function () {
+                    return navigator.userAgent.match(/IEMobile/i);
+                },
+                any: function () {
+                    return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+                }
+            };
+
+            var mobileFactor = isMobile.any()? 2 : 1; // 1 = normal screen, 2 = mobile/small screen
+
+            // if mobile we want trains to be twice as large, including text for better readability
+
+            var trainWidth = 40*mobileFactor;
+            var trainHeight = 20*mobileFactor;
+            var followTrainWidth = 120*mobileFactor;
+            var followTrainHeight = 30*mobileFactor;
+            var trainFontSize = 13*mobileFactor;
+            var trainTextNormalY = 15*mobileFactor;
+            var trainTextFollowModeY = 20*mobileFactor;
+            var stationsFontSize = 12*mobileFactor;
+
+            // Colors
+            //var trackColors = ["slategray", "slategray", "slategray", "slategray", "slategray", "slategray", "slategray",
+            //    "slategray", "slategray", "slategray", "slategray", "slategray", "red", "red", "red"];
+            //var trackColors = ["cadetblue", "cornflowerblue", "darkolivegreen", "darkgrey", "chocolate", "darkkhaki", "darkturquoise",
+            //    "darkslateblue", "coral", "deepskyblue", "mediumblue", "gold", "red", "red", "red"]; // adding a few "red" items in case number of tracks increase in the future
+            // Todo: move this to configuration file on server and send array of track names and their colors
+            var trackColor = function (trackName) {
+                switch (trackName) {
+                    case "Holmenkollbanen-east": return "cornflowerblue";
+                    case "Holmenkollbanen-west": return "cornflowerblue";
+                    case "Furusetbanen-east": return "coral";
+                    case "Furusetbanen-west": return "coral"
+                    case "Roabanen-east": return "coral";
+                    case "Roabanen-west": return "coral";
+                    case "Grorudbanen-east": return "mediumseagreen";
+                    case "Grorudbanen-west": return "mediumseagreen";
+                    case "Sognsvannsbanen-east": return "mediumseagreen";
+                    case "Sognsvannsbanen-west": return "mediumseagreen";
+                    case "Østensjobanen-east": return "mediumorchid";
+                    case "Østensjobanen-west": return "mediumorchid";
+                    case "Lorenbanen-east": return "mediumblue";
+                    case "Lorenbanen-west": return "mediumblue";
+                    case "Lambertseterbanen-east": return "mediumblue";
+                    case "Lambertseterbanen-west": return "mediumblue";
+                    case "Kolsasbanen-east": return "mediumorchid";
+                    case "Kolsasbanen-west": return "mediumorchid";
+                    case "Centrumsbanen-east": return "darkgrey";
+                    case "Centrumsbanen-west": return "darkgrey";
+                    default: return "black";
+                }
+            };
+            // color used to highlight a train on the "sporveien spider web" when selected in the side panel
+            // see inside DrawOwnModuleChart function
+            var trainSelectedColor = "#ffc0cb"; // "pink";
+            var trainClickedColor = "#00ffff"; // "cyan";
+
+            // Approximate line colors, add a few "red"´s in case number of lines are increased
+            var LineColor = ["cornflowerblue", "coral", "mediumorchid", "mediumblue", "mediumseagreen", "red", "red", "red", "red", "red", "red"];
+
+            //
+            // DRAW INFRASTRUCTURE
+            //
+
+            // Draw stations, berths, track switches
+            // .. then request server for initial train positions and their tails
+            var drawInfrastructure = function (data) {
+                // data: {"stations": stationObject, "berths":berthTable,"trackswitches":trackswitchTable, "endberths":endberthTable,"tracks":tracksObject});
+
+                setStationsMaxLatLng(d3.values(data.stations));
+                setBerthsMaxLatLng(data.berths);
+                setEndBerthsMinMax(data.endberths);
+                minLat = Math.min(Math.min(minLatStations, minLatBerths), minLatEndBerths);
+                minLng = Math.min(Math.min(minLngStations, minLngBerths), minLngEndBerths);
+                maxLat = Math.max(Math.max(maxLatStations, maxLatBerths), maxLatEndBerths);
+                maxLng = Math.max(Math.max(maxLngStations, maxLngBerths), maxLngEndBerths);
+                centerLng = minLng+(maxLng-minLng)/2;
+                centerLat = minLat+(maxLat-minLat)/2;
+                setScales();
+                drawBerths(data.berths);
+                drawEndBerths(data.endberths);
+                drawTrackSwitches(data.trackswitches);
+                drawTracks(d3.entries(data.tracks));
+                drawStations(d3.values(data.stations));
+                DrawOwnModuleChart(data.trains);
+
+                // Ask server for trains, i.e. array with lists of berth passings
+                socket.emit("alltailsrequest", {"maxBerths": 10}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths berths
+                    if (!data ||  data.length == 0) {
+                        return;
+                    }
+                    for (var i=0; i<data.length; i++) {
+                        drawTrain(data[i]); // array of berths for 1 train
+                    } // for-loop
+                });  // emit-function()
+
+                // Add handler for contextMenu
+                d3.select("body").on('contextmenu',handleContextMenu);
+                //d3.select("body").on("mouseenter", handleMouse);
+                //d3.select("body").on("mouseleave", handleMouse);
+
+            }; // drawInfrastructure ()
+
+            var drawBerths = function (data) {
+                var berths = vis.selectAll("circle.berth")
+                    .data(data, function (d) { return getIDFromName(d.itemCode); })
+                    .enter().append("svg:circle")
+                        .attr("class", "berth")
+                        .style("visibility", function (d) { return d3.select("#berthchbox").property('checked') ? "visible" : "hidden"; })
+                        .attr("id", function (d) { return "berth_id"+getIDFromName(d.itemCode);})
+                        //.attr("stroke-linecap", 'round')
+                        .attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); }) // todo check if lat/lng is switched...  Track is -1 for even, 1 for Odd
+                        .attr("cy", 0) //function(d) { return y(d.lat); })
+                        .attr("r", "4")
+                        .attr("title", function(d) { return d.itemName + " " + d.itemCode; })
+                        .style("stroke", "black")
+                        .style("stroke-width", 1)
+                        .style("fill", function (d) { return d.trackDirectionCode < 0 ? "steelblue":"burlywood"; });
+
+                berths.attr("transform", function (d) { return "translate(" +  x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+                berths.on("mouseenter", handleMouse);
+                berths.on("mouseleave", handleMouse);
+            }; // drawBerths()
+
+            var colorOKBerths = function (reset) {
+                // Color Berths
+                if (reset) {
+                    var circles = vis.selectAll("circle.berth")
+                            .style("fill", function (d) {
+                                return d.trackDirectionCode < 0 ? "steelblue" : "burlywood";
+                            });
+                }
+                else {
+                    var circles = vis.selectAll("circle.berth")
+                            .style("fill", function (d) {
+                                return IsBerthOK(d) ? "green" : "red";
+                            });
+                }
+                function IsBerthOK(d) {
+                    if (!ctsOKObject) {
+                        return false;
+                    }
+                    return ctsOKObject[d.itemCode];
+                }
+            }; // colorOKberths()
+
+            var drawEndBerths = function (data) {
+                var berths = vis.selectAll("rect.endberth")
+                        .data(data, function (d) {
+                            return getIDFromName(d.itemCode);
+                        })
+                        .enter().append("svg:rect")
+                        .attr("class", "endberth")
+                        .style("visibility", function (d) {
+                            return d3.select("#berthchbox").property('checked') ? "visible" : "hidden";
+                        })
+                        .attr("id", function (d) {
+                            return "berth_id" + getIDFromName(d.itemCode);
+                        })
+                        //.attr("stroke-linecap", 'round')
+                        .attr("x", function (d) {
+                            return trackOffset * d.trackDirectionCode * zoom.scale();
+                        }) // todo check if lat/lng is switched...  Track is -1 for even, 1 for Odd
+                        .attr("y", 0) //function(d) { return y(d.lat); })
+                        .attr("width", "8")
+                        .attr("height", "8")
+                        .attr("title", function (d) {
+                            return d.itemName + " " + d.itemCode;
+                        })
+                        .style("stroke", "black")
+                        .style("stroke-width", 1)
+                        .style("fill", function (d) {
+                            return d.trackDirectionCode < 0 ? "steelblue" : "burlywood";
+                        });
+
+                berths.attr("transform", function (d) { return "translate(" + x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+                berths.on("mouseenter", handleMouse);
+                berths.on("mouseleave", handleMouse);
+            }; // drawEndBerths()
+
+            function drawTracks (data) {
+                //var data = d3.entries(tracksObject); // d3.entries transforms a javascript object into an array of key/value elements where the object properties are keys
+
+                var lineGraph = vis.selectAll("path.trackline")
+                    .data(data, function (d) { return getIDFromName(d.key); })
+                        .enter()
+                            .append("path")
+                            .attr("d", function (d) { return lineFunction(d.value); }) // Note: d.value is an array, we have one array for each line and east/west direction
+                            .attr("class", function (d) { return "trackline " + getIDFromName(d.key); })
+                            .style("visibility", function (d) { return d3.select("#railroadchbox").property('checked') ? "visible" : "hidden"; })
+                            .style("stroke", function (d,i) { return trackColor(d.key); })
+                            .style("stroke-width", 4)
+                            .style("fill", "none");
+                //lineGraph.on("mouseenter", showToolTip);
+                //lineGraph.on("mouseleave", hideToolTip);
+            } // drawTracks()
+
+            // Function to draw tracks
+            var lineFunction = d3.svg.line()
+                    .x(function (d) { return trackOffset * d.trackDirectionCode * zoom.scale() + x(d.Startlng); }) //*zoom.scale()
+                    .y(function (d) {  return y(d.Startlat); })
+                    .interpolate("linear");
+
+            function drawTrainAggregateMove (data) {
+                //var invdata = JSON.parse(JSON.stringify(data)).map(function (obj) { obj.Count = -obj.Count; return obj; }); // clone the array, then change Count to negative number
+                //var dataarea = invdata.concat(data);
+                areaFromAggregate(data);
+                var aggGraph = vis.append("path") // selectAll .am
+                    .data(data) //, function (d) { return "am"+getIDFromName(d.values.to_infra_berth.Name); })
+                       // .enter()
+                         //   .append("path")
+                            .attr("class", function (d) { return "am"; })
+                            .attr("d", function (d) { return aggFunction(data); }) //dataarea
+                            .style("stroke", function (d,i) { return "red"; })
+                            .style("stroke-width", 1)
+                            .style("opacity", 0.5)
+                            .style("fill", "red");
+            } // drawTrainAggregateMove ()
+
+            // Function to draw the aggregate movement
+            var aggFunction = d3.svg.line()
+                    .x(function (d) { return (d.Count + x(d.values.to_infra_berth.StartLatitude)); }) // + trackOffset) * d.trackDirectionCode * zoom.scale()
+                    .y(function (d) { return y(d.values.to_infra_berth.StartLongitude); })
+                    .interpolate("linear"); // cardinal-closed, linear, ...
+
+            var areaFromAggregate = function (data) {
+                var len = data.length;
+                var tmpObj = null;
+                for (var i=len-1; i>=0; i--) {
+                    tmpObj = JSON.parse(JSON.stringify(data[i]));
+                    //console.log("tmpObj.Count: " + tmpObj.Count.toString() + " data[i].Count: " + data[i].Count.toString());
+                    tmpObj.Count = -data[i].Count;
+                    data.push(tmpObj);
+                }
+                //for (i=0; i<len;i++) {
+                //    console.log("i: " + data[i].Count.toString() + " " + data[data.length-i-1].Count.toString());
+                //}
+            }; // areaFromAggregate()
+
+
+            var drawTrackSwitches = function (data) {
+                var trackswitches = vis.selectAll("circle.trackswitch")
+                    .data(data, function (d) { return getIDFromName(d.itemCode); })
+                    .enter().append("svg:circle")
+                        .attr("class", "trackswitch")
+                        .style("visibility", function (d) { return d3.select("#trackswitchchbox").property('checked') ? "visible" : "hidden"; })
+                        .attr("id", function (d) { return "trackswitch_id"+getIDFromName(d.itemCode);})
+                        //.attr("stroke-linecap", 'round')
+                        //.attr("transform", function (d) { return "translate(" +  x(d.Startlng) + "," + y(d.Startlat) + ")"; })
+                        .attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); })  //todo check if lat/lng is switched...  trackOffset*d.Track +
+                        .attr("cy", 0)
+                        .attr("r", "3")
+                        .attr("title", function(d) { return d.itemName + " " + d.itemCode; })
+                        .style("stroke", 'black')
+                        .style("fill", function (d) { return d.trackDirectionCode < 0 ? "orange":"sandybrown"; });
+
+                trackswitches.attr("transform", function (d) { return "translate(" +  x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+
+                trackswitches.on("mouseenter", handleMouse);
+                trackswitches.on("mouseleave", handleMouse);
+            }; // drawTrackSwitches()
+
+            var drawStations = function (data) {
+                var stations = vis.selectAll("g.station")
+                    .data(data, function (d) { return getIDFromName(d.stationName) + d.trackDirectionCode });
+
+                var newStations = stations.enter().append("svg:g")
+                        .attr("class", function (d) { return "station" + " " + getIDFromName(d.trackName); }) // also make class per trackname, makes it possible to manipulate each røabane, kolsåsbane etc later
+                        .attr("id", function(d) { return 'station_id'+ getIDFromName(d.stationName) + "_" + d.trackDirectionCode; })
+                        .style("visibility", function () { return d3.select("#stationschbox").property('checked') ? "visible" : "hidden"; })
+                         //.attr("transform", function (d) { return "translate(" + x(d.platformlng) + "," + y(d.platformlat) + ")"; })
+                         .on("mouseover", function (d) { this.parentNode.appendChild(this); }); // trick to make station appear on top of all other elements on mouseover
+
+                newStations.append("svg:circle")
+                        .attr("class", "station")
+                        .attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); })
+                        .attr("cy", 0)
+                        .attr("r", "8")
+                        .attr("title", function(d) { return d.stationName + " " + d.trackDirectionName; })
+                        .style("stroke", 'black')
+                        .style("fill", "grey") //'#ffffff')
+                        .style("opacity", 0.7);
+
+                newStations.append("svg:text")
+                        .attr("class", "station")
+                        .attr("text-anchor", "start")
+                        .attr("x", 10) //function(d) { return 10 + x(d.lng); })
+                        .attr("y", 0) //function(d) { return y(d.lat); })
+                        .attr("font-size", stationsFontSize)
+                        .style("fill", "black")
+                        .style("font-weight", "bold")
+                        .text(function (d) { return d.trackDirectionCode == 1 ? d.stationName : ""; });
+
+                stations.attr("transform", function (d) { return "translate(" +  x(d.platformlng) + "," + y(d.platformlat) + ")"; });
+                //stations.on("mouseenter", showToolTip);
+                //stations.on("mouseleave", hideToolTip);
+                /*
+                // Adding axis
+                vis.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + hCanvas + ")")
+                    .style("stroke", "grey")
+                    .call(xAxis);
+
+                vis.append("g")
+                    .attr("class", "y axis")
+                    .style("stroke", "grey")
+                    .call(yAxis);
+                */
+            }; // drawStations()
+
+            //
+            // FINISHED DRAW INFRASTRUCTURE
+            //
+
+            //
+            // LIVE SECTION
+            //
+
+            // Functions for drawing trains and their tails
+            //
+
+            // if we follow a specific train, this variable holds the train number otherwise 0
+            var keyFollowTrain = 0;
+
+            // parameter: single cts-message
+            function getTrack(d) {
+                var item = d3.select("#berth_id" + getIDFromName(d.values.to_infra_berth.Name)); //.split(" ")[0]));
+                if (!item.empty())
+                    return item.datum().trackDirectionCode;
+                item = d3.select("#trackswitch_id" + getIDFromName(d.values.to_infra_berth.Name));
+
+                if (!item.empty()) {
+                    return item.datum().trackDirectionCode;
+                }
+                console.log("Train: " + d.values.address + " Got non-existing berth/trackswitch: " + d.values.to_infra_berth.Name + "  ID: " + "berth/trackswitch_id  " + getIDFromName(d.values.to_infra_berth.Name));
+                return 0;
+            } // getTrack()
+
+            // for debug...
+            var errorBerths = {};
+            var okBerths = {};
+            // ...
+
+            // parameter: array of cts-messages
+            var drawTrainTail = function (data) {
+
+                /* NOT performant, will be deleted
+                var berthsandswitches = vis.selectAll(".berth, .trackswitch").filter(function (d,i) { return propertyInArray(getIDFromName(d.itemCode), ["values", "to_infra_berth", "Name"], data) > -1; }).each(updateDatum); // rewrite delalyBerthColor?
+
+                function propertyInArray (valueToFind, propertyList, objArray) {
+                    var i=0,j=0;
+                    var tmp=0;
+
+                    if (!Array.isArray(propertyList) || !Array.isArray(objArray) || !valueToFind)
+                        return -1;
+
+                    for (i=0; i<objArray.length; i++) {
+                        tmp = objArray[i][propertyList[0]];
+                        //console.log("tmp outer: " + tmp);
+                        if (!tmp)
+                            break;
+                        for (j = 1; j < propertyList.length; j++) {
+                            tmp = tmp[propertyList[j]];
+                            //console.log("tmp inner: " + tmp);
+                            if (!tmp)
+                                break;
+                        }
+                        if (valueToFind === tmp) {
+                            //console.log("iii: " + i);
+                            return i;
+                        }
+                    }
+                    //console.log("minus one!" + i);
+                    return -1;
+                } // propertyInArray()
+
+                function updateDatum (d,i) {
+                    var element = d3.select(this);
+                    console.log("updateDatum d: " + d + " i: " +i + "this: " + this);
+                    var dd = element.datum();
+                    dd.cts = d;
+                    element.datum(dd);
+                }
+                */
+
+                //console.log("drawTrainTail: " + JSON.stringify(data));
+                if (!data || !(Object.prototype.toString.call(data) === '[object Array]')) {
+                    console.log ("drawTrainTail called with illegal data: " + JSON.stringify(data));
+                    return;
+                }
+
+                //console.log("drawTrainTail, data.length: " + data.length + " Tog: " + data[0].values.address);
+                for (var index = 0; index < data.length; index++) {
+                    var currentBerth = vis.select("#berth_id" + getIDFromName(data[index].values.to_infra_berth.Name)); //.split(" ")[0])); // throw away anything after " "
+                    var currentBerthColor, currentBerthText, currentBerthTrack;
+
+                    if (currentBerth.empty()) {
+                        currentBerth = vis.select("#trackswitch_id" + getIDFromName(data[index].values.to_infra_berth.Name));
+                    }
+
+                    if (currentBerth.empty()) {
+                        if (!errorBerths.hasOwnProperty([data[index].values.to_infra_berth.Name])) {
+                            errorBerths[data[index].values.to_infra_berth.Name] = 0;
+                        }
+                        errorBerths[data[index].values.to_infra_berth.Name] += 1;
+
+                        //Todo: add LogToKinesis("");
+                        console.log("drawTrainTail data.length: " + data.length + " break at index: " + index + " Train: " + data[index].values.address + " Berth: " + data[index].values.to_infra_berth.Name + " " + getIDFromName(data[index].values.to_infra_berth.Name));
+                    }
+                    else {
+
+                        if (!okBerths.hasOwnProperty([data[index].values.to_infra_berth.Name])) {
+                            okBerths[data[index].values.to_infra_berth.Name] = 0;
+                        }
+                        okBerths[data[index].values.to_infra_berth.Name] += 1;
+
+                        var thisDatum = currentBerth.datum();
+                        thisDatum.CTS_TrainNumber = data[index].values.address;
+                        thisDatum.CTS__TimeStamp = data[index].values.timestamp;
+                        thisDatum.CTS_FromBerth = data[index].values.from_infra_berth ? data[index].values.from_infra_berth.Name : data[index].values.from_berth; // from_berth is the name used by the CTS system, from_infra_berth.Name is the "official" name
+                        currentBerth.datum(thisDatum);
+
+                        currentBerthColor = delayBerthColor(data[index]);
+                        currentBerthText = data[index].values.to_infra_berth.Name + " \nTog: " + data[index].values.address + " \nAvvik: " + data[index].values.delay;
+                        currentBerthTrack = currentBerth.datum().trackDirectionCode;
+                        currentBerth
+                                .style("fill", currentBerthColor)
+                                .attr("title", currentBerthText);
+                        /*
+                                .transition()
+                                .delay(1000 * 60 * 5) // keep unchanged for 5 mins
+                                //.ease('cubic-out')
+                                .duration(1000 * 60 * 1)  // transition to original color in 1 min
+                                .style("fill", function () { return currentBerthTrack < 0 ? "steelblue" : "burlywood"; });
+                        */
+                        // put current berth on top
+                        currentBerth.node().parentNode.appendChild(currentBerth.node());
+                    }
+                } // for-loop
+                //console.log("drawTrainTail, index == " + index);
+            }; // drawTrainTrail()
+
+            // Set color of fill and text according to delay
+            //
+
+            // parameter: cts-message
+            var delayTrainColor = function (d) {
+
+                var train = vis.select("#train_id"+getIDFromName(d.values.address));
+                if (train.empty()) {
+                    console.log ("Unable to select train: " + d.values.address);
+                    return "grey"; // make it easier to spot bugs visually
+                }
+                if (train.select("rect.train").property("clicked") == 1) {
+                    return trainClickedColor;
+                }
+                if (train.select("rect.train").property("mouseover") == 1) {
+                    return trainSelectedColor;
+                }
+
+                if (keyFollowTrain != 0 && d.values.address !== keyFollowTrain) {
+                    return "ivory";
+                }
+                if (d.values.delay <= -180) {
+                    return "gold";
+                }  // "gold" looks like strong yellow
+                if (d.values.delay <= -60) {
+                    return "yellow";
+                }
+                if (d.values.delay > 10) {
+                    return "red";
+                }
+                return "lawngreen";
+            };
+            // parameter: cts-message
+            var delayBerthColor = function (d) {
+                if (d.values.delay <= -180) {
+                    return "gold";
+                }  // "gold" looks like strong yellow
+                if (d.values.delay <= -60) {
+                    return "yellow";
+                }
+                if (d.values.delay > 10) {
+                    return "red";
+                }
+                return "lawngreen";
+            };
+            // parameter: cts-message
+            var delayTextColor = function (d) {
+                if (keyFollowTrain != 0 && keyFollowTrain != d.values.address) { return "black"; }
+
+                if (d.values.delay <= -180) {
+                    return "red";
+                }  // 3 minutes or more delayed
+                if (d.values.delay <= -60) {
+                    return "black";
+                }
+                if (d.values.delay > 10) {
+                    return "white";
+                }
+                return "black";
+            };
+
+            // parameter: cts-message
+            function calcTrainRectX(d) {
+                var iTrack = getTrack(d);
+                // iTrack is either -1 for left track and 1 for right track
+
+                // Calculate offset adjusted for zooming
+                var Offset = zoom.scale() * trackOffset * iTrack;
+
+                if (d.values.address === keyFollowTrain) {
+                    // If we are in the left track we must move the train rect to the left so that the right corner
+                    // is aligned with the current berth
+                    return Offset + (iTrack < 0 ? - followTrainWidth  : 0);
+                }
+                return Offset + (iTrack < 0 ? - trainWidth: 0);
+            } // calcTrainRectX
+
+            // parameter: cts-message
+            function calcTrainTextX(d) {
+                var iTrack = getTrack(d);
+                // iTrack is either -1 for left track and 1 for right track
+
+                // Calculate offset adjusted for zooming
+                var Offset = zoom.scale() * trackOffset * iTrack;
+
+                if (d.values.address === keyFollowTrain) {
+                    // If we are in the left track we must move the text to the left
+                    return Offset + (iTrack < 0 ? -followTrainWidth*0.6  : followTrainWidth*0.6);
+                }
+                return Offset + (iTrack < 0 ? -trainWidth*0.6: trainWidth*0.6);
+            } // calcTrainTextX
+
+            // parameter: d - datum attached to svg "g" element. The datum() is a cts-message
+            // This function is attached to "train" g element, and called on mouseclick
+            var toggleFollowTrainMode = function (d) {
+                var gElement = d3.select(this);
+                var trains = vis.selectAll("g.train");
+
+                var test = d3.event;
+                if (d3.event.type === "mousedown" && d3.event.which !== 1) // if mouseevent, only procedd if it was left-click
+                    return;
+
+                d3.event.stopPropagation();
+
+
+                // Toggle mode
+                if (keyFollowTrain == d.values.address) {
+                    keyFollowTrain = 0;
+                } else {
+                    keyFollowTrain = d.values.address;
+                }
+
+                // Set proper rectangle and text color for all trains
+                trains.select("rect")
+                    .attr("width", trainWidth)
+                    .attr("height", trainHeight)
+                    .attr("x", function (d) { return calcTrainRectX(d);})
+                    .style("fill", function (d) { return delayTrainColor(d); });
+                trains.select("text")
+                    .attr("x", function (d) { return calcTrainTextX(d); })
+                    .attr("y", trainTextNormalY)
+                    .style("fill", function (d) { return delayTextColor(d); });
+
+                if (keyFollowTrain) {
+                    trains.style("opacity", 0.3);
+                    gElement.style("opacity", 1.0);
+                    // Draw the followed train
+                    gElement.select("rect")
+                        //.style("opacity", .75)
+                        .attr("width", followTrainWidth)
+                        .attr("height", followTrainHeight)
+                    gElement.select("text")
+                        .attr("y", trainTextFollowModeY);
+                    gElement.node().parentNode.appendChild(gElement.node());
+
+
+                    // set all berths to standard color
+                    vis.selectAll("circle.berth")
+                        .style("fill", function (d) { return d.trackDirectionCode < 0 ? "steelblue" : "burlywood"; });
+
+                    // draw tail on followed Train
+                    socket.emit("tailrequest", {"trainNo": keyFollowTrain, "noOfBerths": 300}, function(data) { // array of cts-messages for this trainNo
+                        var b = data.map(function (obj) { return obj.values.to_infra_berth.Name;});
+                        //console.log("toggle: " + JSON.stringify((b)));
+                        drawTrainTail(data);
+                    });
+                }
+                else { // draw tails on all trains
+                    trains.style("opacity", 1.0)
+                    socket.emit("alltailsrequest", {"maxBerths": 20}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths cts-messages
+                        if (!data || data.length == 0) {
+                            return;
+                        } // todo: skip for-loop, call drawTrain directly
+                       for (var i=0; i<data.length; i++) {
+                            drawTrain(data[i]); // array of berths for 1 train
+                       } // for-loop
+                    });  // emit-function()
+                } // else-clause
+            }; //toggleFollowTrainMode()
+
+            // We receive an array of berths with newest berth at data[0]
+            var drawTrain = function (data) {
+                if (!data || Object.keys(data).length == 0) { // should never happen
+                    console.error("drawTrain: Received trains without data");
+                    return;
+                }
+
+                // Note: we receive an array of f.ex. the last 100 berths for one particular train...
+                // We are only interested in the newest element to draw the train. Newest element is in position [0]
+                var train = vis.selectAll("g.train")
+                    .data([data[0]], function (d) { return d.values.address; });
+
+
+                // Enter section
+                var newTrains = train.enter()
+                        .append("svg:g")
+                        .attr("class","train")
+                        .attr("id", function(d) { return 'train_id'+ getIDFromName(d.values.address); })
+                        .style("opacity", function () { return keyFollowTrain == 0 ? 1.0 : 0.3; })
+                        .on("mouseover", function (d) { this.parentNode.appendChild(this); })
+                        .on("mousedown", toggleFollowTrainMode)
+                        .on("touchstart", toggleFollowTrainMode);
+
+                newTrains.append("svg:rect")
+                        .attr("class", "train")
+                        .on("mouseenter", handleMouse)
+                        .on("mouseleave", handleMouse)
+                        .attr("width", trainWidth)
+                        .attr("height", trainHeight)
+                        .attr("rx", 4 + "px")         // set the x corner curve radius
+                        .attr("ry", 4 + "px")
+                        .style("stroke-width", 4)
+                        .style("stroke-dasharray", function (d) { return d.values.yellow ? ("4,4") : null; }) // "null" removes the property
+                        .style("stroke", function (d) { if (d.values.yellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
+                        .style("fill", "white") //'#ffffff')
+                        .style("opacity", 1.0);
+
+                newTrains.append("svg:text")
+                        .attr("class", "train")
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", trainFontSize)
+                        .style("fill", "black")
+                        .style("font-weight", "bold");
+                        //.text(function (d) { return d.values.address; });
+
+                // place train(s) on top
+                train.node().parentNode.appendChild(train.node());
+
+                // Postion existing and new trains
+
+                // NOTE: As a side effect <selection>.select also propages data to the child element, so we ensure that also updated data are handled...
+                train
+                    .transition()
+                    .duration(3000)
+                    //.attr("transform", "translate(" + x(centerLat) + "," + y(centerLng) + ")");
+                    .attr("transform", function (d) { return "translate(" +  x(d.values.to_infra_berth.StartLatitude) + "," + y(d.values.to_infra_berth.StartLongitude) + ")"; });
+                train.select("rect")
+                    .attr("title", function(d) { return d.values.to_infra_berth.Name + "\nTog: " + d.values.address + "\nAvvik: " + d.values.delay; })
+                    .style("stroke-dasharray", function (d) { return d.values.yellow ? ("4,4") : null; }) // We set this property here is becaues of the Special codes (EXIT, NOTD, INTERP etc. As soon as the train start moving we remove the dasharray stroke
+                    .style("stroke", function (d) { if (d.values.yellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
+                    .style("fill", function (d) { return d.values.yellow ? "white" : delayTrainColor(d); })
+                    .attr("x", function (d) { return calcTrainRectX(d);})
+                    .attr("y", 0); // function (d) { return getTrack(d) < 0 ? "0" : "-20";});
+                train.select("text")
+                        .attr("title", function(d) { return d.values.to_infra_berth.Name + "\nTog: " + d.values.address + "\nAvvik: " + d.values.delay; })
+                        .style("fill", function (d) { return delayTextColor(d); })
+                        .attr("x", function (d) { return calcTrainTextX(d); })
+                        .attr("y", function (d) { return keyFollowTrain == d.values.address ? trainTextFollowModeY : trainTextNormalY; })
+                        .text(function (d) { return bTextDestination ? getDestination(d) : d.values.address; }); //function (d) { return getTrack(d) < 0 ? "15": "-5";});
+
+                // Update the Train Tail(s)
+                if (keyFollowTrain != 0) { // follow mode - only draw tail if this is the train we follow
+                    if (keyFollowTrain != data[0].values.address) {
+                        return;
+                    }
+                    drawTrainTail (data);
+                } else {  // normal mode, all trains have tails
+                    drawTrainTail(data);
+                } // normal-mode
+
+                // Exit section
+                /* todo: find out how to handle changing train-numbers
+                 Maybe check if an old train number is physically in the same spot as a new train number?
+                 check end-berths?
+                 marker.exit()
+                 .remove();
+                 */
+            }; // drawTrain()
+
+            var drawTrainSpecialCode = function (data) {
+                var TrainG = d3.select("#train_id" + getIDFromName(data.values.address));
+                var code = data.values.to_berth;
+                var TrainRect = null;
+                var d = null;
+
+                if (TrainG.empty())
+                    return;
+
+                if (code && (code === "INTERP" || code === "EXIT" || code === "LOST" || code === "CANCEL" || code === "NOTD")) {
+                    code = data.values.to_berth;
+                }
+                else {
+                    code = data.values.from_berth;
+                }
+
+                var d = TrainG.datum();
+                d.values.special = code; // store it so that we can display it to the user later, pon right-click
+                TrainG.datum(d);
+
+                TrainRect = TrainG.select("rect"); // remember trains have a group object as its top-level element...
+                if (TrainRect.empty())
+                    return;
+
+                TrainRect.style("stroke-dasharray", ("6, 2"))
+                        .datum(d);
+
+                if (code === "EXIT") {
+                    TrainRect
+                            .transition()
+                            .duration(1000 * 60 * 2)
+                            .style("opacity", 0)
+                            .remove();
+                    TrainG.selectAll("*")
+                            .transition()
+                            .duration(1000 * 60 * 2)
+                            .style("opacity", 0)
+                            .remove();
+                    TrainG.transition()
+                            .delay(1000 * 61 * 2)
+                            .remove();
+                }
+                /*
+                 .transition()
+                 .duration (1000*60*2)
+                 .style ("stroke-dasharray", null);
+                 */
+            }; // drawTrainSpecialCode()
+
+            var drawTrainGhost = function (data) {
+                //console.log("cts_ghost_train:" + JSON.stringify(msg, undefined, 2));
+                if (data.values.to_infra_berth) {
+                    addGhost(data.values.to_infra_berth);
+                }
+                else if (data.values.from_infra_berth) {
+                    addGhost(data.values.from_infra_berth);
+                }
+                else {
+                    console.log("Ghost disappeared: " + JSON.stringify(data, undefined, 2));
+                }
+            }; // drawTrainGhost()
+
+            var drawTrainNumberChanged = function (data) {
+                var newTrain = d3.select("#train_id" + getIDFromName(data.msgObject.values.address)).select("rect"); // remember trains have a group object as its top-level element...
+                var newBerth = d3.select("#berth_id" + getIDFromName(data.msgObject.values.to_infra_berth.Name));
+                var oldTrain = d3.select("#train_id" + getIDFromName(data.old_train_no)).select("rect");
+                var oldTrainG = d3.select("#train_id" + getIDFromName(data.old_train_no));
+                var oldBerth = d3.select("#berth_id" + getIDFromName(data.msgObject.values.from_infra_berth.Name));
+
+                setBlinkAlarm([newTrain, oldTrain, oldBerth, newBerth]);
+
+                if (!oldTrain.empty()) {
+                    oldTrain
+                            .style("stroke-dasharray", ("6, 2"))
+                            .transition()
+                            .duration(1000 * 60 * 2)
+                            .style("opacity", 0)
+                            .remove();
+                    oldTrainG.selectAll("*")
+                            .transition()
+                            .duration(1000 * 60 * 2)
+                            .style("opacity", 0)
+                            .remove();
+                    oldTrainG.transition()
+                            .delay(1000 * 61 * 2)
+                            .remove();
+                }
+                if (oldBerth.empty()) {
+                    console.log("Non-existing berth had a train number change. Old number: " + data.old_train_no + " New number: " + data.msgObject.values.address + " Berth: " + data.msgObject.values.from_infra_berth.Name);
+                }
+                else {
+                    var dd = oldBerth.datum();
+                    if (dd.noTrainNumberChanges)
+                        ++dd.noTrainNumberChanges;
+                    else
+                        dd.noTrainNumberChanges = 1;
+                    oldBerth.datum(dd);
+                    oldBerth.attr("r", function (d) {
+                        return parseInt(d3.select(this).attr("r")) + 1;
+                    });
+                    console.log("Existing berth had a train number change. Old number: " + data.old_train_no + " New number: " + data.msgObject.values.address + "Berth: " + data.msgObject.values.from_infra_berth.Name);
+                }
+            }; // drawTrainNumberChanged()
+
+            // Handle zoom events
+            function zoomstart() {
+                var selection = vis.selectAll("rect, circle, path.trackline, g, text");
+                selection.transition(); // end all ongoing transitions upon zoomstart
+            }
+            function zoomed() {
+
+                //vis.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+                //console.log ("translate: " + zoom.translate() + "scale: " + zoom.scale());
+
+                // recall that on startup of the client we call setScales, that enable the "magic"
+                //... x = d3.scale.linear().domain([minLng, maxLng]).range([0, wCanvas]);
+                // ...zoom = d3.behavior.zoom().x(x).y(y)
+                //        .on("zoom", zoomed);
+
+
+                // the berths are offset to split the tracks so we must also adjust cx with the new scale
+                var berthsandswitches = vis.selectAll("circle.berth, circle.trackswitch, rect.endberth")
+                    .attr("transform", function (d) { return "translate(" + x(d.Startlng) + "," + y(d.Startlat) + ")"; }) // prøv scale zoom.scale...?
+                    .attr("cx", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
+
+                var stations = vis.selectAll("g.station");
+                stations.select("circle").attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
+                stations.select("text").attr("x", 10);
+                stations.attr("transform", function (d) { return "translate(" + x(d.platformlng) + "," + y(d.platformlat) + ")"; });
+
+
+                // "g" objects do not have x,y cx... attributes so we can not do the same as with berths and swithces: attr("cx", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
+
+                var tracks = vis.selectAll("path.trackline")
+                    .attr("stroke-width", 6/zoom.scale())
+                    .attr("d", function (d) { return lineFunction(d.value); });
+
+                // Rescale trains. Trains consist of the "g" element, a "rect" and a "text
+                // First we transform the "g" element...
+                var trains = vis.selectAll("g.train")
+                    .attr("transform", function (d) { return "translate(" + x(d.values.to_infra_berth.StartLatitude) + "," +
+                                y(d.values.to_infra_berth.StartLongitude) + ")"; //scale(" + zoom.scale() + ")";
+                        });
+                // .. then we adjust the x attribute of the rect
+                trains.selectAll("rect.train, .traininfo")
+                        .attr("x", function (d) { return calcTrainRectX(d);});
+                // ... and the text
+                trains.select("text.train")
+                        .attr("x", function (d) { return calcTrainTextX(d); });
+            } // zoomed ()
+
+            var resizeVis = function () {
+                var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+                var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+                if (w === 0 || h === 0)
+                    return;
+
+                wCanvas = Math.max(w - margin.left - margin.right, 0);
+                hCanvas = Math.max(h - margin.top - margin.bottom,0);
+                // Adjust the scales
+                x.range([0, wCanvas]);
+                y.range([hCanvas, 0]);
+                // Make zoom aware that range is changed
+                zoom.x(x); zoom.y(y);
+
+                var bertshandswitches = vis.selectAll("circle.trackswitch, circle.berth, rect.endberth")
+                        .attr("transform", function (d) { return "translate(" + x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+
+                var stations = vis.selectAll("g.station")
+                   .attr("transform", function (d) { return "translate(" + x(d.platformlng) + "," + y(d.platformlat) + ")"; });
+
+                // this seems to to the trick, but not quite sure why.
+                var tracks = vis.selectAll("path.trackline")
+                .attr("stroke-width", 6 / zoom.scale())
+                .attr("d", function (d) { return lineFunction(d.value); });
+                //.attr("transform", "translate(" + zoom.translate() + ")scale(" + zoom.scale() + ")");
+
+                var train = vis.selectAll("g.train")
+                        .attr("transform", function (d) { return "translate(" +  x(d.values.to_infra_berth.StartLatitude) + "," +
+                                y(d.values.to_infra_berth.StartLongitude) + ")"; });
+                train.selectAll("rect.train, .traininfo")
+                        .attr("x", function (d) { return calcTrainRectX(d);});
+                train.select("text.train")
+                        .attr("x", function (d) { return calcTrainTextX(d); });
+
+            }; // resizeVis()
+
+
+            var changeTrainTexts = setInterval(function () {
+                setTrainTexts();
+            }, 1000*15);
+
+            var bTextDestination = true;
+            var setTrainTexts = function () {
+                bTextDestination = !bTextDestination;
+                var trainTexts = vis.selectAll("text.train")
+                    .text(function (d) { return bTextDestination ?  getDestination(d) : d.values.address; });
+            };
+
+            function getDestination(d) {
+                var dest = d.values.destination;
+                if (dest === "--00")
+                    return dest;
+                if (!isNaN(parseInt(dest.slice(-1)))) {
+                    return dest.slice(0, -1); // remove the last digit
+                }
+                return dest;
+            } // getDestination()
+
+            var checkParkedTrains = setInterval(function () {
+                drawParkedTrains ();
+            }, 1000*10);  // check every 10 secs for parked trains, i.e. trains we have not heard from in a while
+
+            // Mark trains if we have no cts-message in 1.5 minutes
+            // Add extra emphasis to trains if we have no cts-message in 3 minutes
+            var drawParkedTrains = function () {
+                var time = new Date(localTic);//new Date();
+                var timeNow = time.getTime();
+                // todo: get time from server, - and in case of history - get time relative to historic time...
+                var parkedTrains = vis.selectAll("g.train");
+                var longpark = parkedTrains
+                    .filter(function (d) { return timeNow - Date.parse(d.values.time_stamp) > 1500*60; });
+                longpark.select("rect.train")
+                        .style("fill", function (d) { return timeNow - Date.parse(d.values.time_stamp) > 3000*60 ? "url(#vertical-stripe-1)": "url(#diagonal-stripe-1)"; });
+                longpark.select("text.train")
+                    .style("fill", "black");
+            }; // drawParkedTrains()
+
+
+            //
+            // DrawPassengers
+            //
+
+            DrawPassengers = function (data) {
+                return;
+                // msg is an array of stations/passengers objects of the form
+                // key: PidasID
+                // value:
+                //      passengers
+                //          ownMooduleNo
+                //          DateAndTimeUnix
+                //          ...
+                //      stations
+                //          ...
+
+                // Transform msg array to new array of ownModuleID objects
+                // ownModuleID, newestDateAndTimeUnix, LineNumber, TogNumber, ModleConfig, CoupledModuleNo
+                /*
+                 var OwnModules = {};
+                 var currentOwnModuleNo;
+                 var currentOwnModuleObject;
+
+                 for (var i=0;i<msg.length;i++) {
+                 currentOwnModuleNo = msg[i].value.passengers.OwnModuleNo;
+                 currentOwnModuleObject = {
+                 LineNumber: msg[i].value.passengers.LineNumber,
+                 TogNumber: msg[i].value.passengers.TogNumber,
+                 ModuleConfig: msg[i].value.passengers.ModuleConfig,
+                 CoupledModuleNo: msg[i].value.passengers.CoupledModuleNo,
+                 CurrentStationID: msg[i].value.passengers.CurrentStationID,
+                 DateAndTimeUnix: msg[i].value.passengers.DateAndTimeUnix
+                 };
+                 // Create property if it does not exist
+                 if (!OwnModules.hasOwnProperty([currentOwnModuleNo])) {
+                 OwnModules[currentOwnModuleNo] = currentOwnModuleObject;
+                 // update if we have new information
+                 } else if (OwnModules[currentOwnModuleNo].DateAndTimeUnix < msg[i].value.passengers.DateAndTimeUnix) {
+                 OwnModules[currentOwnModuleNo] = currentOwnModuleObject; // only keep newest information
+                 }
+                 } // for-loop
+
+                 OwnModules = d3.entries(OwnModules); // transform from object to array with key, value...
+
+                 // Iterate through all OwnModules, select corresponding train (i.e. Tognumber) and add info-text
+                 for (var j=0; j<OwnModules.length; j++) {
+                 var train = vis.select("#train_id" + OwnModules[j].value.TogNumber);
+                 if (train.empty()) {
+                 console.log("Received passenger data from train " + OwnModules[j].value.TogNumber + ", but no updated CTS-info exist for train");
+                 break;
+                 }
+                 var string = "Linje: " + OwnModules[j].value.LineNumber + " Togsett: " + OwnModules[j].value.ModuleConfig + "\n" + OwnModules[j].key;
+                 if (OwnModules[j].value.ModuleConfig > 1)
+                 string = string + " " + OwnModules[j].value.CoupledModuleNo;
+
+                 var moduleInfo = train.select("text.module");
+                 if (moduleInfo.empty()) {
+                 moduleInfo = train.append("svg:text")
+                 .classed("module", true)
+                 .style("stroke", "black")
+                 .style("stroke-width", 1)
+                 .attr("x", 0)  // trainRectX (parent)...
+                 .attr("y", 0);
+                 }
+                 moduleInfo.text (string);
+                 }
+
+                 // Update list of all physical trains that we have information about
+                 DrawOwnModuleChart(OwnModules);
+                 */
+            }; // drawPassengers()
+
+
+            var initDrawOwnModules = function () {
+
+                // Show or hide ownModules elements
+                var strVisibility = d3.select("#ownmoduleschbox").property('checked') ? "visible" : "hidden";
+                d3.select("#ownmodulediv").style("visibility", strVisibility);
+                d3.select("#ownmoduleheader").style("visibility", strVisibility);
+
+                // Get dimensions of nearby elements
+                var optionsBoundingRect = d3.select("#options").node().getBoundingClientRect();
+                var stationsBoundingRect = d3.select("#bardivstations").node().getBoundingClientRect();
+                var headerBoundingrect = d3.select("#ownmoduleheader").node().getBoundingClientRect();
+
+                // Calculate top attribute for header and div
+                var airBetweenOptionsAndOwnModuleDiv = 40;
+                var topOwnModuleHeader = optionsBoundingRect.bottom + airBetweenOptionsAndOwnModuleDiv;
+                var topOwnModuleDiv = topOwnModuleHeader + headerBoundingrect.height;
+
+                d3.select("#ownmoduleheader").style("top", topOwnModuleHeader + "px");
+                d3.select("#ownmoduleheader").style("width", optionsBoundingRect.width + "px");
+                d3.select("#ownmodulediv").style("top", topOwnModuleDiv + "px");
+                d3.select("#ownmodulediv").style("width", optionsBoundingRect.width + "px");
+                d3.select("#ownmodulediv").style("height", (stationsBoundingRect.top - topOwnModuleDiv) + "px");
+            };
+
+            // data: array of objects, example object: {OwnModuleNo:3068,TotalAlighting:4641, TotalBoarding:4588}
+            var DrawOwnModulePassengers = function (data) {
+                var margin = {top: 2, right: 5, bottom: 0, left: 5};
+                var groupWidth = parseInt(d3.select("#ownmodulediv").style("width")) - margin.left - margin.right;
+                var markerOwnModule = d3.select("#ownmodules");
+                var paxArray = data.map(function(obj) { return obj.OwnModuleNo.toString(); });
+
+                var existingOwnModules = markerOwnModule.selectAll("g")
+                        .each(drawPaxLevel);
+
+                function drawPaxLevel(d) {
+                    var paxIndex = paxArray.indexOf(d.key);
+                    var alight=0;
+                    var board=0;
+                    var paxRect;
+                    if (paxIndex < 0) {
+                        return; // this OwnModule do not exist in the array of active ownmodules we just received
+                    }
+                    alight = data[paxIndex].TotalAlighting;
+                    board = data[paxIndex].TotalBoarding;
+                    paxRect = d3.select(this).select("rect.trainstatus");
+                    if (paxRect.empty()) {  // should not be possible ever, but we check just in case
+                        return;
+                    }
+                    paxRect
+                     .attr("width", function (d) { return (Math.abs((board-alight)/200) * groupWidth) + "px";})
+                        .style("fill", "steelblue") // Siemens sometimes report less than zero people onboard
+                        .filter(function (d) { return board - alight < 0 })
+                            .style("fill", "red"); // Siemens sometimes report less than zero people onboard
+                } //drawPaxLevel
+            }; // DrawOwnModulePassengers()
+
+
+
+            // Draw panel of physical train 3-car set. Adds an entry for each 3-car set that we have received PIDAS data from
+            // almost identical to corresponding function in index.jade, so we keep the name the same...
+            var DrawOwnModuleChart = function (data) {
+                /*
+                data is an array of
+                key: OwnModuleID,
+                value: Object  {
+                    LineNumber: x
+                    TogNumber: x
+                    ModuleConfig: x
+                    CoupledModuleNo: x
+                    CurrentStationID: x
+                    DateAndTimeUnix: x // the time the last alight/board event occured
+                    DateAndTimeUnixDataReceived: x  // the time we actually receive the data
+                };
+                */
+                var margin = {top: 2, right: 5, bottom: 0, left: 5};
+                var imageHeight = 20;
+                var textHeight = 12;
+                var groupGap = 2; // space between "trains"
+                var groupHeight = imageHeight + textHeight + groupGap;
+                // set with equal to the widht of the options-box
+                var groupWidth = parseInt(d3.select("#ownmodulediv").style("width")) - margin.left - margin.right;
+
+                /*
+                $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) {
+                            return d.TotalAlighting;
+                        }).toString());
+                $("#nowPax").text("Passasjerer ombord: " + d3.sum(data, function (d) {
+                            return d.TotalBoarding - d.TotalAlighting;
+                        }).toString());
+                $("#nowAPC").text("Tog i trafikk: " + data.filter(function (obj) {
+                            return obj.TotalBoarding > 0;
+                        }).length.toString()); // Consider train to be in traffic if passengers have boarded
+                */
+
+                data = d3.entries(data); // transform trainObject to key,value array
+                var markerOwnModule = d3.select("#ownmodules");
+                var existingData = markerOwnModule.selectAll("g").data();
+
+                // If train do not exist, add to existingData
+                // If train already exist, update existingData with the new data
+                for (var i=0; i<data.length; i++) {
+                    // check if train exist already
+                    var pos = existingData.map(function(obj) { return obj.key; }).indexOf('data[i].key');
+
+                    if (pos < 0) {
+                        existingData.unshift(data[i]); // add new data to the beginning of existingData
+                    } else if (existingData[pos].value.DateAndTimeUnix < data[i].value.DateAndTimeUnix) { // only add date if newer than existing
+                        existingData[pos] = data[i];
+                    }
+                }
+                //var allData = existingData.concat(data); // TODO: Remove duplicates/oldest version
+                var ownmodulesHeight = margin.top + ((existingData.length) * (groupHeight + groupGap));
+                markerOwnModule.attr("height", ownmodulesHeight);
+                markerOwnModule.attr("width", groupWidth);
+
+                //console.log("DrawOwnModuleChart - data: " + JSON.stringify(data));
+                // TODO: Save max onBoard seen so far today per train, display small triangle indicating max
+
+                // sort data according to timestamp data _received_ , newest trains first. The time we receive data do not correlate tightly with the time the last passengers aligth/board event was registered
+                // i.e. the train may drive a long way before it hits a wi-fi point and unloads its files
+                var dataSorted = existingData.sort(function (a, b) { return (b.value.DateAndTimeUnixDataReceived - a.value.DateAndTimeUnixDataReceived); });
+
+                var g = markerOwnModule.selectAll("g")
+                    .data(dataSorted, function (d) { return d.key; });
+
+                // Add Trains not seen before
+                var newGroup = g.enter()
+                        .append("svg:g")
+                        .style("height", groupHeight + "px")
+                        .style("width", groupWidth + "px");
+
+                var im = newGroup.append("svg:image")
+                        .attr("height", imageHeight + "px")
+                        .attr("width", groupWidth + "px")
+                        .attr("xlink:href", "MX3000bk.png");
+
+                var rectStatus = newGroup.append("svg:rect")
+                        .classed("trainstatus", true)
+                        .attr("height", imageHeight + "px")
+                        //.attr("width", function (d) { return (Math.max(200 / 400, 0) * groupWidth) + "px"; })
+                        .style("fill-opacity", .5)
+                        .style("stroke-opacity", 1.0)
+                        .style("stroke-width", 3);
+
+                var rectLineIndicator = newGroup.append("svg:rect")
+                        .attr("height", imageHeight + "px")
+                        .attr("width", groupWidth + "px")
+                        //.attr("width", function (d) { return (Math.max(200 / 400, 0) * groupWidth) + "px"; })
+                        .style("fill-opacity", .0) // no fill
+                        .style("stroke-opacity", 1.0)
+                        .style("stroke-width", 3)
+                        .style("stroke", function (d) { return LineColor[d.value.LineNumber - 1]; });
+
+                 var textTraininfo = newGroup.append("svg:text")
+                        .classed("traininfo", true)
+                        .attr("text-anchor", "middle")
+                        .attr("x", (groupWidth / 2) + "px")
+                        .attr("y", (imageHeight / 2) + "px")
+                        .attr("dy", "0.4em")
+                        .attr("font-size", "11px")
+                        .style("fill", "black")
+                        .style("font-weight", "normal");
+                        //.text(function (d) { return d.value.TogNumber + "/" + d.value.LineNumber; });
+
+                var textOwnModuleID = newGroup.append("svg:text")
+                        .classed("ownmoduleid", true)
+                        .attr("text-anchor", "middle")
+                        .attr("x", (groupWidth / 2) + "px")
+                        .attr("y", imageHeight + "px")
+                        .attr("dy", ".9em")
+                        .attr("font-size", "10px")
+                        .style("fill", "black")
+                        .style("font-weight", "thinner")
+                        .text(function (d) { return d.value.ModuleConfig == 1 ? d.key : (d.LeadingOrGuided == 1 ? d.key + " " + d.value.CoupledModuleNo: d.value.CoupledModuleNo + " " + d.key); });
+
+                // Update AND Enter section
+                g.select("rect.trainstatus")   // transfer updated data to the rects
+                        .attr("width", function (d) { return (Math.abs(100/200) * groupWidth) + "px";})
+                        .style("fill", "steelblue") // Siemens sometimes report less than zero people onboard
+                        .filter(function (d) { return d.key > 30000 })
+                            .style("fill", "red"); // Siemens sometimes report less than zero people onboard
+                g.select("text.traininfo").transition().duration(10000)
+                        .text(function (d) { return d.value.TogNumber + "/" +
+                            d.value.LineNumber + "/" + new Date(d.value.DateAndTimeUnixDataReceived).toTimeString().split(' ')[0]; });
+
+
+                g.transition().delay(2000).duration(1500).ease("sin-in-out")
+                        .attr("transform", function (d, i) { return "translate(" + 0 + "," + (margin.top + (groupHeight * i)) + ")"; });
+                //g.transition().delay(2000).duration(1500).ease("sin-in-out")
+                //        .attr("transform", function (d, i) { return "translate(" + 0 + "," + (margin.top + (groupHeight * i)) + ")"; });
+
+                // Exit section
+                //g.exit()
+                //        .remove();
+
+                /*
+                 function transform(d,i) {
+                 return d3.select(this)
+                 .transition().delay(2000).duration(1500).ease("sin-in-out")
+                 .attr("transform", function (d) { return "translate(" + groupPadding.toString() + "," + (groupPadding + (groupHeight * d.index)).toString() + ")";});
+                 }
+                 */
+
+                g.on("mouseenter", function () {
+                    var thisObj = d3.select(this);
+                    var TogNumber = thisObj.datum().value.TogNumber;
+                    var trainG = vis.select("#train_id"+getIDFromName(TogNumber));
+                    var trainRect = 0;
+                    if (trainG.empty()) {
+                        console.log("Received passenger data from train " + TogNumber + ", but no updated CTS-info exist for train");
+                        return false;
+                    }
+                    // bring to top
+                    trainG.node().parentNode.appendChild(trainG.node());
+                    trainRect = trainG.select("rect.train");
+                    if (trainRect.property("clicked") == 1) {
+                        return false;
+                    }// already in clicked state
+                    trainRect.property("oldFill", trainRect.style("fill")); // store away current fill
+                    trainRect.style("fill", trainSelectedColor);
+                    trainRect.property("mouseover", 1);
+                    return false; //todo: consider adding stop propagation
+                });
+
+                g.on("click", function () {
+                    // toggle
+                    var thisObj = d3.select(this);
+                    var TogNumber = thisObj.datum().value.TogNumber;
+                    var trainG = vis.select("#train_id"+getIDFromName(TogNumber));
+                    var trainRect = 0;
+                    var trainRectInfo = 0;
+                    var trainText = null;
+                    var ownModuleIDText = thisObj.select("text.ownmoduleid");
+                    var ownModuleText = ownModuleIDText.text();
+                    if (trainG.empty()) {
+                        console.log("Received passenger data from train " + TogNumber + ", but no updated CTS-info exist for train");
+                        return false;
+                    }
+                     // bring to top
+                    trainG.node().parentNode.appendChild(trainG.node());
+                    trainRect = trainG.select("rect.train");
+
+                    if (trainRect.property("clicked") != 1) {
+                        trainRect.property("clicked", 1);
+                        // set train clicked color...
+                        trainRect.style("fill", trainClickedColor);
+
+                        trainRectInfo = trainG.append("rect")
+                            .classed("traininfo", true)
+                            .style("fill", "white")
+                            .style("stroke", "grey")
+                            .attr("x", function (d) { return calcTrainRectX(d) + 2; }) // offset by 2 for visual appeal
+                            .attr("y", trainHeight - 2)
+                            .attr("width", 1.5*trainWidth)
+                            .attr("height", 2*trainHeight);
+                        trainText = trainG.append("text")
+                            .classed("traininfo", true)
+                            .attr("x", function (d) { return calcTrainRectX(d) + 2; }) // offset by 2 for visual appeal
+                            .attr("y", trainHeight)
+                            .attr("dy", 1)
+                            .style("font-size", "10px")
+                            .style("font-weight", "thinner")
+                            .style("fill", "black")
+                            .text(function (d) { return "Linje: " + thisObj.datum().value.LineNumber +
+                                    "\nA-feil: 0 " + "\nTid: " + new Date(thisObj.datum().value.DateAndTimeUnix).toTimeString().split(" ")[0] +
+                                    "\nTogsett: " + ownModuleText; });
+                        wrap(trainText, 1.5*trainWidth, "traininfo");
+                    } else {
+                        // do not revert to original color, as we have probably missed several cts updates while we were in "clicked" mode
+                        // rather set to same color as on "mouseenter", then color will be set correct when we receive new cts
+                        trainRect.style("fill", trainSelectedColor);
+                        trainRect.property("clicked", 0);
+                        trainG.selectAll(".traininfo").remove();
+                    }
+
+                    return false; //todo: consider adding stop propagation
+                });
+
+                g.on("mouseleave", function () {
+                    // only do action if not clicked
+                    var thisObj = d3.select(this);
+                    var train;
+                    var TogNumber = thisObj.datum().value.TogNumber;
+                    var trainG = vis.select("#train_id" + TogNumber);
+                    var trainRect = 0;
+                    var oldFill = 0, currentFill = 0;
+                    if (trainG.empty()) {
+                        console.log("Received passenger data from train " + TogNumber + ", but no updated CTS-info exist for train");
+                        return false;
+                    }
+                    trainRect = trainG.select("rect.train");
+                    oldFill = trainRect.property("oldFill");
+                    currentFill = trainRect.style("fill");
+                    if (!oldFill) {
+                        console.log("Train did not have an original color: " + TogNumber);
+                        trainRect.style("fill", "grey");
+                    }
+                    else if (trainRect.property("clicked") != 1) {
+                        trainRect.style("fill", oldFill);
+                    }
+                    trainRect.property("mouseover", 0);
+                    return false; //todo: consider adding stop propagation
+                });
+            }; // DrawOwnModuleChart
+
+            var removeTrain = function (trainNo) {
+                var remTrain = d3.select("#train_id" + getIDFromName(trainNo));
+                if (remTrain.empty()) {
+                    console.log("Tried to remove train " + trainNo + " , but it was not found.");
+                    return;
+                }
+                //trainRect.property("oldFill", trainRect.style("fill"));
+                remTrain.select("rect")
+                  .property("oldclr", function (d) { return d3.select(this).style("fill"); })
+                  .transition()
+                    .duration(1*1000)
+                    .style("fill", "lightgrey")
+                  .transition()
+                    .delay(5*1000)
+                    .each("start", function() { d3.select(this).style("fill", "darkgrey"); })
+                  .transition()
+                    .delay(10*1000)
+                    .each("start", function() { d3.select(this).style("fill", "lightgrey"); })
+                  .transition()
+                    .delay(15*1000)
+                    .duration(5*1000)
+                    .each("start", function() { d3.select(this).style("opacity", 0.3); });
+                    //.attr("opacity", 0);
+
+                remTrain.selectAll("*").transition().delay(20*1000).remove();
+                remTrain.transition().delay(21*1000).remove();
+
+                console.log("Received removetrain notification and succesfully removed train: " + trainNo);
+            }; // removeTrain()
+
+            // function to wrap text for given selection of svg text elements - taken from http://bl.ocks.org/mbostock/7555321
+            function wrap(text, width, textClass) {
+                text.each(function() {
+                var text = d3.select(this),
+                    words = text.text().split(/\s+/).reverse(),
+                    word,
+                    line = [],
+                    lineNumber = 0,
+                    lineHeight = 1.1, // ems
+                    y = text.attr("y"),
+                    x = text.attr("x"),
+                    dy = parseFloat(text.attr("dy")),
+                    tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em").classed(textClass, true);
+                while (word = words.pop()) {
+                    line.push(word);
+                    tspan.text(line.join(" "));
+                    if (tspan.node().getComputedTextLength() > width) {
+                        line.pop();
+                        tspan.text(line.join(" "));
+                        line = [word];
+                        tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").classed(textClass, true).text(word);
+                    }
+                }
+              });
+            } // wrap()
+
+            var nextBlinkGroupID = 0;
+            var showBlinkAlarms = false;
+
+            // input: array of svg´s (rect, circle, etc) to blink that is to be blinked "together"
+            // function: class the svg´s as "blinking" and assign unique blinkinggroupid-class to the elements
+            // so they are flashed by the blinkTimer
+            function setBlinkAlarm (nodes) {
+                if (!showBlinkAlarms || !nodes || !Array.isArray(nodes))
+                    return;
+
+                for (var i=0; i<nodes.length; i++) {
+                    if (nodes[i].empty())
+                        break;
+
+                    nodes[i].classed("blinking", true);
+                    nodes[i].classed("blinkgroupid" + nextBlinkGroupID, true);
+                    nodes[i].property("oldclr", function (d) { return d3.select(this).style("fill"); });
+                    nodes[i].property("blinkgroupid", nextBlinkGroupID);
+                    //var d = nodes[i].datum();
+                    //d.blinkGroupID = nextBlinkGroupID;
+                    //nodes[i].datum(d);
+                }
+                ++nextBlinkGroupID;
+            } // setBlinkAlarm()
+
+            var toggleBlink = 0;
+            var blinkTimer = setInterval(function () {
+                var blinkingObjects = vis.selectAll(".blinking").filter(function (d) { return d3.select(this).property("hold") != true; });
+                if (blinkingObjects.empty())
+                    return;
+
+                if (toggleBlink == 0) {
+                    toggleBlink = 1;
+                    blinkingObjects.each(function (d) {
+                        if (this.tagName.toLowerCase() === "image") {
+                            d3.select(this).style("opacity", 0);
+                        }
+                        else {
+                            d3.select(this).style("fill", "white");
+                        }
+                    });
+                }
+                else {
+                    toggleBlink = 0;
+                    blinkingObjects.each(function (d) {
+                        if (this.tagName.toLowerCase() === "image") {
+                            d3.select(this).style("opacity", 1);
+                        }
+                        else {
+                            d3.select(this).style("fill", "purple");
+                        }
+                    });
+                    /*
+                    if (blinkingObjects.tagName.toLowerCase() === "image")
+                        blinkingObjects.style("opacity", 1);
+                    else
+                        blinkingObjects.style("fill","purple");
+                    */
+                }
+            }, 1000 * 1);  // check every 1 sec for objects to blink
+
+
+            var addGhost = function (berth) {
+                var g = vis.selectAll("g.ghost")
+                        .data([berth], function (d) { return d.Name; });
+
+                // Add Ghosts not seen before
+                var newGroup = g.enter()
+                        .append("svg:g")
+                        .classed("ghost", true)
+                        .style("height", 20 + "px")
+                        .style("width", 20 + "px");
+                /*
+                var rect = newGroup.append("svg:rect")
+                        .classed("ghost", true)
+                        .attr("height", 20 + "px")
+                        .attr("width", 20 + "px")
+                        .style("fill", "green");
+                */
+
+                var im = newGroup.append("svg:image")
+                        //.classed("ghost", true)
+                        .attr("height", 20 + "px")
+                        .attr("width", 20 + "px")
+                        .attr("xlink:href", "ghost.png");
+
+                g.attr("transform", function (d) { return "translate(" + x(d.StartLatitude) + "," + y(d.StartLongitude) + ")"; });
+                g.on("mouseenter", handleMouse);
+                g.on("mouseleave", handleMouse);
+
+                setBlinkAlarm ([im]);
+            }; //addGhost()
+
+            var setLastPaxUpdateTime = function (timestamp) {
+                d3.select("#lastPaxReceived").text("Siste av/påstigning: " + new Date(timestamp).toTimeString().split(' ')[0]);
+            }; // setLastPaxUpdateTime()
+            var setTrainsInTraffic = function (noTrains) {
+                d3.select("#nowTrains").text("Tog i trafikk nå: " + noTrains);
+            }; // setTrainsInTraffic()
+            //
+            // Helpers
+            //
+
+            function getIDFromName(Name) {
+                var tmp;
+                var tmp2;
+                if (!Name) {
+                    console.error("getIDFromName missing input parameter.");
+                    return;
+                }
+                tmp = Name.toString().split(' ').join('_').replace("/", "_");
+                tmp2 = tmp.replace(/\*/g, "star"); // replace "*" with "star"
+                //console.log ("tmp2: " + tmp2);
+                return tmp2;
+            } // getIDFromName ()
+
+            // Options form handling
+            //
+
+            var handleOptions = function (Option, bChecked) {
+                var strVisible = bChecked ? "visible" : "hidden";
+                var selection;
+
+                if (Option === "Presisjonsvisning") {
+                    trackOffset = bChecked ? 20 : 0;
+                    selection = vis.selectAll("circle.berth, circle.trackswitch")
+                            .transition()
+                            .duration(1000)
+                            .attr("cx", function (d) {
+                                return trackOffset * d.trackDirectionCode * zoom.scale();
+                            });         // todo check if lat/lng is switched...  Track is -1 for even, 1 for Odd
+                    selection = vis.selectAll("rect.endberth")
+                            .transition()
+                            .duration(1000)
+                            .attr("x", function (d) {
+                                return trackOffset * d.trackDirectionCode * zoom.scale();
+                            });
+
+                    selection = vis.selectAll("g.station");
+                    selection.select("circle")
+                            .transition()
+                            .duration(1000)
+                            .attr("cx", function (d) {
+                                return trackOffset * d.trackDirectionCode * zoom.scale();
+                            });
+                    selection.select("text")
+                            .attr("x", 10);
+
+                    selection = vis.selectAll("path.trackline")
+                            .transition()
+                            .duration(1000)
+                            .attr("d", function (d) {
+                                return lineFunction(d.value);
+                            });
+
+                    selection = vis.selectAll("rect.train, .traininfo")
+                            .transition()
+                            .duration(1000)
+                            .attr("x", function (d) {
+                                return calcTrainRectX(d);
+                            });
+                    selection = vis.selectAll("text.train")
+                            .transition()
+                            .duration(1000)
+                            .attr("x", function (d) {
+                                return calcTrainTextX(d);
+                            });
+
+                    //drawBerths();
+                }
+                else if (Option === "Stasjoner") {
+                    selection = vis.selectAll('.station').style("visibility", strVisible);
+                }
+                else if (Option === "Sporfelt") {
+                    selection = vis.selectAll('.berth, .endberth').style("visibility", strVisible);
+                }
+                else if (Option === "Sporveksler") {
+                    selection = vis.selectAll('.trackswitch').style("visibility", strVisible);
+                }
+                else if (Option === "Pax") {
+                    selection = vis.selectAll(".passengerselement").style("visibility", strVisible);
+                    //d3.selectAll(".passengers").style("visibility", strVisible);
+                }
+                else if (Option === "Tog") {
+                    selection = vis.selectAll(".train").style("visibility", strVisible);
+                }
+                else if (Option === "Kjørevei") {
+                    selection = vis.selectAll(".trackline").style("visibility", strVisible);
+                }
+                else if (Option === "OwnModules") {
+                    d3.select('#ownmodulediv').style("visibility", strVisible);
+                    d3.select('#ownmoduleheader').style("visibility", strVisible);
+                }
+            };
+            // if current element is part of blinking alarm group, highlight all members of group with orange fill
+            var handleMouse = function (d, i) {
+                var d3_target = d3.select(d3.event.target);
+                var blinkGroupID = d3_target.property("blinkgroupid");
+                var blinkers = null;
+
+                if (d3_target.classed("blinking") && blinkGroupID) {
+                    d3.event.preventDefault();
+                    blinkers = vis.selectAll(".blinkgroupid" + blinkGroupID.toString());
+                    if (d3.event.type === "mouseenter") {
+                        blinkers.property("hold", true);
+                        blinkers.style("fill", "orange");
+                    }
+                    else if (d3.event.type === "mouseleave") {
+                        blinkers.property("hold", false);
+                    }
+                }
+            }; // handleMouse()
+
+            var bContextMenuShowing = false;
+
+            var handleContextMenu = function (d, i) {
+                var htmltext = "<br/>"; // add blank line on top
+                var attribute;
+                var d3_target;
+
+                if (bContextMenuShowing) {
+                    d3.event.preventDefault();
+                    bContextMenuShowing = false;
+                    toolTip.transition()
+                            .duration(50) // micro-delay but still let user "see" that menu fades away
+                            .style("opacity", 0);
+                } else {
+                    d3_target = d3.select(d3.event.target);
+
+                    if (d3_target.classed("blinking")) {
+                        d3.event.preventDefault();
+
+                        // get the blink-group-id
+                        var blinkGroupID = d3_target.property("blinkgroupid");
+                        var blinkers = vis.selectAll(".blinkgroupid" + blinkGroupID.toString());
+                        if (blinkers.empty()) {
+                            console.error("Error: empty blinking selection!");
+                            return; // should not be possible
+                        }
+                        blinkers.classed("blinkgroupid" + blinkGroupID.toString(), false);
+                        blinkers.classed("blinking", false);
+                        // set back to original color
+                        blinkers.style("fill", function (d) {
+                            return d3.select(this).property("oldclr");
+                        });
+                        blinkers.property("blinkgroupid", null);
+                        blinkers.property("oldclr", null);
+                        blinkers.property("hold", null);
+                    }
+                    else if (d3_target.classed("berth") || d3_target.classed("endberth") || d3_target.classed("trackline") || d3_target.classed("trackswitch") || d3_target.classed("station") || d3_target.classed("train") || d3_target.classed("ghost")) {
+                        d3.event.preventDefault();
+                        bContextMenuShowing = true;
+                        d = d3_target.datum();
+
+                        if (d3_target.classed("trackline")) { // user is hovering over a railroad track
+                            htmltext += "Banenavn: " + d.key + "<br/>" + "Antall sporfelt: " + d.value.length;
+                        }
+                        else if (d3_target.classed("train")) {
+                            htmltext += "<em>Tog: " + d.values.address + "</em><br/>";
+                            for (attribute in d.values) {
+                                if (attribute != "from_infra_berth" && attribute != "to_infra_berth") {
+                                    htmltext += attribute + ": " + d.values[attribute] + "<br/>"
+                                }
+                            }
+                            htmltext += "<em>from_infra_berth:</em><br/>";
+                            for (attribute in d.values.from_infra_berth) {
+                                if (d.values.from_infra_berth[attribute] != null && d.values.from_infra_berth[attribute] != "" && d.values.from_infra_berth[attribute] != undefined) {
+                                    htmltext += "   -" + attribute + ": " + d.values.from_infra_berth[attribute] + "<br/>"
+                                }
+                            }
+                            htmltext += "<em>to_infra_berth:</em><br/>";
+                            for (attribute in d.values.to_infra_berth) {
+                                if (d.values.to_infra_berth[attribute] != null && d.values.to_infra_berth[attribute] != "" && d.values.to_infra_berth[attribute] != undefined) {
+                                    htmltext += "   -" + attribute + ": " + d.values.to_infra_berth[attribute] + "<br/>"
+                                }
+                            }
+                        }
+                        else {
+                            for (attribute in d) {
+                                if (d[attribute] != null && d[attribute] != "" && d[attribute] != undefined) {
+                                    htmltext += attribute + ": " + d[attribute] + "<br/>"
+                                }
+                            }
+                        }
+                        htmltext += "<br/>"; // add blank line at the end
+
+                        toolTip.transition()
+                                .duration(200)
+                                .style("opacity", .9);
+                        toolTip
+                                .html(htmltext)
+                                .style("left", (d3.event.pageX) + "px")
+                                .style("top", (d3.event.pageY - 28) + "px");
+                    }
+                }
+            }; // handleContextMenu()
+
+            var showToolTip = function (d) {
+                var htmltext = "<br/>"; // add blank line on top
+                var attribute;
+
+                if (this.tagName.toLowerCase() === "path") { // user is hovering over a railroad track
+                    htmltext += "Banenavn: " + d.key + "<br/>" + "Antall sporfelt: " + d.value.length;
+                }
+                else if (d3.select(this).classed("train")) {
+                    htmltext += "<em>Tog: " + d.values.address + "</em><br/>";
+                    for (attribute in d.values) {
+                        if (d.values[attribute] != null && d.values[attribute] != "" && d.values[attribute] != undefined && attribute != "from_infra_berth" && attribute != "to_infra_berth") {
+                            htmltext += attribute + ": " + d.values[attribute] + "<br/>"
+                        }
+                    }
+                    htmltext += "<em>from_infra_berth:</em><br/>";
+                    for (attribute in d.values.from_infra_berth) {
+                        if (d.values.from_infra_berth[attribute] != null && d.values.from_infra_berth[attribute] != "" && d.values.from_infra_berth[attribute] != undefined) {
+                            htmltext += "   -" + attribute + ": " + d.values.from_infra_berth[attribute] + "<br/>"
+                        }
+                    }
+                    htmltext += "<em>to_infra_berth:</em><br/>";
+                    for (attribute in d.values.to_infra_berth) {
+                        if (d.values.to_infra_berth[attribute] != null && d.values.to_infra_berth[attribute] != "" && d.values.to_infra_berth[attribute] != undefined) {
+                            htmltext += "   -" + attribute + ": " + d.values.to_infra_berth[attribute] + "<br/>"
+                        }
+                    }
+                }
+                else {
+                    for (attribute in d) {
+                        if (d[attribute] != null && d[attribute] != "" && d[attribute] != undefined) {
+                            htmltext += attribute + ": " + d[attribute] + "<br/>"
+                        }
+                    }
+                }
+                htmltext += "<br/>"; // add blank line at the end
+
+                toolTip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                toolTip
+                        .html(htmltext)
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+            }; // showToolTip
+
+            var hideToolTip = function (d) {
+                toolTip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+            }; // hideToolTip ()
+
+
+            //
+            // START THE BALL ROLLING
+            //
+
+            initCanvas();
+            initDrawOwnModules();
+            window.addEventListener('resize', resizeVis);
+            $('.checker').change(function () {
+                handleOptions(this.value, this.checked);
+            });
+
+
+            //
+            // Socket.io section, i.e. receive data from server
+            //
+
+            var socket = io();
+
+            var bHistory = false;
+
+            socket.on("connect", function (data) {
+                d3.select("#clockTime").style("background-color", "whitesmoke");
+                console.log("connect: " + JSON.stringify(data));
+            });
+            socket.on("id", function (data) {
+                console.log("id: " + data);
+            });
+            socket.on("ip", function (data) {
+                console.log("ip: " + data);
+            });
+
+            socket.on("reconnect", function (data) {
+               console.log("reconnect: " + JSON.stringify(data));
+                vis.selectAll(".train").remove();
+                // Ask server for trains, i.e. array with lists of berth passings
+                socket.emit("alltailsrequest", {"maxBerths": 10}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths berths
+                    if (!data || data.length == 0) {
+                        return;
+                    }
+                    for (var i = 0; i < data.length; i++) {
+                        drawTrain(data[i]); // array of berths for 1 train
+                    } // for-loop
+                });  // emit-function()
+            });
+
+            socket.on("disconnect", function (data) {
+                d3.select("#clockTime").style("background-color", "red");
+                d3.select("#clockTime").text("Kontakter...");
+            });
+            socket.on("timetick", function (data) {
+                d3.select("#clockTime").text(new Date(data).toTimeString().split(' ')[0]);
+                localTic = data;
+            });
+
+            socket.on("chat message", function (data) {
+                console.log("chat message: " + JSON.stringify(data, undefined,2));
+            });
+
+            var bInitInfrastructure = false;
+            //
+            // Receive stations, berths, track switches
+            // ... and ask server for initial train positions
+            socket.on("initinfrastructure", function (data) {
+                if (!bInitInfrastructure) {
+                    drawInfrastructure(data);
+                    bInitInfrastructure = true;
+                }
+            });
+
+            //
+            // CTS
+            //
+
+            // receive continuosly updated train positions
+            // one or more trains and their newest berth passings
+            socket.on("cts", function (msg) {
+                if (bInitInfrastructure) {
+                    drawTrain(msg); // array of berths for 1 train
+                }
+            });
+
+            socket.on("cts_special_code", function (msg) {
+                drawTrainSpecialCode(msg);
+            });
+
+            socket.on("cts_ghost_train", function (msg) {
+                drawTrainGhost(msg);
+            });
+
+            socket.on("cts_trainnumber_changed", function (msg) {
+                drawTrainNumberChanged(msg);
+            });
+
+            socket.on("cts_trainnumber_first_time", function (msg) {
+                //console.log("cts_trainnumber_first_time: ", ": train " + msg.values.address);
+            });
+            socket.on ("cts_train_jump", function (msg) {
+                console.log("cts_train_jump. InfraFrom: " + msg.values.jump_infraFrom + " ctsFrom: " + msg.values.jump_ctsFrom + " ctsTo: " + msg.values.jump_ctsTo);
+                /*
+                msgObject.values.jump_infraFrom = Infra_fromBerthObject.itemCode;
+                msgObject.values.jump_ctsFrom = CTS_fromBerthObject.Name;
+                msgObject.values.jump_ctsTo = CTS_toBerthObject.Name;
+                */
+            });
+
+            // Commands, - alter appearance of visual elements
+            var resetToNormalColors = false;
+            socket.on("okberths", function (msg) {
+                ctsOKObject = msg;
+                colorOKBerths(resetToNormalColors);
+                resetToNormalColors = !resetToNormalColors;
+                //drawBerths(); //ctsBerthOverlay();
+            });
+            socket.on("blinkalarms", function (msg) {
+                showBlinkAlarms = !showBlinkAlarms;
+                console.log("blink alarm: " + showBlinkAlarms);
+            });
+            socket.on("destination", function (msg) {
+                showDestination = !showDestination;
+                console.log("destination: " + showDestination);
+            });
+
+            // The physical strain still exist:-) but the TrainNo the server has had no CTS signals from the logical train
+            // for so long that the server has decided that the train has changed its logical number
+            // since the cts do not inform us about this as it happens, our only soloution for the time beeing is to
+            // remove the logical trains after a server-decided time limit...
+            socket.on("removetrain", function (msg) {
+                removeTrain(msg);
+            });
+
+            // Received information about physical trains
+            socket.on ("trains", function (msg) {
+                DrawOwnModuleChart(msg) // todo: change the name of this function ...drawAPCinfo...
+            });
+
+            //
+            // PAX
+            //
+            socket.on("pax", function (msg) {
+                DrawPassengers(msg);
+            });
+            socket.on("LastPaxUpdateTime", function (msg) {
+                setLastPaxUpdateTime(msg);
+            });
+            socket.on("trainsintraffic", function (msg) {
+                setTrainsInTraffic(msg);
+            });
+            socket.on("LineAggregate", function (msg) {
+                //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
+                //DrawLinesBarChart(msg);
+                //setLastDataRecTime();
+            });
+            socket.on("StationAggregate", function (msg) {
+                //DrawStationsBarChart(msg);
+                //addHeatmapData(msg);
+            });
+            socket.on("OwnModuleAggregate", function (msg) {
+                $("#sumPax").text("Passasjerer i dag: " + d3.sum(msg, function (d) { return d.TotalAlighting; } ).toString());
+                //$("#nowPax").text("Passasjerer ombord: " + d3.sum(msg, function (d) { return d.TotalBoarding - d.TotalAlighting; } ).toString());
+                $("#nowAPC").text("Tog med passasjertelling: " + msg.filter(function(obj) { return obj.TotalBoarding > 0; }).length.toString()); // Consider train to be in traffic if passengers have boarded
+                DrawOwnModulePassengers(msg);
+                //DrawOwnModuleChart(msg);
+                //setLastDataRecTime();
+            });
+
+            //
+            // HISTORY
+            //
+            socket.on("history start", function (data) {
+                console.log("history start: " + JSON.stringify(data));
+                bHistory = true;
+                vis.selectAll(".train").remove();
+            });
+            socket.on("history stop", function (data) {
+                console.log("history stop: " + data);
+                //vis.selectAll(".train").remove();
+            });
+            socket.on("realtime", function (data) {
+                vis.selectAll(".train").remove();
+                console.log("realtime: " + data);
+                bHistory = false;
+            });
+            socket.on("aggregatehistory", function (data) {
+                //vis.selectAll(".train").remove();
+                //console.log("aggregatehistory: " + data);
+                bHistory = false;
+                drawTrainAggregateMove (data);
+            });
+
+            // Todos
+            // Select train + show x nearest trains at any time
+
+            // Count down at station
+            // Add real-time speed and ghost-train
+            // Add mark berth to report later
+            // Add reporting
+            // Add score and smileys "5 in a row within 10 sec delay, set delay threshodl individually
+            // Write scores to database
+            // Give place, add other metrics i.e. kmś today, passengers today, avg. delays today, lowest max delay today, reported deviations
+            // Alert if incorrect PIDAS/PIDAS not set

@@ -1,0 +1,9 @@
+files:
+  "/opt/elasticbeanstalk/hooks/appdeploy/pre/50npm.sh" :
+    mode: "000775"
+    owner: root
+    group: users
+    content: |
+      export NPM_CONFIG_LOGLEVEL=error
+      export NODE_PATH=`ls -td /opt/elasticbeanstalk/node-install/node-* | head -1`/bin
+      export NPM_CONFIG_UNSAFE_PERM=true

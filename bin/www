@@ -1,0 +1,2257 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+"use strict";
+
+var app = require('../app');
+var http = require('http');
+var util = require('util');
+var os = require("os");
+var logger = require('./logger');
+var log = logger().getLogger('wwww');
+var fs = require('fs');
+var path = require('path');
+var redis = require("redis");
+var toArray = require('stream-to-array');
+var flatten = require("flat");
+var unflatten = require('flat').unflatten;
+var rKeys = require('./rediskeys.js'),
+    rk = rKeys.rk, isMaster = rKeys.isMaster, setMaster = rKeys.setMaster;
+
+
+// replace the methods for any clients
+require("redis-scanstreams")(redis);
+
+//Get port from environment and store in Express.
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+//Create HTTP server.
+var server = http.createServer(app);
+var io = require('socket.io')(server);
+
+// "middleware for socketio. If this function return "next()" connection is established. if it returns next(new Error...) connection is refused
+var socketAuth = function socketAuth(socket, next) {
+    //console.log("socket: " + socket + " next: " + next);
+    //redisStore.set(rk(rKeys.users), socket.id, function (err, reply) {
+    //    //console.log("User authorising. Storing socket.id: " + err + " " + reply);
+    //});
+    return next();
+    //return next(new Error('Nothing Defined'));
+};
+io.use(socketAuth);
+
+// some vars to keep track of Redis
+var redisSubscriberClient; // used to subscribe to Redis to receive events from CTS and APC
+var redisStore; // store CTS data into Redis as hash and sorted set
+var pub;  // only used for testing
+var redisHeatmapClient; // not implemented
+
+// Keep last data received from Redis so they can be sent to new connecting clients
+var passengerTable = [];
+
+// Infrastructure data, sent to clients on connect
+//var stationTable = [];  // gps coordinates etc of the stations
+var berthTable = [];  // gps coordinates etc for each berth ("sporfelt")
+var trackswitchTable = []; // gps coordinates etc for each track switch ("sporveksel")
+var endberthTable = []; // gps coordinates etc for "special" berths at the end of the tracks
+
+var stationObject = {}; // same as stationTable, but "assosiative array", i.e. object with properties. Easier handling for parseAndSendCTS-function
+var tracksObject = {}; // keep track of "Centrumsbanen", "Kolsåsbanen" etc
+var infraObject = {}; // one property for each berth, switch etc holding the number of the train that last passed this element
+
+// Live data from passenger counting and train signalling system
+var APCObject = {}; // Automated Passenger Counting, i.e. physical id for each 3-car train set, and other data from the onboard PIDAS-system
+var ctsLiveObject = {}; // train berth, ... live data from cts
+var ctstrainChangeSuspectObject = {}; // trains we believe have changed their logical number
+//var ctsHistoryList = []; // identical to live object but with historical data
+var ctsGhosts = {}; // some times we receive "noise" or incorrect data from the signalling system, referred to as "ghost trains"
+var eventID = 0;
+
+var ctsOKObject = {}; // for debug all berths that we have managed to match agains list from InfrastrukturEnheten
+var destinationObject = {}; // for debug, all destinations received from the trains
+
+var sumPerLine = [];
+var sumPerStation = [];
+var sumPerOwnModule = [];
+
+var numberOfUsers = 0;
+var maxCTS = 5000; // max number of cts events to track in Redis
+var maxRead = 200;
+
+// small helpers
+function MyIsNaN(p) {
+    //var test = typeof p;
+    //if (typeof p === "number")
+    //  console.log ("MyIsNaN- p: " + p + " typeof p: " + test);
+    return typeof p !== "number" || Number.isNaN(p);
+} // MyIsNaN
+
+function MyIsNumber(p) {
+    var test = typeof p;
+    if (typeof p !== "number")
+        console.log("MyIsNumber- p: " + p + " typeof p: " + test);
+    return typeof p === "number" && !Number.isNaN(p);
+}; // MyisNumber
+// end small helpers
+
+// Read data about all CTS positions and stations
+var ReadMetroInfrastructure = function () {
+    var fileContents = fs.readFileSync(path.join(__dirname, 'sporfelt.csv'));
+    var fileLines = fileContents.toString().split('\n');
+    var track = null;
+    var tmpTracksObject = {}; // "associative" array containing Centrumsbanen[178], Kolsasbaanen194], ...
+    var tmpInfraTable = []; // all elements in infrastructure, i.e. stations, track switches, berths, .
+    var tmpStationTable = [];
+    var i = 0;
+
+    //Sporfeltkode	Sporfeltnavn	Banekode	Banenavn	Retning	NesteSporfeltkode	StartposisjonBreddegrad	StartposisjonLengdegrad
+    //SluttposisjonBreddegrad	SluttposisjonLengdegrad	MeterFraNullpunkt	Sporfeltstypekode	Sporfeltstypenavn
+    //KildekodeCTSBERTH	MeterLengde	Plattformkode	Stasjonskode	Stasjonsnavn	PlattformposisjonBreddegrad	PlattformposisjonLengdegrad PIDAS
+    for (i = 1; i < fileLines.length; i++) { //start from 1 to skip header row
+        var items = fileLines[i].toString().split(';');
+        var infraObj = {
+            itemCode: items[0], // C0231T
+            itemName: items[1], // C-Spor3
+            trackCode: items[2], // M
+            trackName: items[3], // Majorstuen driftsområde
+            trackDirectionName: items[4], // Østover
+            trackDirectionCode: 0,  // calculated below
+            nextitemCode: items[5], // K635
+            Startlat: parseFloat(items[6], 10), // 59.928913
+            Startlng: parseFloat(items[7], 10), // 10.649478
+            Stoplat: parseFloat(items[8], 10), // ...
+            Stoplng: parseFloat(items[9], 10), // ...
+            MetersFromZero: parseFloat(items[10], 10), // 3291.8950, meters from Nationaltheatret station
+            itemtypeCode: items[11], // F(elt), E(nde), V(eksel)
+            itemtypeName: items[12], // O1424W
+            sourceCTSBERTH: items[13], // K655, name used by the signalling system
+            meterLength: parseFloat(items[14], 10), // 202.7920, lenght of this Sporfelt
+            platformCode: items[15], // AMM2, NULL if not station
+            stationCode: items[16], // AMM, null if not station
+            stationName: items[17], // Ammerud
+            platformlat: parseFloat(items[18], 10), // lat
+            platformlng: parseFloat(items[19], 10), // lng
+            CurrentStationID: parseInt(items[20], 10), // PIDAS ID
+            TrainNumber: 0 // The train that was last passing onto this infrastructure object
+        };
+        infraObj.trackDirectionCode = infraObj.trackDirectionName === "Vestover" ? 1 : -1; // easier visualization code.. see driver.jade
+        infraObj.Lines = calculateLines(infraObj);
+        tmpInfraTable.push(infraObj);
+        infraObject[infraObj.itemCode] = infraObj; //infraObj; // during operation the value will be set to the number of the train that passed most recently
+
+        // Build tmp object that has a property for each trackname. The property holds an array of all berth elements for that trackname
+        if (infraObj.trackName === null || infraObj.trackName === undefined || infraObj.trackName === "NULL")
+            break;
+
+        var tn = getTrackName(infraObj.trackName); // remove spaces, "/", æøå from .trackname
+        if (!tmpTracksObject[tn]) {
+            tmpTracksObject[tn] = [];
+        }
+        tmpTracksObject[tn].push(infraObj);
+    } // for-loop
+
+    // Finalize bulding global tracksObject
+    // split east and west, sort west descending, east ascending, remove items without sourceCTSBERTH/MetersFromZero/lat/lng,
+    // add the arrays together and then we have a track that can be drawn from west to east
+    for (track in tmpTracksObject) {
+        var west = tmpTracksObject[track].filter(function (obj) {
+                return obj.trackDirectionName === "Vestover" && obj.sourceCTSBERTH !== "NULL" && obj.sourceCTSBERTH && MyIsNumber(parseFloat(obj.MetersFromZero)) &&
+                    MyIsNumber(parseFloat(obj.Startlat)) && MyIsNumber(parseFloat(obj.Startlng)) &&
+                    obj.itemtypeCode !== "V";
+            }) // exclude the track switches, they seem to mess up the track paths
+            // Descending
+            .sort(function (a, b) {
+                return b.MetersFromZero - a.MetersFromZero;
+            });
+
+        var east = tmpTracksObject[track].filter(function (obj) {
+                return obj.trackDirectionName !== "Vestover" && obj.sourceCTSBERTH !== "NULL" && obj.sourceCTSBERTH && MyIsNumber(parseFloat(obj.MetersFromZero)) &&
+                    MyIsNumber(parseFloat(obj.Startlat)) && MyIsNumber(parseFloat(obj.Startlng)) &&
+                    obj.itemtypeCode !== "V";
+            }) // exclude the track switches...
+            // Ascending
+            .sort(function (a, b) {
+                return a.MetersFromZero - b.MetersFromZero;
+            });
+
+        // Finally, add tracks to the global tracksObject
+        if (west.length > 0 || east.length > 0) {
+            tracksObject[track + "-west"] = west;
+            tracksObject[track + "-east"] = east;
+        }
+    }
+    // split data into the various elements (stations, berths, trackswitches...)
+    tmpStationTable = tmpInfraTable
+        .filter(function (obj) {
+            return obj && obj.stationName && obj.stationName !== "NULL" && MyIsNumber(parseFloat(obj.platformlat)) && MyIsNumber(parseFloat(obj.platformlng));
+        })
+        .sort(function (a, b) {
+            return a.CurrentStationID - b.CurrentStationID;
+        });
+    for (i = 0; i < tmpStationTable.length; i++) {
+        stationObject[tmpStationTable[i].platformCode] = tmpStationTable[i];
+        // sanity check
+        if (!tmpStationTable[i].platformlat || !tmpStationTable[i].platformlng || tmpStationTable[i].platformlat > 60 || tmpStationTable[i].platformlat < 59 || tmpStationTable[i].platformlng > 11 || tmpStationTable[i].platformlng < 10)
+            console.log("Index: " + i + " lat: " + tmpStationTable[i].platformlat + " long: " + tmpStationTable[i].platformlng);
+    }
+    trackswitchTable = tmpInfraTable.filter(function (obj) {
+        return obj && obj.itemtypeCode === "V" && obj.sourceCTSBERTH && obj.sourceCTSBERTH !== "NULL" && MyIsNumber(parseFloat(obj.Startlat)) && MyIsNumber(parseFloat(obj.Startlng));
+    });
+    berthTable = tmpInfraTable.filter(function (obj) {
+        return obj && obj.itemtypeCode === "F" && obj.sourceCTSBERTH && obj.sourceCTSBERTH !== "NULL" && MyIsNumber(parseFloat(obj.Startlat)) && MyIsNumber(parseFloat(obj.Startlng));
+    });
+    endberthTable = tmpInfraTable.filter(function (obj) {
+        return obj && obj.itemtypeCode === "E" && MyIsNumber(parseFloat(obj.Startlat)) && MyIsNumber(parseFloat(obj.Startlng));
+    }); // todo: sourceCTSBERTH is "", this is an error in the master data
+}; // ReadMetroInfrastructure ()
+
+function getTrackName(trackname) {
+    return trackname.split(' ').join('_').replace("/", "_").replace("å", "a").replace("ø", "o").replace("æ", "ae");
+} // getTrackName()
+
+var calculateLines = function (infraObj) {
+    switch (infraObj.trackCode) {
+        case "H":
+            return [1];
+        case "R": // Røabanen
+        case "F": // Furusetbanen
+            return [2];
+        case "K":
+            return [3];
+        case "L": // Lambertseterbanen
+            return [4, 5];
+        case "S":
+            return [5];
+        case "G":
+            if (infraObj.MetersFromZero < 5500) // Grorudbanen, stations Carl Berner and Hasle are unique to line 5
+                return [5];  //
+            return [4, 5];
+        case "D": // Lørenbanen
+            return [4];
+        case "C":
+            return [1, 2, 3, 4, 5]; // todo: add check to differentiate "fellestunnelen" which serves all lines from the parts of centrumsbanen only serving line 4 and 5
+        case "Ø":
+            if (infraObj.MetersFromZero > 6600)
+                return [3];
+            return [1, 2, 3, 4]; // around Brynseng
+        default:
+            return [1, 2, 3, 4, 5]; // not able to determine line, could be any
+    } // case
+}; // calculateLines ()
+
+ReadMetroInfrastructure();
+
+// Setup redis
+// todo: add support for other dev environments...
+// todo: add error handling for createClient...
+if (os.platform() === "darwin") { // running locally on Mac
+    redisSubscriberClient = redis.createClient();
+    pub = redis.createClient(); // for testing only
+    redisStore = redis.createClient();
+    maxCTS = 5000;
+}
+else {  // We are on AWS
+    //redisSubscriberClient = redis.createClient(6379, "web-app-redis.bbfmv1.0001.use1.cache.amazonaws.com");
+    redisSubscriberClient = redis.createClient(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+    pub = redis.createClient(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+    redisStore = redis.createClient(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+    maxCTS = 300000;
+}
+
+// send server time to all clients every second
+var emitTime = setInterval(function () {
+    io.to("realtime").emit("timetick", Date.now());
+}, 1000 * 1);  // Send server time to all connected clients every second
+
+var trainsInTraffic = setInterval(function () {
+    io.to("realtime").emit("trainsintraffic", countTrainsInTraffic());
+}, 1000*20);
+
+function countTrainsInTraffic() {
+    let count = 0; let timeTrain = 0, timeDiff = 0;
+    const timeNow = Date.now();
+    for (var train in ctsLiveObject) {
+        if (!ctsLiveObject[train][0].hasOwnProperty("values")) {
+            continue;
+        }
+        timeTrain = Date.parse(ctsLiveObject[train][0].values.time_stamp);
+        timeDiff = timeNow - timeTrain;
+        //console.log("timeDiff: " + timeDiff);
+        if (timeDiff > 60 * 5 * 1000) { // count all trains that have been active last 5 minutes
+            console.log("timeDiff: " + timeDiff);
+            continue;
+        }
+        count += 1;
+    }
+    return count;
+} // countTrainsInTraffic()
+
+//
+// CLEANERS
+// remove trains that we have not heard from, free up store (redis) memory etc
+
+// trains change their number. Since CTS do not give us these changes we will just assume that
+// trains that have not had any movement for some time are no longer valid in we alert the clients
+var removeTrains = setInterval(function () {
+    for (var train in ctsLiveObject) {
+        if (Date.now() - Date.parse(ctsLiveObject[train][0].values.time_stamp) > 6 * 60 * 60 * 1000) { // no news from train in 6 hrs or more?
+            io.to("realtime").emit("removetrain", train);
+            delete ctsLiveObject[train];
+        }
+    }
+}, 60 * 60 * 1000); // check every hour
+
+var redisFreeOldData = setInterval(function () {
+        if (!isMaster()) {
+            return;
+        }
+        redisStore.zcount(rk(rKeys.cts_timestamp), "-inf", "+inf", function (err, count) {
+        if (err) {
+            console.log("Redis count error: " + err);
+        }
+        else if (count > maxCTS) {
+            // get all events from the oldes (starting at index 0) and up to count-maxCTS
+            redisStore.zrange(rk(rKeys.cts_timestamp), 0, count - maxCTS, function (err, ctsEventsToDelete) { // get all events to delete
+                var i = 0;
+                var multi = redisStore.multi();
+
+                //console.log ("ctsEventsToDelete: " + ctsEventsToDelete);
+                multi.hdel(rk(rKeys.cts), ctsEventsToDelete);
+                multi.zrem(rk(rKeys.cts_timestamp), ctsEventsToDelete);
+                multi.smembers(rk(rKeys.cts_logical_nr_keys));
+                multi.exec(function (err, replies) {
+                    var trainKeys = [];
+                    if (err) {
+                        console.error("Unable to delete: " + err + " Reply: " + reply);
+                        return;
+                    }
+                    trainKeys = replies[2];
+                    for (i = 0; i < trainKeys.length; i++) {
+                        multi.zrem(trainKeys[i], ctsEventsToDelete); // ... and remove the events we want to
+                    }
+                    multi.exec(function (err, replies) {
+                        if (err) {
+                            console.error("Unable to delete: " + err + " Reply: " + reply);
+                            return;
+                        }
+                        //console.log (replies.toString());
+                    });
+                });
+            }); // zrange
+        } // count > maxCTS
+    }); // zcount
+}, 1000 * 3); // check every 3rd second
+
+//
+// CLIENT COMMUNICATIONS
+// Handle communication with clients
+// Note: socket.emit => send data to the specific client that sent data to or connected to server _only
+// io.emit => send data to _all connected clients
+
+io.on('connection', function (socket) {
+    //console.log('a user connected');
+    socket.emit("id", socket.id);
+    socket.emit("ip", socket.request.connection.remoteAddress);
+    socket.join("realtime");
+    socket.room = "realtime";
+    socket.mode = "realtime";
+
+    ++numberOfUsers;
+
+    socket.emit("initinfrastructure", {
+        "stations": stationObject,
+        "berths": berthTable,
+        "trackswitches": trackswitchTable,
+        "endberths": endberthTable,
+        "tracks": tracksObject,
+        "trains": APCObject // note: this is only trains where we know their serial number (i.e. "OwnModuleID")
+    });
+
+    if (passengerTable.length > 0) {
+        socket.emit("pax", passengerTable);
+    }
+    if (sumPerLine.length > 0) {
+        socket.emit("LineAggregate", sumPerLine);
+    }
+    if (sumPerStation.length > 0) {
+        socket.emit("StationAggregate", sumPerStation);
+    }
+    if (sumPerOwnModule.length > 0) {
+        socket.emit("OwnModuleAggregate", sumPerOwnModule);
+    }
+    socket.emit('LastPaxUpdateTime', lastPaxUpdateTimeUnix);
+
+    socket.on('disconnect', function () {
+        //console.log('user disconnected');
+    });
+
+    socket.on('chat message', function (msg) {
+        io.emit('chat message', msg);
+        var cmdArray = msg.split(" ");
+        var tmpSocket = null;
+        var n1 = null; // optional numeric command-line argument
+        var n2 = null; // optional numeric command-line argument
+        var socketid = null;
+        var toSocketID = null;
+        var i = 0;
+        var multi = null;
+
+        if (!msg)
+            return; // received empty string
+
+        cmdArray[0] = cmdArray[0].toLowerCase();
+        if (cmdArray[0] === "?" || cmdArray[0] === "help") {
+            socket.emit("help", cmdDictionary); // will be true if successfull
+        }
+
+        switch (cmdArray[0]) {
+            case "sub":
+                // just for testing and verifying connection
+                // if you'd like to select database 3, instead of 0 (default), call
+                // client.select(3, function() { /* ... */ });
+                redisSubscriberClient.subscribe("kinesisStationsChannel");
+                redisSubscriberClient.subscribe("InfrastructureStationsChannel");
+                redisSubscriberClient.on("error", function (err) {
+                    console.log("Error " + err);
+                });
+                break;
+            case "flushall":
+                if (cmdArray.length !== 2 || cmdArray[1] !== "Poker")
+                    return;
+                redisStore.flushall(function (err, succeeded) {
+                    socket.emit("chat message", "Redis says: " + err + " " + succeeded); // will be true if successfull
+                });
+                break;
+            case "master":
+                if (cmdArray.length !== 2 || cmdArray[1] !== "Poker") {
+                    // only return state
+                    socket.emit('chat message', "OsloMetro - master state is: " + isMaster());
+                    return;
+                }
+                setMaster(!isMaster()); // Toggle master state
+                socket.emit('chat message', "OsloMetro - New master state: " + isMaster());
+                break;
+            case "cts":
+                if (cmdArray.length === 1 || !MyIsNumber(parseInt(cmdArray[1])))
+                    n1 = eventID; // just retrieve the newest cts-record
+                else
+                    n1 = parseInt(cmdArray[1]);
+
+                redisStore.hget(rk(rKeys.cts), n1, function (err, object) { // todo implement eventID rather than just "1"
+                    var flatmsgObject = JSON.parse(object);
+                    var msgObject = unflatten(flatmsgObject);
+                    socket.emit('chat message', "Redis says: " + err + " " + JSON.stringify(msgObject, undefined, 2));
+                });
+                break;
+            case "eventID":
+                redisStore.get('CTS_EVENT_ID', function (err, eID) {
+                    if (err) {
+                        console.log("redis error trying to get key CTS_EVENT_ID: " + err);
+                        return;
+                    }
+                    socket.emit("chat message", "CTS_EVENT_ID: " + eID + " eventID: " + eventID);
+                });
+                break;
+            case "join":
+                if (cmdArray.length !== 2 || !io.sockets.connected[cmdArray[1]]) {
+                    socket.emit("help", {"join": cmdDictionary.join});
+                    return;
+                }
+                socketid = cmdArray[1];
+
+                socket.leave(socket.room);
+                socket.join(socketid);
+                socket.room = socketid;
+                socket.joined = true;
+                io.to(socketid).emit("chat message", socket.id + " joined to client " + socketid);
+                break;
+            case "unjoin":
+                // not implemented
+                break;
+            case "aggregate":
+                handleAggregateSend (socket, cmdArray); // true = split events per train
+                break;
+            case "history":
+                handleHistoryPlayback (socket, cmdArray); // false = do not split events per train, i.e. playback events as they occured and not sorted per train
+                break;
+            case "cancel":
+                if (!socket.joined) {
+                    socket.emit("cancel", {"cancel": cmdDictionary.cancel});
+                    return;
+                }
+                toSocketID = socket.room;
+                tmpSocket = io.sockets.connected[toSocketID];
+                if (!toSocketID || !tmpSocket) {
+                    socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+                    return;
+                }
+
+                if (tmpSocket.bCancelledByUser) {
+                    socket.emit("chat message", "Already cancelling history playback");
+                    return;
+                }
+                if (tmpSocket.mode === "history") { // playBack is ongoing
+                    tmpSocket.bCancelledByUser = true; // playback() will read this state, stop playback and set mode to "ready"
+                    socket.emit("chat message", "Cancelling history playback...");
+                }
+                break;
+            case "realtime": //todo: add proper command interpreter, add support for help, enter "admin" mode? float on map?
+                if (!socket.joined) {
+                    socket.emit("help", {"realtime": cmdDictionary.realtime});
+                    return;
+                }
+                toSocketID = socket.room;
+                tmpSocket = io.sockets.connected[toSocketID];
+                if (!toSocketID|| !tmpSocket) {
+                    socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+                    return;
+                }
+                if (tmpSocket.room === "realtime") {
+                    socket.emit("chat message", "Already processing realtime");
+                    return;
+                }
+
+                if (tmpSocket.mode === "history") { // playBack is ongoing
+                    socket.emit("chat message", "Cancel ongoing playback/operation first, then issue new realtime command.");
+                    return;
+                }
+                if (tmpSocket.mode !== "ready") {
+                    console.log("received realtime. tmp.socket.mode: " + tmpSocket.mode);
+                }
+
+                if (tmpSocket.room && tmpSocket.room !== "realtime") {  // remember: tmpSocket is the socket of the map-client, not current (cmd) client
+                    tmpSocket.leave(tmpSocket.room);
+                }
+
+                tmpSocket.join("realtime");
+                tmpSocket.room = "realtime";
+                tmpSocket.mode = "realtime";
+                socket.to(toSocketID).emit("realtime", "start");
+                break;
+            case "trains":
+                redisStore.smembers(rk(rKeys.cts_logical_nr_keys), function (err, cts_logical_nr_Keys) { // get all logical train keys
+                    if (err) {
+                        console.log("smembers error: " + err);
+                    }
+                    else {
+                        socket.emit('trains', cts_logical_nr_Keys);
+                    }
+                });
+                break;
+            case "range":
+                multi = redisStore.multi();
+                multi.zrange(rk(rKeys.cts_timestamp), 0, 0, "withscores");
+                multi.zrange(rk(rKeys.cts_timestamp), -1, -1, "withscores");
+                multi.exec(function (err, result) {
+                    if (err) {
+                        console.log("Unable to retrieve range. Error: " + err);
+                        return;
+                    }
+                    socket.emit('range', { "startID": result[0][0], "startTime": result[0][1], "stopID": result[1][0], "stopTime": result[1][1] });
+                });
+                break;
+            case "info":
+                socket.emit('chat message', "Redis says: " + JSON.stringify(redisStore.server_info, undefined, 2));
+                break;
+            case "max":
+                if (cmdArray.length === 2 && MyIsNumber(parseInt(cmdArray[1]))) {
+                    socket.emit('chat message', "OsloMetro - max number of records to track in Redis changed. Old max " + maxCTS + " New max: " + cmdArray[1]);
+                    maxCTS = parseInt(cmdArray[1]);
+                }
+                else {
+                    socket.emit('chat message', "OsloMetro - max number of records to track in Redis is: " + maxCTS);
+                }
+                break;
+            case "count":
+                redisStore.zcount(rk(rKeys.cts_timestamp), "-inf", "+inf", function (err, count) {
+                    if (err) {
+                        socket.emit("chat message", "Received Redis error: " + err);
+                        return;
+                    }
+                    socket.emit("chat message", "Number of cts-events stored: " + count);
+                });
+                break;
+            case "sockets":
+                tmpSocket = [];
+                for (var sock in io.sockets.connected) {
+                    var bJoined = io.sockets.connected[sock].joined ? true : false;
+                    tmpSocket.push(io.sockets.connected[sock].id.toString() + " " + io.sockets.connected[sock].room + " Joined: " + bJoined);
+                }
+                socket.emit('socketlist', tmpSocket);
+                break;
+            case "berth":
+                if (!socket.joined) {
+                    socket.emit("help", {"berth": cmdDictionary.berth});
+                    return;
+                }
+                toSocketID = socket.room;
+                tmpSocket = io.sockets.connected[toSocketID];
+                if (!toSocketID|| !tmpSocket) {
+                    socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+                    return;
+                }
+                socket.to(toSocketID).emit("okberths", ctsOKObject);
+                //io.emit('okberths', ctsOKObject);
+                break;
+            case "blink":
+                if (!socket.joined) {
+                    socket.emit("help", {"blink": cmdDictionary.blink});
+                    return;
+                }
+                toSocketID = socket.room;
+                tmpSocket = io.sockets.connected[toSocketID];
+                if (!toSocketID|| !tmpSocket) {
+                    socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+                    return;
+                }
+                socket.to(toSocketID).emit("blinkalarms", null);
+                //socket.emit('blinkalarms', null);
+                break;
+            case "destination":
+                if (!socket.joined) {
+                    socket.emit("help", {"destination": cmdDictionary.destination});
+                    return;
+                }
+                toSocketID = socket.room;
+                tmpSocket = io.sockets.connected[toSocketID];
+                if (!toSocketID|| !tmpSocket) {
+                    socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+                    return;
+                }
+                socket.to(toSocketID).emit("destination", null);
+                //io.emit('destination', null);
+                break;
+            case "ghost":
+                // create 3 ghost msgObjects by changing train address to "----" and send to clients
+                // used for testing
+                if (!socket.joined) {
+                    socket.emit("help", {"ghost": cmdDictionary.ghost});
+                    return;
+                }
+                toSocketID = socket.room;
+                tmpSocket = io.sockets.connected[toSocketID];
+                if (!tmpSocket) {
+                    console.error("Internal communication error. Socket not found: " + toSocketID);
+                    return;
+                }
+                for (var train in ctsLiveObject) {
+                    var msgObject = JSON.parse(JSON.stringify(ctsLiveObject[train][0]));
+                    msgObject.values.address = "----";
+                    parseAndSendCTS(toSocketID, "cts", msgObject);
+                    ++i;
+                    if (i == 3)
+                        return;
+                }
+                break;
+        }
+    }); // chat message
+
+    //
+    // Handle various requests from clients
+    //
+// station, berth, trackswitch not implemented in clients for now
+    socket.on("stationsrequest", function (msg, fn) { // msg; {}
+        // Server lacking data?
+        if (!stationObject || Object.keys(stationObject).length === 0) {
+            fn(null);
+            return;
+        }
+        // send data
+        fn(stationObject);
+    }); //stationrequest
+
+    socket.on("berthsrequest", function (msg, fn) { // msg; { }
+        // Server lacking data?
+        if (!berthTable || berthTable.length == 0) {
+            fn(null); // todo: add error handling
+            return;
+        }
+        // send data
+        fn(berthTable);
+    }); //berthrequest
+
+    socket.on("trackswitchesrequest", function (msg, fn) { // msg; { }
+        // Server lacking data?
+        if (!trackswitchTable || trackswitchTable.length == 0) {
+            fn(null);
+            return;
+        }
+        // send data
+        fn(trackswitchTable);
+    }); //trackswitchrequest
+
+
+    // send the "tail" of a train, i.e. list of latest berth-passings
+    socket.on("tailrequest", function (msg, fn) { // msg; {trainNo: id, count: noOfBerthsToSend }
+        var n = 0;
+        // Illegal request?
+        if (!msg || !msg.trainNo || !msg.noOfBerths) {
+            fn(null);
+            return;
+        }
+        // Server lacking data?
+        if (!ctsLiveObject || !ctsLiveObject[msg.trainNo]) {
+            fn(null);
+            return;
+        }
+        n = Math.min(ctsLiveObject[msg.trainNo].length, msg.noOfBerths);
+        //var test = ctsLiveObject[msg.trainNo].slice(0,n);
+        fn(ctsLiveObject[msg.trainNo].slice(0, n));
+    }); // tailrequest
+
+    // send "tail" of all trains, i.e. array of lists of berth-passings
+    socket.on("alltailsrequest", function (msg, fn) { // msg; {trainNo: id, maxBerths: max no Of Berths To Send for one train}
+        var i = 0, n = 0;
+        var train = null;
+        var trainsToSend = [];
+        // Illegal request?
+        if (!msg || !msg.maxBerths) {
+            fn(null);
+            return;
+        }
+        // Server lacking data?
+        if (!ctsLiveObject) {
+            fn(null);
+            return;
+        }
+
+        for (train in ctsLiveObject) {
+            n = Math.min(ctsLiveObject[train].length, msg.maxBerths);
+            // trainsToSend is an array of arrays, trainsToSend[i] contains an array of 0..n passings for one train
+            trainsToSend[i++] = ctsLiveObject[train].slice(0, n);
+        }
+        // sort array so that the train with the oldest passing is first
+        // this will allow the client to draw the tails in order, with the newest passings "on top" visible for the user
+        trainsToSend.sort(function (a, b) {
+            return Date.parse(a[0].values.time_stamp) - Date.parse(b[0].values.time_stamp);
+        });
+        fn(trainsToSend);
+    }); // alltailsrequest
+
+    socket.on("ghostrequest", function (msg, fn) { // msg; { }
+        // send data
+        fn(ctsGhosts);
+    }); //ghostrequest
+}); // socket.io
+
+
+var cmdDictionary = {
+    sub: "subscribe to some redis channels. Used to verify that connection to Redis is ok",
+    flushall: "empty the Redis database",
+    master: "get master state. True=this server is pushing data to Redis. Enter password to toggle state",
+    cts: "cts <eventNr>:  Retrieves 1 cts event from Redis. If eventNr is not given the oldes event is returned",
+    join: "join <socket.id>: Connects a console to a map and enable console to send commands to the map",
+    history: "history <fromEvent> <toEvent>.  History is played back into joined map-client",
+    realtime: "sets joined map-client back to normal, i.e. map-client starts receiving realtime events. Any on-going history playback is cancelled",
+    info: "Retrieves information about the Redis database",
+    max: "max <number>. If no number is provided returns the max number of cts-events that will be kept in Redis. If number is provided sets the max number of records to keep",
+    count: "retrieves the number of cts events stored in Redis",
+    berth: "Colors berths that we have not received data from RED and the other berths GREEN. Do <berth> again to reset coloring to normal",
+    blink: "Strong visualization of certain events (i.e. logical train ID chagen). Affected elements will blink. Right-click on element to stop the blinking. Send <blink> again to reset to normal visualization",
+    destination: "Toggle trains display between <trainid> and <destination>",
+    ghost: "create some ghost signals and send to joined map-client for testing",
+    trains: "list all logical train IDs",
+    trains_phys: "list all physical three-car IDs (Note: not yet implemented)",
+    cancel: "Cancel on-going history playback for joined map-client",
+    range: "Returns the first and last eventID we have stored and their associated times",
+    eventID: "Retrieve the CTS_EVENT_ID'key. This key is the ID of the last CTS event we have received. The ID of the next event will be CTS_EVENT_ID+1"
+}; // cmdDictionary
+
+function handleHistoryPlayback (socket, cmdArray) {
+    var tmpSocket = null, toSocketID = null;
+    var trainsArray = [];
+    var startTime = 0, stopTime = 0;
+
+    if (!socket.joined) {
+        // We receive this message from a cmd-client. If the cmd-client is not joined to a map-client, we can not proceed
+        socket.emit("help", {"history": "Clients are not joined. " + cmdDictionary.history});
+        return;
+    }
+    toSocketID = socket.room; // if we are joined, our socket.room attribute contain the socket.id of the joined client
+    tmpSocket = io.sockets.connected[toSocketID];
+    if (!toSocketID || !tmpSocket) {
+        socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        return;
+    }
+
+    if (tmpSocket.mode === "history") {
+        socket.emit("Already playing back history. Cancel ongoing playback first, then issue new history command.");
+        return;
+    }
+
+    if (cmdArray.length >= 2 && MyIsNumber(parseInt(cmdArray[1])))
+        startTime = parseInt(cmdArray[1]);
+    if (cmdArray.length >= 3 && MyIsNumber(parseInt(cmdArray[2])))
+        stopTime = parseInt(cmdArray[2]);
+    // Set default values for start Event and range if proper values not provided by user
+    if (!startTime) { startTime = 0; }
+    if (!stopTime) { stopTime = Date.now(); }
+
+    if (cmdArray.length > 3) // contains logical train ids
+        trainsArray = cmdArray.slice(3, cmdArray.length); // send the train ids as an array to playHistory
+    else
+        trainsArray = null; // no logical train ids given, send null value to playHistory to have all trains played back
+
+    tmpSocket.leave(tmpSocket.room); // leaving "realtime", the client will no longer receive realtime data
+    tmpSocket.room = null;
+    tmpSocket.mode = "history";
+    tmpSocket.bCancelledByUser = false;
+    socket.to(toSocketID).emit("history start", {"from": startTime, "to": stopTime});
+
+    if (trainsArray && Array.isArray(trainsArray)) { // only play back specific trains
+        playSomeTrains (toSocketID, startTime, stopTime, trainsArray);
+    }
+    else {
+        playAllTrains (toSocketID, startTime, stopTime);
+    }
+} // handleHistoryPlayback()
+
+var playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
+    var multi = redisStore.multi();
+    var i;
+
+    // get eventIDs per train within given range
+    for (i = 0; i < trainsArray.length; i++) {
+        multi.zrangebyscore(rk(rKeys.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000);
+    }
+    multi.exec(function (err, replies) {
+        // replies is an array with one record per zrangebyscore call
+        // each record contains the eventIDs for a given train within the range
+        var index;
+        var eventIDs = [];
+        var tmpSocket = io.sockets.connected[toSocketID];
+
+        if (!tmpSocket) {
+            console.log("playSomeTrains - internal error, communications ID not found");
+            socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+            return;
+        }
+
+        if (err) {
+            console.log("Error retrieving history data: " + err);
+            return;
+        }
+
+        // Now, get the actual cts-events (not only their ID)
+        tmpSocket.historyList = [];
+        for (index=0; index < replies.length; index++) {
+            eventIDs = eventIDs.concat(replies[index]);
+            //multi.hmget(ctsStoreKey, eventIDs);
+        }
+        if (eventIDs.length === 0) {
+            socket.emit ("chat message", "no data found!");
+            return;
+        }
+        eventIDs.sort(function(a, b){return a-b}); //.filter(function(e) { return e === 0 || e; })); //.map(function (e) { return parseInt(e); }));
+
+        redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) { // get lists for all trains
+            var flatmsgObject = null, msgObject = null;
+            var eventCTSList = [];
+            var j = 0, k = 0;
+            var currentCTS = null;
+            if (err) {
+                console.err("playSomeTrains - unable to retrieve hash per train: " + err);
+                return;
+            }
+            for (j=0; j < ctsEvents.length; j++) {
+                currentCTS = ctsEvents[j];
+                if (!currentCTS) {
+                    console.error("playSomeTrains - unexpected null value in event data at index: " + j);
+                    continue;
+                }
+                flatmsgObject = JSON.parse(currentCTS);
+                msgObject = unflatten(flatmsgObject);
+                tmpSocket.historyList.push(msgObject);
+            }
+            console.log("playSome tmpSocket.historyList.length: " + tmpSocket.historyList.length);
+            playBackEvent (toSocketID, "cts"); // play back event list for all trains
+        });
+    }); // exec zrangebyscore get all eventIDs within range
+}; // playSomeTrains()
+
+var playAllTrains = function (toSocketID, startTime, stopTime) {
+    var flatmsgObject = null, msgObject = null;
+    var eventIDs = null;
+    redisStore.zrangebyscore(rk(rKeys.cts_timestamp), startTime, stopTime, function (err, reply) {
+        if (err) {
+            console.log("playAllTrains - Redis count error: " + err);
+            return;
+        }
+        eventIDs = reply;
+        //console.log ("playAllTrains - eventIDs: " + eventIDs.toString());
+        if (!eventIDs) {
+            console.log("playAllTrains - unable to retrieve cts events");
+            return;
+        }
+        redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) {
+            var tmpSocket = null;
+            var trainObj = {};
+            var prop = null;
+            var i = 0;
+            if (err) {
+                console.log("playAllTrains - Redis could not retrieve historical data: " + err);
+                return;
+            }
+            if (!Array.isArray(ctsEvents)) {
+                console.log("playAllTrains - Redis request did not return valid response. Expected array: " + ctsEvents);
+                return;
+            }
+
+            tmpSocket = io.sockets.connected[toSocketID];
+            if (!tmpSocket) {
+                console.error("playAllTrains - Internal communications error. Connection lost: " + toSocketID);
+                return;
+            }
+            tmpSocket.historyList = [];
+            for (i = 0; i < ctsEvents.length; i++) {
+                flatmsgObject = JSON.parse(ctsEvents[i]);
+                msgObject = unflatten(flatmsgObject);
+                tmpSocket.historyList.push(msgObject);
+            }
+            console.log("playAll tmpSocket.historyList.length: " + tmpSocket.historyList.length);
+            playBackEvent(toSocketID, "cts");
+        }); // redis hmget-callback
+    }); // redis zrange-callback
+}; //playAllTrains()
+
+var playbackSpeed = 4;
+
+function playBackEvent (toSocketID, channel) {
+    var currTimeStamp = 0;
+    var nextTimeStamp = 0;
+    var historyList = null;
+    var tmpSocket = io.sockets.connected[toSocketID];
+    if (!tmpSocket) {
+        console.error("playBack - Internal communications error, invalid toSocketID " + toSocketID);
+        return;
+    }
+    if (tmpSocket.bCancelledByUser) { // We received "cancel" from user
+        tmpSocket.historyList = [];
+        tmpSocket.mode = "ready";  // ready for another history playback or to switch to realtime
+        tmpSocket.bCancelledByUser = false;
+        io.to(toSocketID).emit("history stop", "cancelled by user. Time: " + Date.now());
+        return;
+    }
+
+    if (!tmpSocket.historyList || !Array.isArray(tmpSocket.historyList)) { // tmpSocket.historyList
+        console.error("playBack - Internal error, historyList not found.");
+        return;
+    }
+
+    if (tmpSocket.historyList.length === 0) {
+        console.error("playback -- out of range");
+        return;
+    }
+
+    if (!tmpSocket.historyList[0]) {
+        console.error("playback -- empty element in historyList");
+        return;
+    }
+    // todo: make general by replacing parseAndSend with a function parameter and providing functions for currTime and nextTime below
+    parseAndSendCTShistory(toSocketID, channel, tmpSocket.historyList[0]); // make version that do not update ctsLive etc
+
+    if (tmpSocket.historyList.length === 1) { // did the last one, set states and cleanup
+        //console.log("time: " + new Date().getTime());
+        tmpSocket.mode = "ready";  // ready for another history playback or to switch to realtime
+        tmpSocket.historyList.shift(); // free the last element
+        if (tmpSocket.historyList.length !== 0) {
+            console.log ("history not free")
+        }
+        io.to(toSocketID).emit("history stop", "Finished at: " + Date.now());
+        return;
+    }
+
+    if (!tmpSocket.historyList[0].values) {
+        console.err("playBackEvent - missing values (0)");
+        return;
+    }
+    if (!tmpSocket.historyList[1].values) {
+        console.err("playBackEvent - missing values (1)");
+        return;
+    }
+    currTimeStamp = new Date(tmpSocket.historyList[0].values.time_stamp).getTime();
+    nextTimeStamp = new Date(tmpSocket.historyList[1].values.time_stamp).getTime();
+    tmpSocket.historyList.shift(); // remove current element
+    io.to(toSocketID).emit("timetick", currTimeStamp);
+
+    // wait until it is time to play back the next event
+    setTimeout(playBackEvent, (nextTimeStamp - currTimeStamp)/playbackSpeed, toSocketID, channel);
+} // playBackEvent()
+
+function handleAggregateSend (socket, cmdArray) {
+    var tmpSocket = null, toSocketID = null;
+    var trainsArray = [];
+    var startTime = 0, stopTime = 0;
+
+    if (!socket.joined) {
+        // We receive this message from a cmd-client. If the cmd-client is not joined to a map-client, we can not proceed
+        socket.emit("help", {"history": "Clients are not joined. " + cmdDictionary.history});
+        return;
+    }
+    toSocketID = socket.room; // if we are joined, our socket.room attribute contain the socket.id of the joined client
+    tmpSocket = io.sockets.connected[toSocketID];
+    if (!toSocketID || !tmpSocket) {
+        socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        return;
+    }
+
+    if (cmdArray.length >= 2 && MyIsNumber(parseInt(cmdArray[1])))
+        startTime = parseInt(cmdArray[1]);
+    if (cmdArray.length >= 3 && MyIsNumber(parseInt(cmdArray[2])))
+        stopTime = parseInt(cmdArray[2]);
+    // Set default values for start Event and range if proper values not provided by user
+    if (!startTime) { startTime = 0; }
+    if (!stopTime) { stopTime = Date.now(); }
+
+    if (cmdArray.length > 3) // contains logical train ids
+        trainsArray = cmdArray.slice(3, cmdArray.length); // send the train ids as an array to playHistory
+    else
+        trainsArray = null; // no logical train ids given, send null value to playHistory to have all trains played back
+
+    if (trainsArray && Array.isArray(trainsArray)) { // only play back specific trains
+        aggSomeTrains (toSocketID, startTime, stopTime, trainsArray);
+    }
+    else {
+        aggAllTrains (toSocketID, startTime, stopTime);
+    }
+} // handleAggregateSend ()
+
+var aggSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
+    var multi = redisStore.multi();
+    var i;
+
+    // get eventIDs per train within given range
+    for (i = 0; i < trainsArray.length; i++) {
+        multi.zrangebyscore(rk(rKeys.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000/trainsArray.length);
+    }
+    multi.exec(function (err, replies) {
+        // replies is an array with one record per zrangebyscore call
+        // each record contains the eventIDs for a given train within the range
+        var index;
+        var eventIDs = [];
+        var tmpSocket = io.sockets.connected[toSocketID];
+
+        if (!tmpSocket) {
+            console.log("playSomeTrains - internal error, communications ID not found");
+            socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+            return;
+        }
+
+        if (err) {
+            console.log("Error retrieving history data: " + err);
+            return;
+        }
+
+        // Now, get the actual cts-events (not only their ID)
+        //tmpSocket.historyList = new Array(replies.length);
+        for (index = 0; index < replies.length; index++) {
+            eventIDs = replies[index];
+            //retrieveandplay(toSocketID, rk(rKeys.cts), eventIDs, playbackFn);
+            redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) {
+                var flatmsgObject = null, msgObject = null;
+                var eventCTSList = [];
+                var j = 0;
+                if (err) {
+                    console.error("playSomeTrains - unable to retrieve hash per train: " + err);
+                    return;
+                }
+                for (j = 0; j < ctsEvents.length; j++) {
+                    if (!ctsEvents[j]) {
+                        console.error("playSomeTrains - unexpected null value in event data at index: " + i + " " + ctsEvents[i]);
+                        continue;
+                    }
+                    flatmsgObject = JSON.parse(ctsEvents[j]);
+                    msgObject = unflatten(flatmsgObject);
+                    eventCTSList.push(msgObject);
+                }
+                console.log("aggSome eventCTSList.length: " + eventCTSList.length);
+                aggregateAndSendEvents(toSocketID, "cts", eventCTSList); // play back event list for one trai
+            }); //exec get and send event-hashes per train
+        } // iterate all trains
+    }); // exec zrangebyscore get all eventIDs within range
+}; // aggSomeTrains()
+
+var aggAllTrains = function (toSocketID, startTime, stopTime, sendbackFn) {
+    var flatmsgObject = null, msgObject = null;
+    var eventChunkTimeRange = 1000;
+    var i;
+
+    toArray(redisStore.scan({pattern: "*", count: 100}), function(err, arr) {
+        if (err)
+            throw err;
+
+        console.log("scan: " + arr);
+    });
+    toArray(redisStore.zscan(rk(rKeys.cts_timestamp),{pattern: "*", count: 100}), function(err, arr) {
+        if (err)
+            throw err;
+
+        console.log("zscan: " + arr);
+    });
+
+    redisStore.zrangebyscore(rk(rKeys.cts_timestamp), startTime, stopTime, "limit", 0, 1000, function (err, eventIDs) {
+        if (err) {
+            console.log("playAllTrains - Redis count error: " + err);
+            return;
+        }
+        //console.log ("playAllTrains - eventIDs: " + eventIDs.toString());
+        if (!eventIDs) {
+            console.log("playAllTrains - unable to retrieve cts events");
+            return;
+        }
+        redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) {
+            var msgObject = null, flatmsgObject = null;
+            var tmpSocket = null;
+            var trainObj = {};
+            var prop = null;
+            var i = 0;
+            if (err) {
+                console.log("playAllTrains - Redis could not retrieve historical data: " + err);
+                return;
+            }
+            if (!Array.isArray(ctsEvents)) {
+                console.log("playAllTrains - Redis request did not return valid response. Expected array: " + ctsEvents);
+                return;
+            }
+
+            tmpSocket = io.sockets.connected[toSocketID];
+            if (!tmpSocket) {
+                console.error("playAllTrains - Internal communications error. Connection lost: " + toSocketID);
+                return;
+            }
+
+            for (i = 0; i < ctsEvents.length; i++) {
+                flatmsgObject = JSON.parse(ctsEvents[i]);
+                msgObject = unflatten(flatmsgObject);
+                if (!trainObj.hasOwnProperty(msgObject.values.address)) {
+                    trainObj[msgObject.values.address] = [];
+                }
+                trainObj[msgObject.values.address].push(msgObject);
+            }
+            for (prop in trainObj) {
+                aggregateAndSendEvents(toSocketID, "cts", trainObj[prop]);
+                console.log("aggAll length trainObj[" + prop + "] : " + trainObj[prop].length + " test: " + Array.isArray(trainObj[prop]));
+            }
+        }); // redis hmget-callback
+    }); // redis zrange-callback
+}; //aggAllTrains()
+
+function aggregateAndSendEvents (toSocketID, channel, eventArray) {
+    var tmpSocket = io.sockets.connected[toSocketID];
+    var eventObj = {}, currentEvent = null, eventList = [];
+    var Name = null;
+
+    if (!tmpSocket) {
+        console.error("aggregateEvents - Internal communications error, invalid toSocketID " + toSocketID);
+        return;
+    }
+    if (!eventArray || !Array.isArray(eventArray)) {
+        console.error("aggregateEvents - Internal error, historyList not found.");
+        return;
+    }
+
+    if (eventArray.length === 0) {
+        console.error("aggregateEvents -- out of range");
+        return;
+    }
+    // reduce history list to array of only unique berths, sorted in the order they are encountered and with a "Count" value equal to the number of times the berth occur in historyList
+    for (var i = 0; i < eventArray.length; i++) {
+        currentEvent = eventArray[i];
+        Name = getToBerthName(currentEvent);
+
+        if (!Name || !checkToBerthLatLng(currentEvent))
+            continue; // CTS event invalid for aggregate
+        if (!eventObj.hasOwnProperty(Name)) {
+            currentEvent.Count = 1;
+            eventList.push(currentEvent);               // save event
+            eventObj[Name] = eventList.length - 1;  // save index for easy lookup
+        }
+        else {
+            eventList[eventObj[Name]].Count = eventList[eventObj[Name]].Count + 1;
+        }
+    }
+    /*
+    for (var i=0; i<eventList.length; i++) {
+        console.log ("eventList[" + i + "] Adress/Train: " + eventList[i].values.address + " to_infra_berth: " + eventList[i].values.to_infra_berth.Name + " Timestamp: " + eventList[i].values.time_stamp + " Count: " + eventList[i].Count);
+    }
+    */
+    io.to(toSocketID).emit("aggregatehistory", eventList);
+    eventArray = []; // memory ok for garbage collection
+    eventObj = null;
+} // aggregateAndSendEvents()
+
+function getToBerthName (msgObject) {
+    if (!msgObject) {
+        console.error("getToBerthName - msgObject null");
+        return null;
+    }
+    if (!msgObject.values) {
+        console.log("getToBerthName - msgObject.values null");
+        return null;
+    }
+    if (!msgObject.values.to_infra_berth)
+        return null;
+    if (!msgObject.values.to_infra_berth.Name)
+        return null;
+    return msgObject.values.to_infra_berth.Name;
+}
+function checkToBerthLatLng (msgObject) {
+    if (!msgObject) {
+        console.error("parseFloatLatLng - msgObject null");
+        return false;
+    }
+    if (!msgObject.values) {
+        console.log("parseFloatLatLng - msgObject.values null");
+        return false;
+    }
+    if (!msgObject.values.to_infra_berth)
+        return false;
+    if (!msgObject.values.to_infra_berth.StartLatitude || !msgObject.values.to_infra_berth.StartLongitude)
+        return false;
+    return true;
+}
+/*
+ var getPlaybackData = function (toSocketID, startTime, stopTime) { // array of logical train numbers
+ var i = 0;
+ var multi = redisStore.multi();
+ for (i = 0; i < trainsArr.length; i++) {
+ multi.zrangebyscore(rk(rKeys.cts_logical_nr, trainsArr[i]), startTime, stopTime);
+ }
+ multi.exec(function (err, reply) {
+ var eventIDs = reply;
+ // todo: sort
+ redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, objArr) {
+ if (err) {
+ console.error("Redis - unable to retrieve train-keys: " + err);
+ }
+ else {
+ socket.id.history = history
+ }
+ }); // hmget
+ }); // exec
+ }; // getPlaybackData()
+ */
+
+
+//
+// BACK END COMMUNICATIONS
+// Subscribe to redis topics
+
+redisSubscriberClient.subscribe("pax");
+redisSubscriberClient.subscribe("LineAggregate");
+redisSubscriberClient.subscribe("StationAggregate");
+redisSubscriberClient.subscribe("OwnModuleAggregate");
+redisSubscriberClient.subscribe("Log");
+redisSubscriberClient.subscribe("Error");
+redisSubscriberClient.subscribe("cts");
+redisSubscriberClient.on("error", function (err) {
+    console.log("Error " + err);
+});
+
+// Start Redis communication
+redisSubscriberClient.on("subscribe", function (channel, count) {
+    io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + count);
+});
+
+// Handle data from Redis
+redisSubscriberClient.on("message", function (channel, msg) {
+    var msgObject = JSON.parse(msg);
+    if (channel === "pax") {
+        parsePassengerData("realtime", channel, msgObject);
+    }
+    else if (channel === "LineAggregate") {
+        parseSumPerLine("realtime", channel, msgObject);
+    }
+    else if (channel === "StationAggregate") {
+        parseSumPerStation("realtime", channel, msgObject);
+    }
+    else if (channel === "OwnModuleAggregate") { // todo: add room to all of these: realtime
+        parseSumPerOwnModule("realtime", channel, msgObject);
+    }
+    else if (channel === "cts") {
+        parseAndSendCTS("realtime", channel, msgObject);
+    }
+    else if (channel === "Log" || channel === "Error") {
+        io.emit("Log", channel + ": " + msg)
+    }
+
+    // emit all data we get as a separate topic, except for log-data
+    if (channel !== "Log") {
+        io.emit("data", msg);
+    }
+
+});
+
+// RECEIVE and SEND functions
+// parsePassengerData, parseSumPerLine, parseSumPerStation, etc
+/* Format av the message we receive on topic "cts"
+ {
+ "topic"
+ :
+ "cts", "values"
+ :
+ {
+ "from_infra_berth"
+ :
+ {
+ "Name"
+ :
+ "R0852T", "Latitude"
+ :
+ 59.94284, "Longitude"
+ :
+ 10.618624
+ }
+ ,
+ "to_infra_berth"
+ :
+ {
+ "Name"
+ :
+ "R0878T", "Latitude"
+ :
+ 59.941393, "Longitude"
+ :
+ 10.616812
+ }
+ ,
+ "time_stamp"
+ :
+ "2016-03-20T11:23:05Z", "sequence_no"
+ :
+ 0, "interlocking_id"
+ :
+ "OST", "from_berth"
+ :
+ "R852 ", "to_berth"
+ :
+ "R878 ", "address"
+ :
+ "508", "path"
+ :
+ "0111", "destination"
+ :
+ "ØSÅ2", "delay"
+ :
+ -82, "arrive_depart"
+ :
+ " ", "platform"
+ :
+ " ", "ars_mode"
+ :
+ "T", "metadata"
+ :
+ {
+ "dataType"
+ :
+ "tuv", "dataMock"
+ :
+ false, "isSafeFromDelete"
+ :
+ false, "dataPartition"
+ :
+ "tuv-2016-03-20-508", "entryAssembly"
+ :
+ null, "operatingDayOslo"
+ :
+ "2016-03-20", "drivTimeStamp"
+ :
+ "2016-03-20T11:23:15.9189806Z"
+ }
+ }
+ }
+ */
+var missingToBerths = {};
+var missingFromBerths = {};
+var trainChangeNoBerths = {};
+var specialBerths = {};
+var trainNumbers = {};
+
+
+var incProperty = function (obj, prop) {
+    if (obj === "null" || typeof obj !== 'object' || !prop)
+        return false;
+    if (!obj.hasOwnProperty([prop]))
+        obj[prop] = 1;
+    else
+        obj[prop] += 1;
+    return true;
+};
+
+var isSpecialCTSCode = function (code) {
+    var test = (code === "INTERP" || code === "EXIT" || code === "LOST" || code === "CANCEL" || code === "NOTD");
+    return test;
+};
+
+// The concept of Lines is used to inform passengers about the end-stations assosiated with a certain train-movement.
+// In reality, there are exceptions from this simple concept and the signalling system do not report which line is associated with a train
+// We deduct line as follows
+// 1. Look at the destination. Bergkrystallen may be line 1 or 4, Vestli may be line 4 or 5. Destination may also be Majorstua or any other station that could be any line
+// 2. Look at to_berth. If this berth is traficked by only 1 line, this is what we will use
+// 3. Look at where the train has been. Find the last berth it passed that is associated with only 1 line
+// 5. Special cases: Trains numbered 17xx and 13xx are trams, *01 and similar are normal trains but CTS has "lost" its original number, 3-digit trainnumbers are normal and in most cases the first digit is equal to the line,
+//     so if the train is not a tram, not "*train", not normal train - then it is most likely a maintenance train not used by passengers...
+var identifyLineNumber = function (msgObject) {
+    var trainNo = msgObject.values.address;
+    var firstChar = trainNo.charAt(0);
+    var iLine = parseInt(firstChar);
+    if (MyIsNaN(iLine))
+        msgObject.values.lineNumber = 0;
+    else
+        msgObject.values.lineNumber = iLine;
+
+    return msgObject.lineNumber;
+}; // identifyLineNumber()
+
+var bIsInfraObjUniqueLine = function (infraObject) {
+    return infraObject.Lines.length == 1;
+}; // bIsInfraObjUniqueLine()
+
+var removeSpaces = function (obj) {
+    //JSON.parse(JSON.stringify(obj)) -- fastest way to clone object in javascript, ref. stackoverflow
+    return JSON.parse(JSON.stringify(obj).replace(/"\s+|\s+"/g, '"')); //"\s+|\s+" ?
+    /*
+     if (typeof obj === "string") {
+     obj = obj.replace(/\s/g, "");
+     }
+     else {
+     for (var prop in obj) {
+     if (obj[prop] !== null && typeof obj[prop] !== 'object') {
+     obj[prop] = obj[prop].replace(/\s/g, "");
+     }
+     }
+     }
+     return obj;
+     */
+}; // removeSpaces
+
+var guessLineNoFromTrainNo = function (trainNo) {
+    var tmpLine = 0;
+
+    if (!trainNo)
+        return 0;
+
+    tmpLine = parseInt(trainNo.replace(/[a-z*]/gi, ""));
+    if (!MyIsNumber(tmpLine)) {
+        return 0;
+    }
+    else if (tmpLine > 99 && tmpLine < 999) {
+        return tmpLine.toString().charAt(0);
+    }
+    else if (tmpLine > 999) {
+        return 3; // trams going on the Kolsås track uses 4 digit trainNo´s
+    }
+    else { // give up
+        return 0;
+    }
+}; // guessLineNoFromTrainNo()
+
+var testLastTimeStamp = 0;
+
+var parseAndSendCTS = function (room, channel, msgObject) {
+    var trainNo = 0;
+    var CTS_fromBerthObject = null;
+    var CTS_fromBerth = null;
+    var CTS_toBerth = 0;
+    var CTS_toBerthObject = null;
+    var timestamp = null;
+
+    // todo: fix all emits/room
+    if (!room || !channel || !msgObject || !msgObject.values) {
+        console.error("paseAndSendCTS called with msgObject null. Other params: " + room + " " + channel);
+        return;
+    }
+    msgObject = removeSpaces(msgObject);
+
+    trainNo = msgObject.values.address;
+    CTS_fromBerthObject = msgObject.values.from_infra_berth;
+    CTS_fromBerth = msgObject.values.from_berth;
+    CTS_toBerthObject = msgObject.values.to_infra_berth;
+    CTS_toBerth = msgObject.values.to_berth;
+    timestamp = new Date(msgObject.values.time_stamp).getTime();
+
+    // for testing only
+    // the code below demonstrates that the cts-signal arrive out of time
+    /*
+     if (MyIsNaN(timestamp)) {
+     console.log("Timestamp is not a number: " + timestamp);
+     }
+     else if (testLastTimeStamp === 0) {
+     testLastTimeStamp = timestamp;
+     console.log("Assigned testLastTimeStamp: " + testLastTimeStamp);
+     }
+     else {
+     if (testLastTimeStamp > timestamp) {
+     console.log ("Time out of order! Last time stamp: " + testLastTimeStamp + " Current timestamp: " + timestamp);
+     }
+     else {
+     testLastTimeStamp = timestamp;
+     }
+     }
+     */
+
+    // Got message from Change Suspect?
+    if (ctstrainChangeSuspectObject.hasOwnProperty(trainNo)) { // train did not change number since we are still getting data from it
+        ctstrainChangeSuspectObject[trainNo].countCTSMsg += 1;
+        console.log ("Train change did not occur for train number: " + trainNo + ". Received " + ctstrainChangeSuspectObject[trainNo].countCTSMsg + " events after suspected change");
+    }
+
+    // REDIS - store data
+    // Store all CTS-data received, whether they are valid or not
+
+    if (isMaster()) {
+        redisStore.incr('CTS_EVENT_ID', function (err, eID) {
+            var multi = redisStore.multi();
+            if (err) {
+                console.log("redis error: " + err);
+            }
+            else {
+                eventID = eID;
+                multi.hset(rk(rKeys.cts), eventID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+                // parameters are KEY, SCORE, MEMBER (or value)
+                multi.zadd(rk(rKeys.cts_timestamp), timestamp, eventID); //JSON.stringify(msgObject), redis.print); // new Date(msgObject.values.time_stamp).getTime()  new Date(msgObject.values.time_stamp).getTime()
+                multi.zadd(rk(rKeys.cts_logical_nr, trainNo), timestamp, eventID);
+                multi.sadd(rk(rKeys.cts_logical_nr_keys), rk(rKeys.cts_logical_nr, trainNo)); // keep a set containg all logical train numbers
+                multi.exec(function (err, data) {
+                    if (err)
+                        console.log("err: " + err + " data: " + data);
+                });
+            }
+        }); // store to Redis
+    }
+
+    //identifyLineNumber(msgObject);
+
+    if (!trainNo.match(/[0-9a-z*]/gi)) { // trainNo does not contain any alphanumeric characters or "*"
+        var ghostBerth = null;
+        io.to(room).emit("cts_ghost_train", msgObject);
+        if (CTS_toBerthObject && CTS_toBerthObject.Name)
+            ghostBerth = CTS_toBerthObject.Name;
+        else if (CTS_fromBerthObject && CTS_fromBerthObject.Name)
+            ghostBerth = CTS_fromBerthObject.Name
+        else if (CTS_toBerth)
+            ghostBerth = CTS_toBerth;
+        else if (CTS_fromBerth)
+            ghostBerth = CTS_fromBerth;
+        else
+            ghostBerth = "Unknown";
+
+        ctsGhosts[ghostBerth] = msgObject;
+        //console.log("ghost train: " + trainNo + " data: " + JSON.stringify(msgObject, undefined,2));
+        return;
+    }
+
+    if (trainNo.charAt(0) === "*") { // "star-train"
+        msgObject.values.yellow = false;
+    }
+    else {
+        var tn = trainNo.replace(/[a-z*]/gi, ""); // remove letters and *
+        if (MyIsNaN(parseInt(tn)) || parseInt(tn) < 100) {  // No digits in trainNo or digits less than 99 - should be yellow car
+            msgObject.values.yellow = true;
+            //console.log ("yellow car: " + trainNo);
+        }
+        else {
+            msgObject.values.yellow = false;
+        }
+    }
+
+    // Special CTS code?
+    if (isSpecialCTSCode(CTS_toBerth) || isSpecialCTSCode(CTS_fromBerth)) {
+        incProperty(specialBerths, CTS_fromBerth);
+        incProperty(specialBerths, CTS_toBerth);
+        io.to(room).emit("cts_special_code", msgObject);
+        return;
+    }
+    // Check destination
+    incProperty(destinationObject, msgObject.values.destination); // for debugging - make object where each property correspond to a destination and count each time destination occur
+    // Check train number
+    incProperty(trainNumbers, trainNo);
+
+    // Check To Berth, only pass valid data to clients
+    if (!CTS_toBerthObject) {
+        incProperty(missingToBerths, CTS_toBerth); // for debugging - log that we encountered to-berth that was not matched
+        return; // not going anywhere, just return
+    }
+
+    if (!infraObject.hasOwnProperty([CTS_toBerthObject.Name])) { // Invalid berth
+        console.log("non-existing to_infra_berth.Name: " + CTS_toBerthObject.Name);
+        return; // not going anywhere we know of, ...
+    }
+
+    // Check From Berth
+    if (!CTS_fromBerthObject) { // this is a valid case, (f.ex entering from Ryen? or receiving special CTS-code like INTERP, CANCEL, LOST, EXIT
+        incProperty(missingFromBerths, CTS_fromBerth); // for debugging - log that we encountered from-berth that was not matched
+    }
+    else if (!CTS_fromBerthObject.Name) {
+        console.log("non-existing from_infra_berth.Name: " + CTS_fromBerthObject.Name);
+    }
+    else if (!infraObject.hasOwnProperty([CTS_fromBerthObject.Name])) {
+        console.log("invalid from_infra_berth.Name: " + CTS_fromBerthObject.Name);
+    }
+    else {  // we have a valid from_infra_berth and to_infra_berth, check if our train changed its number from the last time we heard from it and to now
+        var Infra_fromBerthObject = infraObject[CTS_fromBerthObject.Name]; // InfraObject has information on the trainNumber that was on a given berth last
+
+        if (!Infra_fromBerthObject) {
+            console.error("Masterdata error - received unknown berth from CTS: " + JSON.stringify(CTS_fromBerthObject, undefined, 1));
+            return;
+        }
+
+        // check if the train has changed its number
+        if (Infra_fromBerthObject.itemtypeCode != "V" && Infra_fromBerthObject.TrainNumber != trainNo && Infra_fromBerthObject.TrainNumber != 0) {
+            // hmm, the train number that was the last to pass our from_berth was different from this train,
+            // should only be possible if this train changed its number
+            // in reality, there are errors - either in the masterdata or in CTS so that from_berth - to_berth reported by CTS does not match expected from_berth - to_berth in masterdata
+            // our best approach is to conclude that a train has changed its number only if CTS and masterdata match AND train numbers are different
+            if (Infra_fromBerthObject.nextitemCode !== CTS_toBerthObject.Name) {
+                console.error("Berth mismatch. Expected from: " + Infra_fromBerthObject.itemCode + " to: " + Infra_fromBerthObject.nextitemCode + " CTS reported from: " + CTS_fromBerthObject.Name + " to: " + CTS_toBerthObject.Name);
+                msgObject.values.jump_infraFrom = Infra_fromBerthObject.itemCode;
+                msgObject.values.jump_ctsFrom = CTS_fromBerthObject.Name;
+                msgObject.values.jump_ctsTo = CTS_toBerthObject.Name;
+                io.to(room).emit("cts_train_jump", msgObject);
+            }
+            else { // We suspect train number change...  TODO: it is the OLD train number we suspect has changed!!
+                let oldTrainNo = Infra_fromBerthObject.TrainNumber;
+                let cloneFromInfraBerthObject = JSON.parse(JSON.stringify(Infra_fromBerthObject)); // need to make a copy, otherwise object will be changed by the current train
+                if (ctstrainChangeSuspectObject.hasOwnProperty(oldTrainNo)) {
+                    // maybe we have received the same CTS-message several times? Or maybe the old train no is still valid?
+                    console.log("Suspected train number change, but suspicion was already registered, presumably we have received same CTS-event again. Train No: " + oldTrainNo);
+                }
+                else {
+                    console.log("Adding train to suspects. Train No: " + oldTrainNo);
+                    ctstrainChangeSuspectObject[oldTrainNo] = { "countCTSMsg": 0, "newTrainNo": trainNo, "fromInfra":  cloneFromInfraBerthObject, "msgObject": msgObject};
+                    setTimeout(function (r, oldTr) { return function () { return trainChangeNumber(r, oldTr); };}(room, oldTrainNo), 30*1000); // look weird? time to read up on javascript closures...
+                    console.log("setTimeout: " + room + " object: " + JSON.stringify(ctstrainChangeSuspectObject[oldTrainNo]));
+                }
+            }
+        } // train had changed its number
+    } // valid from_infra_berth and to_infra_berth
+
+    // register that the current train arrived at this toBerth
+    infraObject[CTS_toBerthObject.Name].TrainNumber = trainNo;
+
+    //var tmpLineTest = parseInt(msgObject.values.address.replace(/^\*|[a-z]+$/gi, ""));
+
+    // Set value of lastUniqueLine for this msgObject
+    if (infraObject[CTS_toBerthObject.Name].Lines.length == 1) { // we are on a berth that is unique to 1 line
+        msgObject.values.lastUniqueLine = infraObject[CTS_toBerthObject.Name].Lines[0];
+    }
+    else if (ctsLiveObject.hasOwnProperty([trainNo]) && !Array.isArray(ctsLiveObject[trainNo])) { // should not be possible
+        console.error("ctsLiveObject{[" + trainNo + "] does not contain array: " + JSON.stringify(ctsLiveObject[trainNo], undefined, 2));
+        msgObject.values.lastUniqueLine = guessLineNoFromTrainNo(trainNo);
+    }
+    else if (ctsLiveObject.hasOwnProperty([trainNo]) && ctsLiveObject[trainNo][0].values.lastUniqueLine) { // look into history, find last unique line we have been on
+        msgObject.values.lastUniqueLine = ctsLiveObject[trainNo][0].values.lastUniqueLine;
+    }
+    else { // not on unique line-berth now, nothing in history... guess line from trainNo
+        msgObject.values.lastUniqueLine = guessLineNoFromTrainNo(trainNo);
+    }
+    // Now we take our best shot at determining the Line that the Train is operating on
+    if (stationObject[msgObject.values.destination] && stationObject[msgObject.values.destination].Lines.length == 1) {
+        msgObject.values.Line = stationObject[msgObject.values.destination].Lines[0];
+    }
+    else {
+        msgObject.values.Line = msgObject.values.lastUniqueLine;
+    }
+
+    // todo: consider using Redis as store for live objects and increase amount of data available to f.ex. 1 week
+    // and implement f.ex. "replay" of events
+
+    // todo: check for valid train number, ie not empty string
+    if (!ctsLiveObject.hasOwnProperty([trainNo])) { // first time we receive data for this trainNo, or it was previously deleted due to train number change
+        //console.log("CTS-trainnumber_first_time: " + msgObject.values.address);
+        msgObject.values.firstTime = true;
+        io.to(room).emit("cts_trainnumber_first_time", msgObject); // notify the client
+        ctsLiveObject[trainNo] = [];
+    }
+    // insert this berth event first in the list of events for this train
+    ctsLiveObject[trainNo].unshift(msgObject);
+
+    // do not allow the berth event list to grow forever
+    while (ctsLiveObject[trainNo].length > 200) {
+        ctsLiveObject[trainNo].pop();
+    } // keep max 420 newest cts values for each train, todo: use Redis and increase to last week or something
+
+    // keep track of the berths that we have received data from, for debug
+    ctsOKObject[CTS_toBerthObject.Name] = 1;
+
+    io.to(room).emit(channel, [msgObject]); // pass on current train/berth as an array of 1 element
+
+}; // parseandsendCTS ()
+
+var trainChangeNumber = function (room, oldTrainNo) {
+    let fromInfra = null;
+    let newTrainNo = -1;
+    let msgObject = null;
+
+    let trainChangeSuspectObject = ctstrainChangeSuspectObject[oldTrainNo];
+
+    if (!trainChangeSuspectObject) {
+        console.error("No trainCangeSuspectObject exist for train: " + oldTrainNo);
+        return;
+    }
+    console.log("trainChangeSuspect: " + JSON.stringify(trainChangeSuspectObject));
+
+    fromInfra = trainChangeSuspectObject.fromInfra;
+    newTrainNo = trainChangeSuspectObject.newTrainNo;
+    msgObject = trainChangeSuspectObject.msgObject;
+
+    if (trainChangeSuspectObject.countCTSMsg !== 0) {
+        // we have received messages relating to the old trainNumber after we thought it had changed
+        // Check how lang ago it is...
+        if (!ctsLiveObject.hasOwnProperty(oldTrainNo)) {
+            console.log ("Old train no: " + oldTrainNo + " was already deleted");
+            return; // old train number object already deleted. This may happen if we receive the same CTS-message several times
+        }
+
+        let ctsEventTime = new Date(ctsLiveObject[oldTrainNo][0].values.time_stamp).getTime();
+        let dateNow = Date.now(); // todo: fix to work even with playback
+        if (dateNow - ctsEventTime < 20000) {  // received last eent less than 20 secunds ago -> no train number change occured
+            delete trainChangeSuspectObject[oldTrainNo]; // Not suspected anymore because there was no change
+            console.log("deleted trainChangeSuspectObject: " + oldTrainNo);
+            return;
+        }
+    }
+
+    // Train-number change occured, notify client
+    // Notify clients
+    console.log("CTS-trainnumber_changed. Oldnumber: " + oldTrainNo + " New number: " + newTrainNo + " msgObject.values.destination: " + msgObject.values.destination);
+    io.to(room).emit("cts_trainnumber_changed", { "new_train_no": newTrainNo, "old_train_no": oldTrainNo, "msgObject": msgObject }); // notify the client
+    //ctsLiveObject[msgObject.values.address] = JSON.parse(JSON.stringify(ctsLiveObject[Infra_fromBerthObject.TrainNumber])); // clone the object. "=" only assigns reference
+    delete trainChangeSuspectObject[oldTrainNo]; // Not suspected anymore because change confirmed
+
+    // Copy data for old train number to property for the new train number
+    //console.log("ctsLiveObject[Infra_fromBerthObject.TrainNumber===" + Infra_fromBerthObject.TrainNumber + "]" + JSON.stringify(ctsLiveObject[Infra_fromBerthObject.TrainNumber],undefined,2));
+    if (ctsLiveObject.hasOwnProperty([oldTrainNo])) {  // sometimes CTS sends same message twice, this is to avoid crashing the second time around...
+        //ctsLiveObject[trainNo] = ctsLiveObject[Suspect.TrainNumber]; // JSON.parse(JSON.stringify(ctsLiveObject[Infra_fromBerthObject.TrainNumber]));
+        //console.log("ctsLiveObject[Infra_fromBerthObject.TrainNumber===" + Infra_fromBerthObject.TrainNumber + "]" + JSON.stringify(ctsLiveObject[Infra_fromBerthObject.TrainNumber],undefined,2));
+        delete ctsLiveObject[oldTrainNo];
+        console.log("ctsLiveObject[" + oldTrainNo + "] deleted");
+        //console.log("ctsLiveOjbect[trainNo " + trainNo + "] isArray: " + Array.isArray(ctsLiveObject[trainNo]));
+        //console.log("ctsLiveObject[" + trainNo + "] = " + JSON.stringify(ctsLiveObject[trainNo], undefined,2));
+        incProperty(trainChangeNoBerths, fromInfra.itemCode); // for debugging - log the from_berth that had trainNumber different from current trainNumber ("address")
+    }
+    else {
+        console.log("No entry for ctsLiveObject[" + oldTrainNo + "]");
+    }
+    // todo: save to redis and in local cts that a train change number event occured...
+
+    // delete from suspectList
+    delete ctstrainChangeSuspectObject[oldTrainNo];
+}; //trainChangeNumber()
+
+// todo: not use ctsLive etc, not save to redis, ...
+var parseAndSendCTShistory = function (room, channel, msgObject) {
+    var trainNo = 0;
+    var CTS_fromBerthObject = null;
+    var CTS_fromBerth = null;
+    var CTS_toBerth = 0;
+    var CTS_toBerthObject = null;
+    var timestamp = null;
+
+    // todo: fix all emits/room
+    if (!room || !channel || !msgObject || !msgObject.values) {
+        console.error("paseAndSendCTS called with msgObject null. Other params: " + room + " " + channel);
+        return;
+    }
+    msgObject = removeSpaces(msgObject);
+
+    trainNo = msgObject.values.address;
+    CTS_fromBerthObject = msgObject.values.from_infra_berth;
+    CTS_fromBerth = msgObject.values.from_berth;
+    CTS_toBerthObject = msgObject.values.to_infra_berth;
+    CTS_toBerth = msgObject.values.to_berth;
+    timestamp = new Date(msgObject.values.time_stamp).getTime();
+
+    // for testing only
+    // the code below demonstrates that the cts-signal arrive out of time
+    /*
+     if (MyIsNaN(timestamp)) {
+     console.log("Timestamp is not a number: " + timestamp);
+     }
+     else if (testLastTimeStamp === 0) {
+     testLastTimeStamp = timestamp;
+     console.log("Assigned testLastTimeStamp: " + testLastTimeStamp);
+     }
+     else {
+     if (testLastTimeStamp > timestamp) {
+     console.log ("Time out of order! Last time stamp: " + testLastTimeStamp + " Current timestamp: " + timestamp);
+     }
+     else {
+     testLastTimeStamp = timestamp;
+     }
+     }
+     */
+
+    // Got message from Change Suspect?
+    if (ctstrainChangeSuspectObject[trainNo]) { // train did not change number since we are still getting data from it
+        ctstrainChangeSuspectObject[trainNo].countCTSMsg += 1;
+        console.log ("Train change did not occur: " + trainNo);
+    }
+
+    // REDIS - store data
+    // Store all CTS-data received, whether they are valid or not
+    /*
+    if (isMaster()) {
+        redisStore.incr('CTS_EVENT_ID', function (err, eID) {
+            var multi = redisStore.multi();
+            if (err) {
+                console.log("redis error: " + err);
+            }
+            else {
+                eventID = eID;
+                multi.hset(rk(rKeys.cts), eventID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+                // parameters are KEY, SCORE, MEMBER (or value)
+                multi.zadd(rk(rKeys.cts_timestamp), timestamp, eventID); //JSON.stringify(msgObject), redis.print); // new Date(msgObject.values.time_stamp).getTime()  new Date(msgObject.values.time_stamp).getTime()
+                multi.zadd(rk(rKeys.cts_logical_nr, trainNo), timestamp, eventID);
+                multi.sadd(rk(rKeys.cts_logical_nr_keys), rk(rKeys.cts_logical_nr, trainNo)); // keep a set containg all logical train numbers
+                multi.exec(function (err, data) {
+                    if (err)
+                        console.log("err: " + err + " data: " + data);
+                });
+            }
+        }); // store to Redis
+    }
+    */
+
+    //identifyLineNumber(msgObject);
+
+    if (!trainNo.match(/[0-9a-z*]/gi)) { // trainNo does not contain any alphanumeric characters or "*"
+        var ghostBerth = null;
+        io.to(room).emit("cts_ghost_train", msgObject);
+        if (CTS_toBerthObject && CTS_toBerthObject.Name)
+            ghostBerth = CTS_toBerthObject.Name;
+        else if (CTS_fromBerthObject && CTS_fromBerthObject.Name)
+            ghostBerth = CTS_fromBerthObject.Name
+        else if (CTS_toBerth)
+            ghostBerth = CTS_toBerth;
+        else if (CTS_fromBerth)
+            ghostBerth = CTS_fromBerth;
+        else
+            ghostBerth = "Unknown";
+
+        ctsGhosts[ghostBerth] = msgObject;
+        //console.log("ghost train: " + trainNo + " data: " + JSON.stringify(msgObject, undefined,2));
+        return;
+    }
+
+    if (trainNo.charAt(0) === "*") { // "star-train"
+        msgObject.values.yellow = false;
+    }
+    else {
+        var tn = trainNo.replace(/[a-z*]/gi, ""); // remove letters and *
+        if (MyIsNaN(parseInt(tn)) || parseInt(tn) < 100) {  // No digits in trainNo or digits less than 99 - should be yellow car
+            msgObject.values.yellow = true;
+            //console.log ("yellow car: " + trainNo);
+        }
+        else {
+            msgObject.values.yellow = false;
+        }
+    }
+
+    // Special CTS code?
+    if (isSpecialCTSCode(CTS_toBerth) || isSpecialCTSCode(CTS_fromBerth)) {
+        incProperty(specialBerths, CTS_fromBerth);
+        incProperty(specialBerths, CTS_toBerth);
+        io.to(room).emit("cts_special_code", msgObject);
+        return;
+    }
+    // Check destination
+    incProperty(destinationObject, msgObject.values.destination); // for debugging - make object where each property correspond to a destination and count each time destination occur
+    // Check train number
+    incProperty(trainNumbers, trainNo);
+
+    // Check To Berth, only pass valid data to clients
+    if (!CTS_toBerthObject) {
+        incProperty(missingToBerths, CTS_toBerth); // for debugging - log that we encountered to-berth that was not matched
+        return; // not going anywhere, just return
+    }
+
+    if (!infraObject.hasOwnProperty([CTS_toBerthObject.Name])) { // Invalid berth
+        console.log("non-existing to_infra_berth.Name: " + CTS_toBerthObject.Name);
+        return; // not going anywhere we know of, ...
+    }
+
+    // Check From Berth
+    if (!CTS_fromBerthObject) { // this is a valid case, (f.ex entering from Ryen? or receiving special CTS-code like INTERP, CANCEL, LOST, EXIT
+        //incProperty(missingFromBerths, CTS_fromBerth); // for debugging - log that we encountered from-berth that was not matched
+    }
+    else if (!CTS_fromBerthObject.Name) {
+        console.log("non-existing from_infra_berth.Name: " + CTS_fromBerthObject.Name);
+    }
+    else if (!infraObject.hasOwnProperty([CTS_fromBerthObject.Name])) {
+        console.log("invalid from_infra_berth.Name: " + CTS_fromBerthObject.Name);
+    }
+    else {  // we have a valid from_infra_berth and to_infra_berth, check if our train changed its number from the last time we heard from it and to now
+        var Infra_fromBerthObject = infraObject[CTS_fromBerthObject.Name]; // InfraObject has information on the trainNumber that was on a given berth last
+
+        if (!Infra_fromBerthObject) {
+            console.error("Masterdata error - received unknown berth from CTS: " + JSON.stringify(CTS_fromBerthObject, undefined, 1));
+            return;
+        }
+
+        // check if the train has changed its number
+        if (Infra_fromBerthObject.itemtypeCode != "V" && Infra_fromBerthObject.TrainNumber != trainNo && Infra_fromBerthObject.TrainNumber != 0) {
+            // hmm, the train number that was the last to pass our from_berth was different from this train,
+            // should only be possible if this train changed its number
+            // in reality, there are errors - either in the masterdata or in CTS so that from_berth - to_berth reported by CTS does not match expected from_berth - to_berth in masterdata
+            // our best approach is to conclude that a train has changed its number only if CTS and masterdata match AND train numbers are different
+            if (Infra_fromBerthObject.nextitemCode !== CTS_toBerthObject.Name) {
+                console.error("Berth mismatch. Expected from: " + Infra_fromBerthObject.itemCode + " to: " + Infra_fromBerthObject.nextitemCode + " CTS reported from: " + CTS_fromBerthObject.Name + " to: " + CTS_toBerthObject.Name);
+                msgObject.values.jump_infraFrom = Infra_fromBerthObject.itemCode;
+                msgObject.values.jump_ctsFrom = CTS_fromBerthObject.Name;
+                msgObject.values.jump_ctsTo = CTS_toBerthObject.Name;
+                io.to(room).emit("cts_train_jump", msgObject);
+            }
+            else { // We suspect train number change...  TODO: it is the OLD train number we suspect has changed!!
+                let oldTrainNo = Infra_fromBerthObject.TrainNumber;
+                let cloneFromInfraBerthObject = JSON.parse(JSON.stringify(Infra_fromBerthObject)); // need to make a copy, otherwise object will be changed by the current train
+                if (ctstrainChangeSuspectObject.hasOwnProperty(oldTrainNo)) {
+                    // maybe we have received the same CTS-message several times? Or maybe the old train no is still valid?
+                    console.log("Suspected train number change, but suspicion was already registered, presumably we have received same CTS-event again. Train No: " + oldTrainNo);
+                }
+                else {
+                    console.log("Adding train to suspects. Train No: " + oldTrainNo);
+                    ctstrainChangeSuspectObject[oldTrainNo] = { "countCTSMsg": 0, "newTrainNo": trainNo, "fromInfra":  cloneFromInfraBerthObject, "msgObject": msgObject};
+                    setTimeout(function (r, oldTr) { return function () { return trainChangeNumber(r, oldTr); };}(room, oldTrainNo), 30*1000); // look weird? time to read up on javascript closures...
+                    console.log("setTimeout: " + room + " object: " + JSON.stringify(ctstrainChangeSuspectObject[oldTrainNo]));
+                }
+            }
+        } // train had changed its number
+    } // valid from_infra_berth and to_infra_berth
+
+    // register that the current train arrived at this toBerth
+    infraObject[CTS_toBerthObject.Name].TrainNumber = trainNo;
+
+    //var tmpLineTest = parseInt(msgObject.values.address.replace(/^\*|[a-z]+$/gi, ""));
+
+    // Set value of lastUniqueLine for this msgObject
+    if (infraObject[CTS_toBerthObject.Name].Lines.length == 1) { // we are on a berth that is unique to 1 line
+        msgObject.values.lastUniqueLine = infraObject[CTS_toBerthObject.Name].Lines[0];
+    }
+    else if (ctsLiveObject.hasOwnProperty([trainNo]) && !Array.isArray(ctsLiveObject[trainNo])) { // should not be possible
+        console.error("ctsLiveObject{[" + trainNo + "] does not contain array: " + JSON.stringify(ctsLiveObject[trainNo], undefined, 2));
+        msgObject.values.lastUniqueLine = guessLineNoFromTrainNo(trainNo);
+    }
+    else if (ctsLiveObject.hasOwnProperty([trainNo]) && ctsLiveObject[trainNo][0].values.lastUniqueLine) { // look into history, find last unique line we have been on
+        msgObject.values.lastUniqueLine = ctsLiveObject[trainNo][0].values.lastUniqueLine;
+    }
+    else { // not on unique line-berth now, nothing in history... guess line from trainNo
+        msgObject.values.lastUniqueLine = guessLineNoFromTrainNo(trainNo);
+    }
+    // Now we take our best shot at determining the Line that the Train is operating on
+    if (stationObject[msgObject.values.destination] && stationObject[msgObject.values.destination].Lines.length == 1) {
+        msgObject.values.Line = stationObject[msgObject.values.destination].Lines[0];
+    }
+    else {
+        msgObject.values.Line = msgObject.values.lastUniqueLine;
+    }
+
+    // todo: consider using Redis as store for live objects and increase amount of data available to f.ex. 1 week
+    // and implement f.ex. "replay" of events
+
+    // todo: check for valid train number, ie not empty string
+    if (!ctsLiveObject.hasOwnProperty([trainNo])) { // first time we receive data for this trainNo, or it was previously deleted due to train number change
+        //console.log("CTS-trainnumber_first_time: " + msgObject.values.address);
+        msgObject.values.firstTime = true;
+        io.to(room).emit("cts_trainnumber_first_time", msgObject); // notify the client
+        ctsLiveObject[trainNo] = [];
+    }
+    // insert this berth event first in the list of events for this train
+    ctsLiveObject[trainNo].unshift(msgObject);
+
+    // do not allow the berth event list to grow forever
+    while (ctsLiveObject[trainNo].length > 200) {
+        ctsLiveObject[trainNo].pop();
+    } // keep max 420 newest cts values for each train, todo: use Redis and increase to last week or something
+
+    // keep track of the berths that we have received data from, for debug
+    ctsOKObject[CTS_toBerthObject.Name] = 1;
+
+    io.to(room).emit(channel, [msgObject]); // pass on current train/berth as an array of 1 element
+
+}; // parseandsendCTShistory ()
+
+var parseSumPerLine = function (room, channel, msgObject) {
+    var lineObj = null;
+    var i = 0;
+
+    if (!room || !channel || !msgObject || !msgObject.values) {
+        console.error("parseSumPerLine - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+        return;
+    }
+    if (msgObject.values.length > 0)
+        sumPerLine = [];
+    for (i = 0; i < msgObject.values.length; i++) {
+        lineObj = JSON.parse(msgObject.values[i]);
+        sumPerLine.push({
+            "LineNumber": lineObj.LineNumber,
+            "TotalBoarding": lineObj["sum(TotalBoarding)"],
+            "TotalAlighting": lineObj["sum(TotalAlighting)"]
+        });
+    }
+    io.to(room).emit(channel, sumPerLine);
+};
+
+var parseSumPerStation = function (room, channel, msgObject) {
+    var stationObj = null;
+    var i = 0;
+    if (!room || !channel || !msgObject || !msgObject.values) {
+        console.error("parseSumPerStation - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+        return;
+    }
+    if (msgObject.values.length > 0)
+        sumPerStation = [];
+    for (i = 0; i < msgObject.values.length; i++) {
+        stationObj = JSON.parse(msgObject.values[i]);
+        sumPerStation.push({
+            "CurrentStationID": stationObj.CurrentStationID,
+            "TotalBoarding": stationObj["sum(TotalBoarding)"],
+            "TotalAlighting": stationObj["sum(TotalAlighting)"]
+        });
+    }
+    io.to(room).emit(channel, sumPerStation);
+};
+
+var parseSumPerOwnModule = function (room, channel, msgObject) {
+    var OwnModuleObj = null;
+    var i = 0;
+
+    if (!room || !channel || !msgObject || !msgObject.values) {
+        console.error("parseSumPerOwnModule - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+        return;
+    }
+    if (msgObject.values.length > 0)
+        sumPerOwnModule = [];
+    for (i = 0; i < msgObject.values.length; i++) {
+        OwnModuleObj = JSON.parse(msgObject.values[i]);
+        sumPerOwnModule.push({
+            "OwnModuleNo": OwnModuleObj.OwnModuleNo,
+            "TotalBoarding": OwnModuleObj.Boarding,
+            "TotalAlighting": OwnModuleObj.Alighting
+        });
+    }
+    io.to(room).emit(channel, sumPerOwnModule);
+};
+
+var parsePassengerData = function (room, channel, msgObject) {
+    // The PIDAS also sends useful information about the trains. Keep track of updated trains info also
+    var tmpAPCObject = {};
+    var records = null;
+    var bStationFound = false;
+    var i = 0;
+    var station = null;
+
+    if (!room || !channel || !msgObject || !msgObject.values) {
+        console.error("parsePassengerData - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+        return;
+    }
+    records = msgObject.values.toString().split('\n');
+
+    if (records === null || records === undefined || records.length == 0) { // we did NOT receive data
+        console.error("parsePassengerData - msgObject did not contain data: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+        return;
+    }
+
+    passengerTable = []; // throw away the old data
+    // todo: implement structure to keep track of N last data, should utilize Redis for that
+
+    for (i = 0; i < records.length; i++) {
+        var items = records[i].toString().split(';');
+        if (!items || items.length < 15) {
+            // seems all passenger files contains an empty record at the end
+            // Only display error if we are not on the last record...
+            if (i !== records.length - 1)
+                console.error("parsePassengerData - msgObject contained invalid data. Record " + records[i] + " msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+            break;
+        }
+
+        var passengerObject = {
+            DateAndTimeUnix: parseInt(items[0], 10) * 1000, // time in milliseconds
+            TogNumber: parseInt(items[1], 10),
+            OwnModuleNo: parseInt(items[2], 10),
+            CoupledModuleNo: parseInt(items[3], 10),
+            ModuleConfig: parseInt(items[4], 10),
+            LeadingOrGuided: parseInt(items[5], 10),
+            TotalBoarding: parseInt(items[6], 10),
+            TotalAlighting: parseInt(items[7], 10),
+            CurrentStationID: parseInt(items[8], 10),
+            RouteCodeID: parseInt(items[9], 10),
+            LineNumber: parseInt(items[10], 10),
+            StartStationID: parseInt(items[11], 10),
+            EndStationID: parseInt(items[12], 10),
+            SensorDiagnoseError: parseInt(items[13], 10),
+            DataInvalid: parseInt(items[14], 10),
+            DateAndTimeUnixDataReceived: 0
+        };
+        /*
+         // seems that the last "items" we get is invalid, check just in case...
+         if (MyIsNaN(passengerObject.TogNumber)) {
+         console.log ("passengerObject.Tognumber: " + passengerObject.TogNumber);
+         break;
+         }
+         */
+        passengerObject.DateAndTimeUnixDataReceived = Date.now();
+        // An undocumented "feature" of the Siemens PIDAS system is that it sometimes adds 500 to the PIDAS_ID/CurrentStationID
+        // This is believed to occur if the train pass a station for the second time wihout having been able to upload the data from the previous pass
+        if (passengerObject.CurrentStationID > 500) {
+            passengerObject.CurrentStationID -= 500;
+        }
+
+        if (passengerObject.CurrentStationID === 0 || passengerObject.CurrentStationID) {
+            // find info about the station corresponding to PIDAS_ID
+            for (station in stationObject) {      // Note: one and the same PIDAS may refer to several platforms, we just use the first match we find, regardless of direction etc
+                if (!stationObject[station].CurrentStationID && stationObject[station].CurrentStationID !== 0) {
+                    console.error("parsePassengerData - invalid data. station: " + station);
+                    continue;
+                }
+                if (stationObject[station].CurrentStationID.toString() === passengerObject.CurrentStationID.toString()) {
+                    setLastPaxUpdateTime(passengerObject.DateAndTimeUnix);
+                    // Merge together passengerData received and stationData
+                    passengerTable.push({   // use "key" and "value" so data are ready to be used by D3js on client side
+                        "key": passengerObject.CurrentStationID.toString(),
+                        "value": {
+                            passengers: passengerObject,
+                            station: stationObject[station]
+                        }
+                    });
+                    /*
+                    todo: only send the minimum required data
+                    {TotalAlighting: d.value.passengers.TotalAlighting,
+                     TotalBoarding: d.value.passengers.TotalBoarding,
+                     LineNumber: d.value.passengers.LineNumber,
+                     StartStationID: d.value.passengers.StartStationID,
+                     EndStationID: d.value.passengers.EndStationID,
+                     platformlat: d.value.station.platformlat,
+                     platformlng: d.value.station.platformlng};
+                    */
+                    bStationFound = true;
+                    break;
+                } // if PIDAS-match
+            } // for-loop
+        }
+        if (!bStationFound && passengerObject.CurrentStationID !== 6) { // PIDAS_ID === 6 is a known error, only log unknown errors
+            console.error("Station Table missing PIDAS received from train: " + JSON.stringify(passengerObject));
+        }
+
+        // finished bulding passengerTable, now update APCObject
+        if (!APCObject.hasOwnProperty([passengerObject.OwnModuleNo])) {
+            APCObject [passengerObject.OwnModuleNo] = passengerObject;
+            tmpAPCObject[passengerObject.OwnModuleNo] = passengerObject;
+        } else if (APCObject [passengerObject.OwnModuleNo].DateAndTimeUnix < passengerObject.DateAndTimeUnix) {
+            APCObject [passengerObject.OwnModuleNo] = passengerObject;
+            tmpAPCObject[passengerObject.OwnModuleNo] = passengerObject;
+        }
+    } // for all passenger data/parsed all received records
+    // Send only new information to clients, keep the total APCObject globally available to send to new connecting clients
+    io.to(room).emit("trains", tmpAPCObject);
+    io.to(room).emit("pax", passengerTable);
+    io.to(room).emit('LastPaxUpdateTime', lastPaxUpdateTimeUnix);
+}; // parsePassenger
+
+var lastPaxUpdateTimeUnix = 0;
+var setLastPaxUpdateTime = function (DateAndTimeUnix) {
+    if (DateAndTimeUnix > lastPaxUpdateTimeUnix) {
+        lastPaxUpdateTimeUnix = DateAndTimeUnix;
+    }
+}; // setLastPaxUpdateTime()
+
+// todo: REDIS clean up is not working properly, i.e. if web app terminate and restart, the number of redis connections may increase?
+process.on('exit', function () {
+    console.log('About to exit.');
+    //todo: check if subscription is active and if connection is open
+    redisSubscriberClient.unsubscribe();
+    redisSubscriberClient.end();
+    redisStore.end();
+    pub.end();
+});
+process.on('SIGINT', function () {
+    console.log('Got CTRL-D');
+    //todo: check if subscription is active and if connection is open
+    redisSubscriberClient.unsubscribe();
+    redisSubscriberClient.end();
+    redisStore.end();
+    pub.end();
+    process.exit(2);
+});
+process.on('uncaughtException', function (e) {
+    console.log('Uncaught Exception...');
+    console.log(e.stack);
+    //todo: check if subscription is active and if connection is open
+    redisSubscriberClient.unsubscribe();
+    redisSubscriberClient.end();
+    redisStore.end();
+    pub.end();
+    process.exit(99);
+})
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+
+    if (MyIsNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    //debug('Listening on ' + bind);
+}

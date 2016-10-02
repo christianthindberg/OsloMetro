@@ -1,0 +1,2303 @@
+//
+//   Created by christianthindberg sometime 2015
+//
+
+extends layout
+
+head
+
+body
+  block content
+    div#bardivlines
+      svg#barchartlines
+    div#bardivstations
+      svg#barchartstations
+    div#ownmodulediv
+      svg#ownmodules
+    div#ownmoduleheader Passasjerer per tog
+    div.lineRectangle#line1(style={background: 'cornflowerblue', left: "12.5em"}) 1
+    div.lineRectangle#line2(style={background: 'coral', left: "15em"}) 2
+    div.lineRectangle#line3(style={background: 'mediumorchid', left: "17.5em"}) 3
+    div.lineRectangle#line4(style={background: 'mediumblue', left: "20em"}) 4
+    div.lineRectangle#line5(style={background: 'mediumseagreen', left: "22.5em"}) 5
+    form#options
+      label.settingslabel Valg
+      label.settingslabel Passasjerer
+        input#paxchbox.checker(type='checkbox' name='Pax' checked=true value="Pax")
+      label.settingslabel Banekart
+        input#metrochbox.checker(type='checkbox' name='Banekart' checked=true value="Banekart")
+      label.settingslabel Tog
+        input#trainchbox.checker(type='checkbox' name='Tog' checked=true value="Tog")
+      label.settingslabel linjer
+        input#lineschbox.checker(type='checkbox' name='Linjestatistikk' checked=false value="Linjestatistikk")
+      label.settingslabel Stasjoner
+        input#stationschbox.checker(type='checkbox' name='Stasjonstatistikk' checked=false value="Stasjonstatistikk")
+      label.settingslabel Vogner
+        input#ownmoduleschbox.checker(type='checkbox' name='OwnModules' checked=false value="OwnModules")
+      label.settingslabel Trafikk
+        input#trafficchbox.checker(type='checkbox' name='Trafikk' checked=false value="Trafikk")
+      label.settingslabel Varmekart
+        input#heatmapchbox.checker(type='checkbox' name='Varmekart' checked=false value="Varmekart")
+      label.settingslabel Sporfelt
+        input#sporfeltchbox.checker(type='checkbox' name='Sporfelt' checked=false value="Sporfelt")
+    div#clockTime
+    div#lastPaxReceived Siste av/påstigning: --
+    div#sumPax Passasjerer hittil i dag: --
+    div#nowTrains Tog i trafikk nå: --
+    div#nowAPC Tog med passasjertelling: --
+    div#circleinfo
+    div#map
+    html.
+      <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+          <defs>
+              <pattern id="diagonal-stripe-1" patternUnits="userSpaceOnUse" width="10" height="10">
+                  <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScvPgogIDxwYXRoIGQ9J00tMSwxIGwyLC0yCiAgICAgICAgICAgTTAsMTAgbDEwLC0xMAogICAgICAgICAgIE05LDExIGwyLC0yJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz4KPC9zdmc+Cg==" x="0" y="0" width="10" height="10">
+                  </image>
+              </pattern>
+          </defs>
+      </svg>
+      <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+          <defs>
+              <pattern id="horizontal-stripe-5" patternUnits="userSpaceOnUse" width="10" height="10">
+                  <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScgLz4KICA8cmVjdCB4PScwJyB5PScwJyB3aWR0aD0nMTAnIGhlaWdodD0nNScgZmlsbD0nYmxhY2snIC8+Cjwvc3ZnPg==" x="0" y="0" width="10" height="10">
+                  </image>
+              </pattern>
+          </defs>
+      </svg>
+      <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+          <defs>
+              <pattern id="vertical-stripe-1" patternUnits="userSpaceOnUse" width="10" height="10">
+                  <image xlink:href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScgLz4KICA8cmVjdCB4PScwJyB5PScwJyB3aWR0aD0nMScgaGVpZ2h0PScxMCcgZmlsbD0nYmxhY2snIC8+Cjwvc3ZnPg==" x="0" y="0" width="10" height="10">
+                  </image>
+              </pattern>
+          </defs>
+      </svg>
+    script.
+
+      // Special terms used:
+      // OwnModule: the term used by Siemens to denote the serial number of a metro car
+      // Pidas ID: the number used by Siemens to identify a metro Station
+
+      // todo: reduce number of overlays to 1.
+      // todo: change prototype of map.draw to handle dynamic data
+
+      var stationTable = [];
+      var ctsBerthTable = [];
+      var ctsOKObject = {};
+      var passengerTable = [];
+
+
+      // Approximate line colors, add a few "red"´s in case number of lines are increased
+      var LineColor = ["cornflowerblue", "coral", "mediumorchid", "mediumblue", "mediumseagreen", "red", "red", "red", "red", "red", "red"];
+
+
+      //
+      // Google Map section
+      //
+
+      // Create the Google Map, centeret at Nationaltheatret
+      var Nationaltheatret = {lat: 59.9149, lng: 10.72974};
+      //zoom: 12,
+      var map = new google.maps.Map(d3.select("#map").node(), {
+        zoom: 11,
+        center: Nationaltheatret,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_LEFT
+        },
+        zoomControl: true,
+        zoomControlOptions: {
+          position: google.maps.ControlPosition.TOP_LEFT
+        },
+        scaleControl: true,
+        streetViewControl: true,
+        streetViewControlOptions: {
+          position: google.maps.ControlPosition.TOP_LEFT
+        }
+      });
+      // Create a google infoWindow as well
+      var infowindow = new google.maps.InfoWindow({
+        content: ""
+      });
+
+      // Google built-in overlays
+      var transitLayer = new google.maps.TransitLayer();
+      if (d3.select("#metrochbox").property('checked'))
+        transitLayer.setMap(map);
+      var trafficLayer = new google.maps.TrafficLayer();
+      if (d3.select("#trafficchbox").property('checked'))
+        trafficLayer.setMap(map);
+
+      // Removed bikeLayer as it did not dispaly well in combination with metrlayer, traffic, ...
+      //var bikeLayer = new google.maps.BicyclingLayer();
+
+      // OsloMetro custom overlay
+      var OM_ProjectionLayer = null;
+      var OM_DrawLayer = null;
+      // todo: implement proper menus
+      var toolTip = null;
+
+      var oslometroStart = 0; var oslometrolayerdivadded = 0; // for debugging
+
+      var oslometroCreateOverlay = function () {
+        if (OM_ProjectionLayer) {
+          console.error("OM_ProjectionLayer exists already!");
+          return;
+        }
+
+        OM_ProjectionLayer = new google.maps.OverlayView();
+
+        console.log("OM_ProjectionLayer: " + ++oslometroStart);
+        // Add the container when the overlay is added to the map.
+
+        OM_ProjectionLayer.onAdd = function () {
+          OM_DrawLayer = d3.select(this.getPanes().overlayMouseTarget)
+                  .append("div")
+                    .attr('pointer-events', 'all')
+                    .attr("class", "oslometro");
+          console.log("OsloMetro - new div: " + ++oslometrolayerdivadded);
+          // Add tooltip element
+          toolTip = OM_DrawLayer.append("div")
+                  .attr("class", "tooltip")
+                  .style("opacity", 0);
+          OM_ProjectionLayer.draw = function () {
+            drawStations();
+            drawBerths();
+            drawTrain();
+            DrawPassengers();
+          };
+        };
+        // Bind our overlay to the map…
+        OM_ProjectionLayer.setMap(map);
+      }; //oslometrocreateOverlay ()
+
+
+      // Implement heatmap
+      var heatmapData = [];
+      var heatmapRadius = 50;
+      var heatmapLayer = null; //
+
+      var addHeatmapData = function (data) {
+        if (!stationTable || stationTable.length == 0)
+          return;
+        heatmapRadius = d3.max(data, function(d) { return d.TotalAlighting/4; });  // divide by 4 to avoid radius becoming too large
+        heatmapData = [];
+        for (var i=0; i<data.length; i++) {
+          var Pidas_ID = data[i].CurrentStationID;
+          for (j = 0; j < stationTable.length; j++) {
+            if (stationTable[j].CurrentStationID == Pidas_ID) {
+              heatmapData.push({
+                location: new google.maps.LatLng(stationTable[j].platformlat, stationTable[j].platformlng),
+                weight: data[i].TotalAlighting // + data[i].TotalBoarding
+              });
+              break;
+            }
+          }
+          if (j == stationTable.length) {
+            // sometimes Siemens sends us non-existing stations...
+            //console.log("Invalid PIDAS_ID: " + Pidas_ID + " Alighting: " + data[i].TotalAlighting + " Boarding: " + data[i].TotalBoarding);
+          }
+        } // matched all data records with stations
+
+        if (heatmapLayer != null && OM_ProjectionLayer != null)  //we have to check OM_ProjectionLayer to ensure that the map itself is ready
+          heatmapLayer.setMap(null); // get rid of old heatmap
+
+        heatmapLayer = new google.maps.visualization.HeatmapLayer({
+          data: heatmapData,
+          radius: heatmapRadius
+        });
+
+        if (d3.select("#heatmapchbox").property("checked") && heatmapLayer != null && OM_ProjectionLayer != null) {
+          heatmapLayer.setMap(map);
+        }
+      }; //addHeatmapData
+
+      var timerCounter = 0; // for debug only
+      var bounds = 0;
+
+      var mapFitBounds = function () {
+        if (!stationTable || stationTable.length == 0) // we have wait till the server sends us the stations...
+          return false;
+
+        // Set the bounds of the map, i.e the south,east,north,west borders
+        bounds = new google.maps.LatLngBounds();
+        for (i = 0; i<stationTable.length;i++) {
+          var place = new google.maps.LatLng(stationTable[i].platformlat ,stationTable[i].platformlng);
+          if (stationTable[i].platformlat > 60 || stationTable[i].platformlat < 59 || stationTable[i].platformlng > 11 || stationTable[i].platformlng < 10)
+            console.log("Index: " + i + " lat: " + stationTable[i].platformlat + " long: " + stationTable[i].platformlng);
+          bounds.extend(place);
+        }
+        map.fitBounds(bounds);
+        return true;
+      }; // mapFitBounds()
+
+      // Set initial mapSize. This overrides the "zoom" set in the new google.maps.Map({...} above
+      google.maps.event.addListenerOnce(map, 'tilesloaded', function () { //other events that could be used are: "bounds_changed",idle", "tilesloaded"
+        // Set initial zoom level adjusted to display size
+        var iZoom;
+
+        if (!mapFitBounds()) { // we wait until we have received stations from the server and potentially other information too
+          var waitForFit = setInterval (function () {
+            ++timerCounter;
+            if (mapFitBounds()) {
+              clearInterval(waitForFit);
+              iZoom = map.getZoom();
+              //map.setZoom(iZoom+1); // fitBounds has a safety margin, making the map appear too small for my taste
+              // ... we therefore zoom back in one level. Some stations are not shown initially, but that´s ok for now
+              // Todo: consider drawing bounds on map, i.e. rectangle for testing
+            }
+          }, 500);
+        }
+        else { // google adds a "safety margin" so this produce a map that is a little bit too zoomed out
+          iZoom = map.getZoom();
+          //map.setZoom(iZoom+1); // zoom back in one level
+        }
+      });
+
+      var ResizeWindows = function() {
+        // Whenever the user resizes the window, we trigger a resize of the google map as well, to optimzie display of metro lines
+        google.maps.event.trigger(map, 'resize');
+        initDrawOwnModules();
+        drawTrain();
+      };
+
+      // skeleton for adding rightclick menu. Default right-click is "Zoom out".
+      window.addEventListener("resize", ResizeWindows, true);
+      /*
+      var googleMapContextMenu = google.maps.event.addListener(
+              map,
+              "rightclick",
+              function (event) {
+                // use JS Dom methods to create the menu
+                // use event.pixel.x and event.pixel.y
+                // to position menu at mouse position
+                console.log(event);
+              }
+      );
+      */
+
+
+      // Scale the map to optimum size if the Windows is resized
+      google.maps.event.addListener(map, 'resize', function () {
+        var iZoom;
+        if (bounds != 0) {
+          map.fitBounds(bounds);
+          iZoom = map.getZoom();
+          map.setZoom(iZoom + 1); // zoom back in one level
+          map.setCenter(Nationaltheatret);
+        }
+      });
+
+      var _projection = null; // just for testing. Do we get "projection_changed". Answer: only on startup
+      google.maps.event.addListener(map, 'projection_changed', function () {
+        _projection = map.getProjection();
+        console.log('event: projection_changed');
+      });
+
+      // for debug only
+      var stationsStart = 0;
+      var stationsLayer = 0;
+
+      //
+      // DRAW INFRASTRUCTURE
+      //
+
+      var drawInfrastructure = function (data) {
+        // data: {"stations": stationObject, "berths":berthTable,"trackswitches":trackswitchTable, "endberths":endberthTable,"tracks":tracksObject});
+        // we are interested in stations and berths, ignore the rest
+
+        stationTable = d3.values(data.stations); // d3.values(data.stations)
+        // do a sanity check on the data
+        for (var i = 0; i < stationTable.length; i++) {
+          if (!stationTable[i].platformlat || !stationTable[i].platformlng || stationTable[i].platformlat > 60 || stationTable[i].platformlat < 59 || stationTable[i].platformlng > 11 || stationTable[i].platformlng < 10)
+            console.log("Index: " + i + " lat: " + stationTable[i].platformlat + " long: " + stationTable[i].platformlng);
+        }
+        ctsBerthTable = data.berths;
+
+        oslometroCreateOverlay();
+
+        //d3.select("body").on('contextmenu', handleContextMenu);
+
+        // Ask server for trains, i.e. array with lists of berth passings
+        /*
+        socket.emit("alltailsrequest", {"maxBerths": 10}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths berths
+          if (!data || data.length == 0) {
+            return;
+          }
+          for (var i = 0; i < data.length; i++) {
+            drawTrain(data[i]); // array of berths for 1 train
+          } // for-loop
+        });  // emit-function()
+
+         // Add handler for contextMenu
+         d3.select("body").on('contextmenu',handleContextMenu);
+         //d3.select("body").on("mouseenter", handleMouse);
+         //d3.select("body").on("mouseleave", handleMouse);
+        */
+      }; // drawInfrastructure ()
+
+
+      //
+      // DRAW functions
+      //
+
+
+      var drawBerths = function () {
+        var Projection = null;
+        var padding = 10;
+
+        if (!OM_ProjectionLayer) {
+          console.error("drawBerths - OM_ProjectionLayer not created yet!");
+          return;
+        }
+        if (!ctsBerthTable) {
+          console.error("drawBerths - ctsBerthTable is null!");
+          return;
+        }
+
+        Projection = OM_ProjectionLayer.getProjection(); // used by transform below to convert between gps and screen
+
+        /*
+        if (drawBerths.arguments.length == 0) { // we were called by the google map due to resize or something
+          OM_DrawLayer.selectAll("svg.ctsberth").each(transform);
+          return;
+        }
+        */
+
+        // CE = short for "containerElements". For google map this has to be an SVG. In other modules this would be a svg:g element
+        var CE = OM_DrawLayer.selectAll("svg.ctsberth")
+                .data(ctsBerthTable, function (d, i) { return d.itemCode; })
+                //.style("fill", function (d) { return IsBerthOK(d) ? "green" : "black"; })
+                .each(transform) // update existing markers
+              .enter()
+                .append("svg:svg")
+                .each(transform)
+                .attr("class", "ctsberth")
+                .style("visibility", function (d) {
+                  return d3.select("#sporfeltchbox").property('checked') ? "visible" : "hidden";
+                });
+
+        // Add circles
+        var circles = CE.append("svg:circle")
+                .attr("class", "berth")
+                .attr('pointer-events', 'all')
+                .attr("id", function (d) { return "berth_id" + getIDFromName(d.itemCode); })
+                .attr("cx", padding)
+                .attr("cy", padding)
+                .attr("r", "3")
+                .attr("title", function (d) { return d.itemName + " " + d.itemCode; })
+                .style("stroke", "black")
+                .style("stroke-width", 1)
+                .style("fill", function (d) { return d.trackDirectionCode < 0 ? "steelblue" : "burlywood"; })
+                //.style("fill", function (d) { return IsBerthOK(d) ? "green" : "red"; })
+                .attr("stroke", "black")
+                .attr("class", "ctsberthelement ctsberthcircle");
+
+        // Add a label.
+        var labels = CE.append("svg:text")
+                .datum( function (d) { return d.itemCode; }) // no need to copy the full dataset to each text-element
+                .attr('pointer-events', 'all')
+                .attr("x", padding + 9 + "px")
+                .attr("y", padding + "px")
+                .attr("dy", ".31em")
+                .attr("class", "ctsberthelement")
+                .text(function (d) { return d; });
+
+        // Todo: add continuous animation back in, find workaround for underlying bug
+        //pulse(stationMark);
+        //colorchange(stationMark);
+
+        function transform(d) {
+          var LatLng = new google.maps.LatLng(d.Startlat, d.Startlng);
+          var pixel = Projection.fromLatLngToDivPixel(LatLng);
+          return d3.select(this)
+                  .style("left", (pixel.x - padding) + "px")
+                  .style("top", (pixel.y - padding) + "px");
+        }
+
+        circles.on("mouseenter", function () {
+          //DisplayInfoWindowStation(d3.select(this).data()[0]);
+          d3.event.stopPropagation();
+        });
+        circles.on("mouseleave", function () {
+          //CloseInfoWindow();
+        });
+
+        labels.on("mouseenter", function () {
+          //DisplayInfoWindowStation(d3.select(this).data()[0]);
+          d3.event.stopPropagation();
+        });
+        labels.on("mouseleave", function () {
+          //CloseInfoWindow();
+        });
+      }; // drawBerths()
+
+      var colorOKBerths = function (reset) {
+        // Color Berths
+        if (reset) {
+           var circles = OM_DrawLayer.selectAll("circle.ctsberthcircle")
+          .style("fill", function (d) { return d.trackDirectionCode < 0 ? "steelblue" : "burlywood"; });
+        }
+        else {
+          var circles = OM_DrawLayer.selectAll("circle.ctsberthcircle")
+            .style("fill", function (d) { return IsBerthOK(d) ? "green" : "red"; });
+        }
+        function IsBerthOK(d) {
+          if (!ctsOKObject) { return false; }
+          return ctsOKObject[d.itemCode];
+        }
+      }; // colorOKberths()
+
+      // todo: rewrite so that it asks the server for stations if ..selectAll(...stations) return empty selection
+      var drawStations = function() {
+        var Projection = null;
+        var padding = 10;
+
+        if (!OM_ProjectionLayer || !OM_DrawLayer) {
+          console.error("drawStations - OM_ProjectionLayer not created yet!");
+          return;
+        }
+        if (!stationTable) {
+          console.error("drawStations - stationTable is null!");
+          return;
+        }
+
+        Projection = OM_ProjectionLayer.getProjection(); // used by transform below to convert between gps and screen
+
+        /*
+        if (drawStations.arguments.length == 0) { // we were called by the google map due to resize or something
+          OM_DrawLayer.selectAll("svg.stations").each(transform);
+          return;
+        }
+        */
+
+        var marker = OM_DrawLayer.selectAll("svg.stations")
+                .data(stationTable, function(d,i) { return d.stationName + d.trackDirectionCode.toString(); })
+                .each(transform); // update existing markers
+
+        var newmarker = marker.enter()
+                .append("svg:svg")
+                .each(transform)
+                .attr('pointer-events', 'none')
+                .attr("class", "stations");
+        // Add a circle.
+        var circleMark = newmarker.append("svg:circle")
+                .classed("station", true)
+                .attr("r", "4.5px")
+                .attr("cx", padding + "px")
+                .attr("cy", padding + "px")
+                .attr('pointer-events', 'all')
+                .style("fill", "bisque")
+                .attr("stroke", "black");
+                //.attr("class", "stationselement");
+
+        // Add a label.
+        var textMark = newmarker.append("svg:text")
+                .classed("station", true)
+                .attr("x", padding + 9 + "px")
+                .attr("y", padding + "px")
+                .attr("dy", ".31em")
+                .attr("class", "stationselement")
+                .attr('pointer-events', 'all')
+                .text(function(d) { if (d.trackDirectionCode == 1) {return d.stationName;} else {return "";} });
+                // avoid displaying same station twice on the map
+
+        // Todo: add continuous animation back in, find workaround for underlying bug
+        //pulse(stationMark);
+        //colorchange(stationMark);
+
+        function transform(d) {
+          var LatLng = new google.maps.LatLng(d.platformlat, d.platformlng);
+          var pixel = Projection.fromLatLngToDivPixel(LatLng);
+          return d3.select(this)
+                  .style("left", (pixel.x - padding) + "px")
+                  .style("top", (pixel.y - padding) + "px");
+        }
+
+
+        /*
+        d3.selectAll(".station").on("click", function() {
+          handleContextMenu (d3.select(this).data()[0], i);
+        });
+
+        circleMark.on("mouseenter", function () {
+          handleContextMenu(d3.select(this).data()[0], i);
+          //d3.event.stopPropagation();
+        });
+        textMark.on("mouseenter", function () {
+          handleContextMenu(d3.select(this).data()[0], i);
+          //d3.event.stopPropagation();
+        });
+        */
+
+        circleMark.on("mouseenter", function () {
+          DisplayInfoWindowStation(d3.select(this).data()[0]);
+          //d3.event.stopPropagation();
+        });
+        circleMark.on("mouseleave", function () {
+          CloseInfoWindow();
+        });
+
+        textMark.on("mouseenter", function () {
+          DisplayInfoWindowStation(d3.select(this).data()[0]);
+          //d3.event.stopPropagation();
+        });
+        textMark.on("mouseleave", function () {
+          CloseInfoWindow();
+        });
+
+      }; // drawStations()
+
+      var trainRectColor = function (d) {
+        if (d.values.delay <= -180) {
+          return "gold";
+        }  // "gold" looks like strong yellow
+        if (d.values.delay <= -60) {
+          return "yellow";
+        }
+        if (d.values.delay > 10) {
+          return "red";
+        }
+        return "lawngreen";
+      }; // trainRectColor()
+
+      var trainTextColor = function (d) {
+        if (d.values.delay <= -180) {
+          return "red";
+        }  // 3 minutes or more delayed
+        if (d.values.delay <= -60) {
+          return "black";
+        }
+        if (d.values.delay > 10) {
+          return "white";
+        }
+        return "black";
+      }; // trainTextColor()
+
+
+      //
+      // FINISHED DRAW INFRASTRUCTURE
+      //
+
+      //
+      // LIVE SECTION
+      //
+
+      // Functions for drawing trains and their tails
+      //
+
+
+      /* Format av the message we receive on topic "cts"
+       {
+       "topic"
+       :
+       "cts", "values"
+       :
+       {
+       "from_infra_berth"
+       :
+       {
+       "Name"
+       :
+       "R0852T", "Latitude"
+       :
+       59.94284, "Longitude"
+       :
+       10.618624
+       }
+       ,
+       "to_infra_berth"
+       :
+       {
+       "Name"
+       :
+       "R0878T", "Latitude"
+       :
+       59.941393, "Longitude"
+       :
+       10.616812
+       }
+       ,
+       "time_stamp"
+       :
+       "2016-03-20T11:23:05Z", "sequence_no"
+       :
+       0, "interlocking_id"
+       :
+       "OST", "from_berth"
+       :
+       "R852 ", "to_berth"
+       :
+       "R878 ", "address"
+       :
+       "508", "path"
+       :
+       "0111", "destination"
+       :
+       "ØSÅ2", "delay"
+       :
+       -82, "arrive_depart"
+       :
+       " ", "platform"
+       :
+       " ", "ars_mode"
+       :
+       "T", "metadata"
+       :
+       {
+       "dataType"
+       :
+       "tuv", "dataMock"
+       :
+       false, "isSafeFromDelete"
+       :
+       false, "dataPartition"
+       :
+       "tuv-2016-03-20-508", "entryAssembly"
+       :
+       null, "operatingDayOslo"
+       :
+       "2016-03-20", "drivTimeStamp"
+       :
+       "2016-03-20T11:23:15.9189806Z"
+       }
+       }
+       }
+       */
+      // We receive an array of berths with newest berth at data[0]
+      var drawTrain = function (data) {
+        var Projection = 0;
+        if (!OM_ProjectionLayer || !OM_DrawLayer) {
+          return;
+        }
+
+        Projection = OM_ProjectionLayer.getProjection(); // used by transform below to convert between gps and screen
+
+        if (drawTrain.arguments.length == 0) { // we were called by the google map due to resize or something
+          OM_DrawLayer.selectAll("svg.train").each(transform);
+          return;
+        }
+
+        var marker = OM_DrawLayer.selectAll("svg.train")
+                .data([data[0]], function (d) { return d.values.address; });
+
+        var newmarker = marker.enter()
+                .append("svg:svg")
+                .attr('pointer-events', 'none')
+                .classed("train", true)
+                //.attr("class", function (d) { return "train id" + getIDFromName(d.values.address); });
+                .attr("id", function (d) { return "train_id" + getIDFromName(d.values.address); }) //firefox fails if ID starts with a nunber (!)
+                .on("mouseover", function (d) { this.parentNode.appendChild(this); });
+                //.each(transform);
+
+        var newRect = newmarker.append("svg:rect")
+            .attr("class", "train trainelement")
+            .style("visibility", function (d) { return d3.select("#trainchbox").property('checked') ? "visible" : "hidden"; })
+            .style("opacity", 1.0)
+            .style("fill", "ivory")
+            .attr("x", 0 + "px")
+            .attr("y", 0 + "px")
+            .attr("width", 40 + "px")
+            .attr("height", 15 + "px")
+            .attr("rx", 4 + "px")         // set the x corner curve radius
+            .attr("ry", 4 + "px")
+            .attr('pointer-events', 'all')
+            .on("mouseover", function (d) { this.parentNode.parentNode.appendChild(this.parentNode);})
+            .style("stroke-width", 4)
+            .style("stroke-dasharray", function (d) { return d.values.yellow ? ("4,4") : null; }) // "null" removes the property
+            .style("stroke", function (d) { if (d.values.yellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
+            .style("fill", "white") //'#ffffff')
+            .style("opacity", 1.0);
+
+        var trainID = newmarker.append("svg:text")
+                .attr("class", "train trainelement")
+                .style("visibility", function (d) { return d3.select("#trainchbox").property('checked') ? "visible" : "hidden"; })
+                .attr("text-anchor", "middle")
+                .attr("x", 20 + "px")
+                .attr("y", 12 + "px")
+                .attr('pointer-events', 'none')
+                .attr("font-size", "12px")
+                //.style("fill", function (d) { return trainTextColor(d); })
+                .style("font-weight", "bold");
+                //.text(function (d) { return d.values.address; });
+
+        marker
+            .each(transform); // update all markers (i.e. trains)
+        marker.select("rect") // select the first (and only) rect child for each svg. Remember the side-effect: select also updates the datum of the child
+          .transition()
+          .duration(2000)
+            .style("stroke-dasharray", function (d) { return d.values.yellow ? ("4,4") : null; }) // We set this property here is becaues of the Special codes (EXIT, NOTD, INTERP etc. As soon as the train start moving we remove the dasharray stroke
+            .style("stroke", function (d) { if (d.values.yellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
+            .style("fill", function (d) { return d.values.yellow ? "white" : trainRectColor(d); });
+        marker.select("text")
+          .text(function (d) { return bTextDestination ? getDestination(d) : d.values.address; })
+          .transition()
+          .duration(2000)
+            .style("fill", function (d) { return trainTextColor(d); });
+
+        function transform(d) {
+          //var dGeoFrom = new google.maps.LatLng(d.values.to_infra_berth.StartLongitude, d.values.to_infra_berth.StartLatitude);
+          var dGeoTo = new google.maps.LatLng(d.values.to_infra_berth.StartLongitude, d.values.to_infra_berth.StartLatitude);
+          //var dScreenFrom = Projection.fromLatLngToDivPixel(dGeoFrom);
+          var dScreenTo = Projection.fromLatLngToDivPixel(dGeoTo);
+
+          // Todo: consider adding logic for left or right aligning trains depending on track, like in /driver.jade
+          //var x = dScreenFrom.x < dScreenTo.x?dScreenFrom.x:dScreenTo.x;
+          //var y = dScreenFrom.y < dScreenTo.y?dScreenFrom.y:dScreenTo.y;
+          //var width = Math.abs(dScreenFrom.y - dScreenTo.y);
+          //var height = Math.abs(dScreenFrom.x - dScreenTo.x);
+
+          return d3.select(this)
+                      .transition()
+                      .duration(3000)
+                      .style("left", dScreenTo.x+"px") // .attr("x", x) do not work ...?
+                      .style("top", dScreenTo.y+"px");
+        }
+
+        /*
+        newCircle.on("mouseenter", function () {
+          DisplayInfoWindowPassengers(d3.select(this).data()[0]);
+          d3.event.stopPropagation();
+          //return false;
+        });
+        newCircle.on("mouseleave", function () {
+          CloseInfoWindow();
+        });
+        */
+      }; // drawTrain()
+
+      var drawTrainSpecialCode = function (data) {
+        var TrainG = d3.select("#train_id" + getIDFromName(data.values.address));
+        var code = data.values.to_berth;
+        var TrainRect = null;
+        var d = null;
+
+        if (TrainG.empty())
+            return;
+
+        if (code && (code === "INTERP" || code === "EXIT" || code === "LOST" || code === "CANCEL" || code === "NOTD")) {
+            code = data.values.to_berth;
+        }
+        else {
+            code = data.values.from_berth;
+        }
+
+        var d = TrainG.datum();
+        d.values.special = code; // store it so that we can display it to the user later, pon right-click
+        TrainG.datum(d);
+
+        TrainRect = TrainG.select("rect"); // remember trains have a group object as its top-level element...
+        if (TrainRect.empty())
+            return;
+
+        TrainRect.style("stroke-dasharray", ("6, 2"))
+                .datum(d);
+
+        if (code === "EXIT") {
+            TrainRect
+                    .transition()
+                    .duration(1000 * 60 * 2)
+                    .style("opacity", 0)
+                    .remove();
+            TrainG.selectAll("*")
+                    .transition()
+                    .duration(1000 * 60 * 2)
+                    .style("opacity", 0)
+                    .remove();
+            TrainG.transition()
+                    .delay(1000 * 61 * 2)
+                    .remove();
+        }
+        /*
+         .transition()
+         .duration (1000*60*2)
+         .style ("stroke-dasharray", null);
+         */
+      }; // drawTrainSpecialCode()
+
+      var drawTrainGhost = function (data) {
+        //console.log("cts_ghost_train:" + JSON.stringify(msg, undefined, 2));
+        if (data.values.to_infra_berth) {
+          addGhost(data.values.to_infra_berth);
+        }
+        else if (data.values.from_infra_berth) {
+          addGhost(data.values.from_infra_berth);
+        }
+        else {
+          console.log("Ghost disappeared: " + JSON.stringify(data, undefined, 2));
+        }
+      }; // drawTrainGhost()
+
+      var drawTrainNumberChanged = function (data) {
+        var newTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data.msgObject.values.address)).select("rect"); // remember trains have a group object as its top-level element...
+        var newBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data.msgObject.values.to_infra_berth.Name));
+        var oldTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data.old_train_no)).select("rect");
+        var oldTrainG = OM_DrawLayer.select("#train_id" + getIDFromName(data.old_train_no));
+        var oldBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data.msgObject.values.from_infra_berth.Name));
+
+        setBlinkAlarm([newTrain, oldTrain, oldBerth, newBerth]);
+
+        if (!oldTrain.empty()) {
+          oldTrain
+                  .style("stroke-dasharray", ("6, 2"))
+                  .transition()
+                  .duration(1000 * 60 * 2)
+                  .style("opacity", 0)
+                  .remove();
+          oldTrainG.selectAll("*")
+                  .transition()
+                  .duration(1000 * 60 * 2)
+                  .style("opacity", 0)
+                  .remove();
+          oldTrainG.transition()
+                  .delay(1000 * 61 * 2)
+                  .remove();
+        }
+        if (oldBerth.empty()) {
+          console.log("Non-existing berth had a train number change. Old number: " + data.old_train_no + " New number: " + data.msgObject.values.address + "Berth: " + data.msgObject.values.from_infra_berth.Name);
+        }
+        else {
+          var dd = oldBerth.datum();
+          if (dd.noTrainNumberChanges)
+            ++dd.noTrainNumberChanges;
+          else
+            dd.noTrainNumberChanges = 1;
+          oldBerth.datum(dd);
+          oldBerth.attr("r", function (d) {
+            return parseInt(d3.select(this).attr("r")) + 1;
+          });
+          console.log("Existing berth had a train number change. Old number: " + data.old_train_no + " New number: " + data.msgObject.values.address + " Berth: " + data.msgObject.values.from_infra_berth.Name);
+        }
+      }; // drawTrainNumberChanged()
+
+      var changeTrainTexts = setInterval(function () {
+        setTrainTexts();
+      }, 1000 * 15);
+
+      var bTextDestination = true;
+      var setTrainTexts = function () {
+        bTextDestination = !bTextDestination;
+        var trainTexts = d3.selectAll("text.train")
+                .text(function (d) {
+                  return bTextDestination ? getDestination(d) : d.values.address;
+                });
+      };
+
+      function getDestination(d) {
+        var dest = d.values.destination;
+        if (dest === "--00")
+          return dest;
+        if (!isNaN(parseInt(dest.slice(-1)))) {
+          return dest.slice(0, -1); // remove the last digit
+        }
+        return dest;
+      } // getDestination()
+
+      var checkParkedTrains = setInterval(function () {
+          drawParkedTrains ();
+      }, 1000*10);  // check every 10 secs for parked trains, i.e. trains we have not heard from in a while
+
+      // Mark trains if we have no cts-message in 1.5 minutes
+      // Add extra emphasis to trains if we have no cts-message in 3 minutes
+      var drawParkedTrains = function () {
+          var time = new Date();
+          var timeNow = time.getTime();
+          var Trains = null, parkedTrains = null;
+
+          if (!OM_ProjectionLayer || !OM_DrawLayer) {
+            return;
+          }
+
+          Trains = OM_DrawLayer.selectAll("svg.train");
+          parkedTrains = Trains.filter(function (d) { return timeNow - Date.parse(d.values.time_stamp) > 1500*60; });
+          parkedTrains.select("rect")
+                  .style("fill", function (d) { return timeNow - Date.parse(d.values.time_stamp) > 3000*60 ? "url(#vertical-stripe-1)": "url(#diagonal-stripe-1)"; });
+          parkedTrains.select("text")
+              .style("fill", "black");
+      }; // drawParkedTrains()
+
+      //
+      // DrawPassengers
+      //
+
+      var iDraws = 0;
+      var rememberExit = null;
+
+      var DrawPassengers = function (data) {
+        var Projection = 0;
+        var existingPax = null;
+
+        if (passengerTable == undefined || passengerTable == null || passengerTable == 0 || passengerTable.length == 0) {
+          return;
+        }
+        if (!OM_ProjectionLayer || !OM_DrawLayer) {
+          return;
+        }
+
+        Projection = OM_ProjectionLayer.getProjection(); // used by transform below to convert between gps and screen
+
+        if (DrawPassengers.arguments.length == 0) { // we were called by the google map due to resize or something
+          existingPax = OM_DrawLayer.selectAll("svg.passengers");
+          if (existingPax.empty()) {
+            console.log("DrawPassengers - no passengers to draw"); // This may happen during loading? Todo: send request to server and ask?
+            return;
+          }
+          existingPax.each(transform);
+          return;
+        }
+
+        // if we receive new data before existing transitions are ended we end up consuming a lot of resources and may hang the client.
+        // Therefore, remove elements with ongoing transitions before we proceed (they would have been removed anyway, we just do it before adding new stuff...
+        if (rememberExit != null && !rememberExit.empty()) {
+          rememberExit.selectAll("*").remove();
+          rememberExit.remove();
+        }
+
+        var marker = OM_DrawLayer.selectAll("svg.passengers")
+                .data(data, function(d) { return d.key.toString() + "_" + d.value.passengers.DateAndTimeUnix.toString(); }) //d.key === CurrentStationID/PIDAS_ID, combination av station and time is a unique alight/board event
+                .each(transform); // update existing markers in case we are called due to user zooming or resize
+
+        var newmarker = marker.enter()
+                .append("svg:svg")
+                .each(transform)
+                .attr('pointer-events', 'none')
+                .attr("class", "passengers");
+        /*
+                Todo: investigate further. Wold be nice to bind only the data we use to save on memory
+                .datum(function (d,i) { return {TotalAlighting: d.value.passengers.TotalAlighting,
+                                                TotalBoarding: d.value.passengers.TotalBoarding,
+                                                LineNumber: d.value.passengers.LineNumber,
+                                                StartStationID: d.value.passengers.StartStationID,
+                                                EndStationID: d.value.passengers.EndStationID,
+                                                platformlat: d.value.station.platformlat,
+                                                platformlng: d.value.station.platformlng}; }); // only bind the data we need, avoid storing too much.
+        */
+
+        // Add circles
+        var newCircle = newmarker.append("svg:circle")
+                .attr("class", function (d) { return "passengerselement" + " id" + d.key + " id" + d.value.passengers.TogNumber; }) // firefox crashes if class is only a number, therefore add "id"
+                .style("visibility", function (d) { return d3.select("#paxchbox").property('checked') ? "visible" : "hidden"; })
+                //.attr("id", function (d) { return "i" + d.key; }) //firefox fails if ID starts with a nunber (!)
+                .attr('pointer-events', 'all')
+                //.on("mouseover", function (d) { this.parentNode.appendChild(this); })
+                .on("mouseover", function (d) { this.parentNode.parentNode.appendChild(this.parentNode);})
+                .style("opacity", .75)
+                .style("fill", function (d) { return LineColor[d.value.passengers.LineNumber-1]; })
+                .attr("r", function (d) { return Math.max((d.value.passengers.TotalBoarding + d.value.passengers.TotalAlighting)/2, 15) + "px"; }) //r=avg align and board, but min r=15 to ensure circle big enough to have room for the text
+                .attr("cx", 0)
+                .attr("cy", 0)
+                .attr("stroke", "black");
+
+        var newLine = newmarker.append("svg:line")
+                .attr("class", "passengerselement")
+                .style("visibility", function (d) { return d3.select("#paxchbox").property('checked') ? "visible" : "hidden";} )
+                .attr("x1", function(d) { return - Math.max(d.value.passengers.TotalBoarding + d.value.passengers.TotalAlighting, 15)/2 + "px" })
+                .attr("x2", function(d) { return Math.max(d.value.passengers.TotalBoarding + d.value.passengers.TotalAlighting, 15)/2 + "px" })
+                .attr("y1", 0)
+                .attr("y2", 0)
+                .attr('pointer-events', 'none')
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .style("fill", "white");
+
+        var arr = function (d) { // vestlige startstasjoner: 32,41,58,71, 73, 88
+          var r = Math.max(d.value.passengers.TotalBoarding + d.value.passengers.TotalAlighting, 15);
+          var arrowHeadL = -(r/2);
+          var arrowHeadR = (r/2);
+          if (d.value.passengers.StartStationID == 32 || d.value.passengers.StartStationID == 41 || d.value.passengers.StartStationID == 58 ||
+                  d.value.passengers.StartStationID == 71 || d.value.passengers.StartStationID == 73 || d.value.passengers.StartStationID == 88) {
+            return "M" + (arrowHeadR-4).toString() + " 6L" + arrowHeadR.toString() + " 0L" + (arrowHeadR-4).toString() + " -6";
+          } else {
+            return "M" + (arrowHeadL+4).toString() + " 6L" + (arrowHeadL).toString() + " 0L" + (arrowHeadL+4).toString() + " -6";
+          }
+        };
+
+        var arrowhead = newmarker.append("svg:path")
+                .attr("stroke", "white")
+                .style("fill", "white")
+                .attr("d", function (d) { return arr(d); })
+                .attr("class","arrowHead passengerselement")
+                .attr('pointer-events', 'none')
+                .style("visibility", function (d) { return d3.select("#paxchbox").property('checked') ? "visible" : "hidden"; });
+
+        // Add text for Alighting and Boarding
+
+        // define the clipPath for alighting, only text within the rect is shown
+        var alightClip = newmarker.append("clipPath")
+                .classed("alightboardclip", true)
+                .attr("id", function (d,i) { return "alightclip" + d.key + "_" + d.value.passengers.DateAndTimeUnix; })  // ensure unique ids for every alightClip path present on screen
+                .append("rect")
+                .attr('pointer-events', 'none')
+                .attr("x", - 20 + "px")
+                .attr("y", -15 + "px")
+                .attr("width", 60 + "px")
+                .attr("height", 15 +"px");
+
+         var alight = newmarker.append("svg:text")
+                .attr("class", "passengerselement")
+                .style("visibility", function (d) { return d3.select("#paxchbox").property('checked') ? "visible" : "hidden"; })
+                .attr("clip-path", function (d,i) { return "url(#alightclip" + d.key + "_" + d.value.passengers.DateAndTimeUnix + ")"; })
+                .attr("text-anchor", "middle")
+                .attr("x", -6 + "px")
+                .attr("y", 9 + "px")
+                .attr("dy", ".31em")
+                 .attr('pointer-events', 'none')
+                 .attr("font-size", "15px")
+                .style("fill", "white")
+                .style("font-weight", "bold")
+                .text(function(d) { return d.value.passengers.TotalAlighting.toString(); });
+
+        // define the clipPath for boarding, only text within the rect is shown
+        var boardClip = newmarker.append("clipPath")
+                .classed("alightboardclip", true)
+                .attr('pointer-events', 'none')
+                .attr("id", function (d,i) { return "boardclip" + d.key + "_" + d.value.passengers.DateAndTimeUnix; })
+                .append("rect")
+                .attr('pointer-events', 'none')
+                .attr("x", -20 + "px")
+                .attr("y", 0 + "px")
+                .attr("width", 60 + "px")
+                .attr("height", 15 + "px");
+
+        var board = newmarker.append("svg:text")
+                .attr("class", "passengerselement")
+                .style("visibility", function (d) { return d3.select("#paxchbox").property('checked') ? "visible" : "hidden";} )
+                .attr("clip-path", function (d,i) { return "url(#boardclip" + d.key + "_" + d.value.passengers.DateAndTimeUnix + ")"; })
+                .attr("text-anchor", "middle")
+                .attr("x", 6 + "px")
+                .attr("y", -7 + "px")
+                .attr('pointer-events', 'none')
+                .attr("dy", ".31em")
+                .attr("font-size", "15px")
+                .style("fill", "white")
+                .style("font-weight", "bold")
+                .text(function(d) { return d.value.passengers.TotalBoarding.toString(); });
+
+        alight.transition()
+                .duration(1500)
+                .attr("y", -7 + "px")
+                .each ("end", function (d, i) { return d3.select(this).attr("clip-path", null); }); // remove the clip-path once we are done
+        board.transition()
+                .duration(1500)
+                .delay(1500)
+                .attr("y", 9 + "px")
+                .each ("end", function (d, i) { return d3.select(this).attr("clip-path", null); });
+        newmarker.selectAll("text")
+                .transition()
+                .delay(3000)
+                .duration(1000)
+                .attr("x", 0);
+        // remove the clip-paths once we are done with the transition as they are no longer needed
+        d3.selectAll(".alightboardclip")
+                .transition()
+                .delay(6000)
+                .remove();
+
+        // remember this exit selection until next time we are called
+        // this enables us to skip any ongoing exit transitions and just remove things if we receive a lot of data, see start of this function
+        rememberExit = marker.exit();
+
+        // remove elements inside the circles
+
+        marker.exit().selectAll("text")
+              .transition()
+                .duration(500)
+                .remove();
+        marker.exit().selectAll("line")
+                .transition()
+                .duration(500)
+                .remove();
+        marker.exit().selectAll(".arrowhead")
+                .transition()
+                .duration(500)
+                .remove();
+
+        // remove circles and svg
+        marker.exit().selectAll("*")
+              .transition()
+                .duration(7000)
+                .delay(function (d,i) { return 50*(d.value.passengers.TotalAlighting+d.value.passengers.TotalBoarding); }) // large circles stay longer...
+                .style ("opacity", 0)
+                .remove();
+        marker.exit()
+          .transition()
+          .duration(7000)
+          .remove();
+
+        function transform(d) {
+          var dGeo = new google.maps.LatLng(d.value.station.platformlat, d.value.station.platformlng);
+          var dScreen = Projection.fromLatLngToDivPixel(dGeo);
+          return d3.select(this)
+                  .style("left", (dScreen.x) + "px")
+                  .style("top", (dScreen.y) + "px");
+        }
+
+        newCircle.on("mouseenter", function () {
+          // Todo: select train and fill with brown?
+          DisplayInfoWindowPassengers(d3.select(this).data()[0]); //todo: use datum()
+          d3.event.stopPropagation();
+          //return false;
+        });
+        newCircle.on("mouseleave", function () {
+          CloseInfoWindow();
+        });
+
+      }; // DrawPassengers()
+
+      // Some animation helpers for the Draw... functions above
+      // NOT used for now as they seem to leek memory on IE
+      // Todo: add this animation back in, find workaround for underlying bug causing ever increasing memory consumption on some browsers
+      var pulse = function (circle) {
+        (function repeat() {
+          circle = circle.transition()
+                  .duration(2000)
+                  .attr("r", 4.5 + "px")
+                  .transition()
+                  .duration(2000)
+                  .attr("r", 6 + "px")
+                  .ease('linear')  //sine, linear, quad, exp, bounce, cubic...
+                  .each("end", repeat);
+        })();};
+
+      // Todo: add this animation back in, find workaround for underlying bug causing ever increasing memory consumption on some browsers
+      var colorchange = function (circle) {
+        (function repeat() {
+          circle = circle.transition()
+                  .duration(3000)
+                  .style("fill", "red")
+                  .transition()
+                  .duration(3000)
+                  .style("fill", "blue")
+                  .ease('cubic-in-out')
+                  .each("end", repeat);
+        })();
+      };
+
+
+      //
+      // InfoWindow functions
+      //
+
+      var isInfoWindowVisible = false;
+
+      var CloseInfoWindow = function () {
+        isInfoWindowVisible = false;
+        infowindow.close();
+      };
+
+      var Weekdays = ["Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag","Lørdag"];
+      var Months = ["Januar", "Februar", "Mars", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Desember"];
+
+      var DisplayInfoWindowPassengers = function (d) {
+        // d contains the passengerTable record associated with this station converted to d3 entries form with key==PIDAS_ID, value = {all other attributes}
+        var latLng = {};
+
+        if (isInfoWindowVisible) {
+          return;
+        }
+        isInfoWindowVisible = true;
+
+        latLng["lat"] = d.value.station.platformlat;
+        latLng["lng"] = d.value.station.platformlng;
+
+        var startStation = stationTable.filter(function (obj) {
+          return obj.CurrentStationID.toString() === d.value.passengers.StartStationID.toString();
+        })[0];
+        var StartStationName = startStation ? startStation.stationName : "--";
+
+        var endStation = stationTable.filter(function (obj) {
+          return obj.CurrentStationID.toString() === d.value.passengers.EndStationID.toString();
+        })[0];
+        var EndStationName = endStation ? endStation.stationName : "--";
+
+        var StartStationID = d.value.passengers.StartStationID ? d.value.passengers.StartStationID : "--";
+        var EndStationID = d.value.passengers.EndStationID ? d.value.passengers.EndStationID : "--";
+        var Bane = d.value.station.trackName ? d.value.station.trackName : "--";
+        var Retning = d.value.station.trackDirectionName ? d.value.station.trackDirectionName : "--";
+        var TotalBoarding = d.value.passengers.TotalBoarding ? d.value.passengers.TotalBoarding : "--";
+        var TotalAlighting = d.value.passengers.TotalAlighting ? d.value.passengers.TotalAlighting : "--";
+        var TogNumber = d.value.passengers.TogNumber ? d.value.passengers.TogNumber : "--";
+        var OwnModuleNo = d.value.passengers.OwnModuleNo ? d.value.passengers.OwnModuleNo : "--";
+        var CoupledModuleNo = d.value.passengers.CoupledModuleNo ? d.value.passengers.CoupledModuleNo : "--";
+        var LineNumber = d.value.passengers.LineNumber ? d.value.passengers.LineNumber : "--";
+        var Temperature = 0; //d.value.Temperature ? d.value.Temperature : "--";
+
+        var date = new Date(d.value.passengers.DateAndTimeUnix);
+        var timeOfDay = date.toTimeString().split(' ')[0];
+        var Weekday = Weekdays[date.getDay()]; //d.value.Weekday ? d.value.Weekday : "--";
+        var Year = date.getFullYear();
+        var Month = Months[date.getMonth()];
+        var DayOfMonth = date.getDate();
+
+        var Height = 0; //d.value.Height ? d.value.Height : "--"
+
+        var contentString = '<div id="content">' +
+                '<div id="siteNotice">' + '</div>' +
+                '<h1 id="firstHeading" class="firstHeading">' + d.value.station.stationName + '</h1>' +
+                '<div id="bodyContent">' + '<p><b>' + 'Plattform: ' + d.value.station.platformCode + "  " + '</b>' + '<br><b>' +
+                'Bane: ' + Bane + '</b>' + " " + 'Retning: ' + Retning + '<br>' +
+                "Lengdegrad: " + d.value.station.platformlat + " Breddegrad: " + d.value.station.platformlng + "<br>" +
+                'PIDAS ID: ' + d.key + '<br>' +
+                'Siste På: ' + TotalBoarding + " " + 'Siste Av: ' + TotalAlighting + '<br>' +
+                'Tognummer: ' + TogNumber + '<br>' + " " + 'OwnModuleNo: ' + OwnModuleNo + '<br>' +
+                'CoupledModuleNo: ' + CoupledModuleNo + " Konfigurasjon: " + d.value.passengers.ModuleConfig + " Leading: " + d.value.passengers.LeadingOrGuided + '<br>' +
+                'Line: ' + LineNumber + '<br>' +
+                'Startstasjon: ' + StartStationID + ' ' + StartStationName + '<br>' +
+                'Endestasjon: ' + EndStationID + ' ' + EndStationName + '<br>' +
+                'Temperatur: ' + Temperature.toPrecision(2) + " Lengde: " + d.value.station.meterLength + '<br>' +
+                Weekday + " " +  DayOfMonth + "." + Month + " " + Year + " " + timeOfDay + '<br>' +
+                "SensorDiagnoseError: " + d.value.passengers.SensorDiagnoseError + " DataInvalid: " + d.value.passengers.DataInvalid + "<br>" +
+                '<p>Sporveien, <br><a href="https://no.wikipedia.org/wiki/Sporveien">' +
+                '<br>https://no.wikipedia.org/w/index.php?title=Sporveien</a> ' +
+                '<br>(sist besøkt november, 2015).</p>' +
+                '</div>' +
+                '</div>';
+        infowindow.setContent(contentString);
+        infowindow.setPosition(latLng);
+        infowindow.open(map);
+      }; // DisplayInfoWindowPassengers
+
+      var DisplayInfoWindowStation = function (d) {
+        // d contains the stationTable record associated with this station
+
+        var latLng = {};
+        if (isInfoWindowVisible) {
+          return;
+        }
+        isInfoWindowVisible = true;
+
+        latLng["lat"] = d.platformlat;
+        latLng["lng"] = d.platformlng;
+
+        var result = passengerTable.filter(function (obj) {
+          return obj.key == d.CurrentStationID;
+        });
+        if (result.length == 0) { // No passengers associated with this station
+          var contentString = '<div id="content">' +
+                  '<div id="siteNotice">' +
+                  '</div>' +
+                  '<h1 id="firstHeading" class="firstHeading">' + d.stationName + '</h1>' +
+                  '<div id="bodyContent">' + '<p><b>' + 'Plattform: ' + d.platformCode + "  " + '</b>' + '<br><b>' +
+                  'Bane: ' + d.trackName + '</b>' + " " + 'Retning: ' + d.trackDirectionName + '<br>' +
+                  "Lengdegrad: " + d.platformlat + " Breddegrad: " + d.platformlng + "<br>" +
+                  'PIDAS ID: ' + d.CurrentStationID + '<br>' +
+                  " Platformlengde: " + d.meterLength + " Meter fra Nationaltheatret: " + d.MetersFromZero + '<br>' +
+                  '<p>Sporveien, <br><a href="https://no.wikipedia.org/wiki/Sporveien">' +
+                  '<br>https://no.wikipedia.org/w/index.php?title=Sporveien</a> ' +
+                  '<br>(sist besøkt november, 2015).</p>' +
+                  '</div>' +
+                  '</div>';
+          infowindow.setContent(contentString);
+          infowindow.setPosition(latLng);
+          infowindow.open(map);
+        } else {
+          DisplayInfoWindowPassengers(result[0]);
+        }
+      }; // DisplayInfoWindowStation
+
+
+      //
+      // Statistics windows section, i.e MetroLines, MetroStations and Trains
+      //
+
+      // --- Bar Chart Lines
+
+      var xLines,yLines, xAxisLines, yAxisLines, chartLines;
+      var innerHeightLines, innerWidthLines;
+
+      var initDrawLinesBarChart = function() {
+        var width = $("#barchartlines").width();
+        var height = $("#barchartlines").height();
+        var w = $("#bardivlines").width();
+        var h = $("#bardivlines").height();
+
+        d3.select("#bardivlines").style("visibility", function (d) { return d3.select("#lineschbox").property('checked') ? "visible" : "hidden"; } );
+
+        //some tests to get attributes - prepare for resize
+        //$('#elt').attr('width');
+        var $body = $(this.ie6 ? document.body : document); // using document in ie6 causes a crash
+        var tw = $body.width();
+        var th = $body.height();
+
+        var margin = {top: 30, right: 20, bottom: 30, left: 40};
+        innerWidthLines = width - margin.left - margin.right;
+        innerHeightLines = height - margin.top - margin.bottom;
+
+        yLines = d3.scale.linear()
+                .range([innerHeightLines, 0]); // note: innerheight, 0 reverses the axis
+        xLines = d3.scale.ordinal()
+                .domain([1,2,3,4,5,6,8])  // The metro lines
+                .rangeRoundBands([0, innerWidthLines], .2);
+
+        xAxisLines = d3.svg.axis()
+                .scale(xLines)
+                .orient("bottom");
+        yAxisLines = d3.svg.axis()
+                .scale(yLines)
+                .orient("left");
+
+        chartLines = d3.select("#barchartlines")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", "0 0 " + width + " " + height)
+                .attr("preserveAspectRatio", "none")
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        chartLines.append("g")
+                .attr("class", "xLines axis")
+                .attr("transform", "translate(0," + innerHeightLines + ")")
+                .call(xAxisLines);
+
+        chartLines.append("g")
+                .attr("class", "yLines axis")
+                .call(yAxisLines)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Passasjerer");
+
+        chartLines.append("text")
+                .attr("x", function (d) { return d3.select(".yLines").select(".domain").node().getBBox().left; }) // left align legend with y-axis
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "left")
+                .style("font-size", "14px")
+                .style("text-decoration", "bold")
+                .text("Passasjerer per linje siste 30 minutter");
+
+      }; //initDrawLinesBarChart
+
+      var DrawLinesBarChart = function (data) {
+        yLines.domain([0, d3.max(data, function(d) { return d.TotalAlighting; })]);
+
+        var bar = chartLines.selectAll("rect")
+            .data(data, function(d) { return d.LineNumber; })
+              .each(transform);
+
+        bar.enter()
+            .append("rect")
+              .style("fill", function (d) { return LineColor[d.LineNumber - 1]; })
+              .attr("x", function(d) { return xLines(d.LineNumber); })
+              .attr("width", xLines.rangeBand())
+              .attr("y", innerHeightLines)
+              .attr("height", 0)
+                .transition().duration(1500).ease("sin-in-out")
+              .attr("y", function (d) {return yLines(d.TotalAlighting);})
+              .attr("height", function (d) { return innerHeightLines - yLines(d.TotalAlighting); });
+
+        // Handle update + exit
+
+        bar.exit() //.selectAll("rect")
+            .remove();
+
+        d3.selectAll(".yLines")
+            .transition().duration(1500).ease("sin-in-out")
+            .call(yAxisLines);
+
+        function transform (d) {
+          return d3.select(this)
+            .transition().duration(1500).ease("sin-in-out")
+            .attr("y", function(d) { return yLines(d.TotalAlighting); })
+            .attr("height", function(d) { return innerHeightLines - yLines(d.TotalAlighting); });
+        }
+
+        bar.on("mouseenter", function () {
+          var thisObj = d3.select(this);
+          var Line = thisObj.datum().LineNumber;
+          d3.selectAll("circle.passengerselement")
+              .filter(function(d) {return d.value.passengers.LineNumber == Line;})
+              .style("fill", "brown");
+          thisObj.style("fill", "brown");
+          return false; //todo: consider adding stop propagation
+        });
+
+        bar.on("mouseleave", function () {
+          var thisObj = d3.select(this);
+          var Line = thisObj.datum().LineNumber;
+          d3.selectAll("circle.passengerselement")
+              .filter(function(d) {return d.value.passengers.LineNumber == Line;})
+              .style("fill", LineColor[Line - 1]);
+          thisObj.style("fill", LineColor[Line-1]);
+
+          //var opaque = selection.filter(function () {
+          //)  return d3.select(this).style("opacity") == 1;
+          //});
+
+          return false; //todo: consider adding stop propagation
+        });
+      };
+
+      // -- Bar Stations --
+      //
+
+      var xStations, yStations, xAxisStations, yAxisStations, chartStations;
+      var innerHeightStations, innerWidthStations;
+
+      var initDrawStationsBarChart = function () {
+        var width = $("#barchartstations").width();
+        var height = $("#barchartstations").height();
+
+        var margin = {top: 30, right: 20, bottom: 30, left: 40};
+        innerWidthStations = width - margin.left - margin.right;
+        innerHeightStations = height - margin.top - margin.bottom;
+
+        d3.select("#bardivstations").style("visibility", function (d) { return d3.select("#stationschbox").property('checked') ? "visible" : "hidden"; } );
+
+        yStations = d3.scale.linear()
+                .range([innerHeightStations, 0]); // note: innerheight, 0 reverses the axis
+
+        xStations = d3.scale.ordinal()
+                .rangeRoundBands([0, innerWidthStations], .2);
+
+        xAxisStations = d3.svg.axis()
+                .scale(xStations)
+                .orient("bottom");
+        yAxisStations = d3.svg.axis()
+                .scale(yStations)
+                .orient("left");
+
+        chartStations = d3.select("#barchartstations")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", "0 0 " + width + " " + height)
+                .attr("preserveAspectRatio", "none")
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        chartStations.append("g")
+                .attr("class", "xStations axis")
+                .attr("transform", "translate(0," + innerHeightStations + ")")
+                .call(xAxisStations)
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-75)");
+
+        chartStations.append("g")
+                .attr("class", "yStations axis")
+                .call(yAxisStations)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Passasjerer");
+
+        chartStations.append("text")
+                .attr("x", (width / 2))
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")
+                .style("font-size", "14px")
+                .style("text-decoration", "bold")
+                .text("Passasjerer per stasjon siste 30 minutter");
+
+      }; //initDrawStationsBarChart
+
+      // Todo: implement handling of already drawn bars if x-scale change due to more are fewer statios with data
+      // Todo: sort stations according to passengers alighting
+      // Todo: allow user to shift between views: total, alighting, boarding
+      // Same should apply to Heatmap and Lines, and Trains...
+
+      var oldStationIDs = null;
+      var bIsStationsChanged = function (oldSt, newSt) {
+        if (oldSt == null || oldSt.length != newSt.length)
+          return true;
+        for (var i=0;i<oldSt.length;i++) {
+          if (oldSt[i] != newSt[i])
+            return true;
+        }
+        return false;
+      }
+      var DrawStationsBarChart = function (data) {
+
+        // sort x-axis according to CurrentStationID
+        //var stationIDs = data.map(function (d) {return d.CurrentStationID;}).sort(function (a,b) {return a-b;});
+
+        // sort x-axis according to TotalAlighting
+        var newStationIDs = data.sort(function (a,b) { return (b.TotalAlighting - a.TotalAlighting); }).map(function (obj) { return obj.CurrentStationID; });
+        xStations.domain(newStationIDs);
+
+        // If there are other/new stations we delete existing bars and scale the x-axis
+        if (bIsStationsChanged (oldStationIDs, newStationIDs)) {
+          oldStationIDs = newStationIDs;
+          chartStations.selectAll("rect").remove();
+          xAxisStations.scale(xStations);
+        }
+
+        // set new max value for the Y-axis
+        yStations.domain([0, d3.max(data, function (d) {return d.TotalAlighting;})]);
+
+
+        var bar = chartStations.selectAll("rect")
+                .data(data, function (d) {return d.CurrentStationID;});
+
+        bar.enter()
+            .append("rect")
+              .style("fill", "steelblue")
+              .attr("x", function (d) {return xStations(d.CurrentStationID);})
+              .attr("width", xStations.rangeBand())
+              .attr("y", innerHeightStations)
+              .attr("height", 0); // yStations(d.TotalAlighting)
+              //  .transition().duration(1500).ease("sin-in-out")
+              //.attr("y", function (d) {return yStations(d.TotalAlighting);})
+              //.attr("height", function (d) {return innerHeightStations - yStations(d.TotalAlighting);});
+
+        bar.transition().duration(1500).ease("sin-in-out")
+          .attr("y", function (d) {return yStations(d.TotalAlighting);})
+          .attr("height", function (d) {return innerHeightStations - yStations(d.TotalAlighting);});
+
+        // Show invalid stationIDs/PidasIDs from Siemens
+        bar.filter(function (d) {return d.CurrentStationID > 104;})
+          .style("fill", "darkslategray");
+
+        bar.exit()
+              .remove();
+
+        d3.selectAll(".xStations")
+                //.transition().duration(1500).ease("sin-in-out")
+                .call(xAxisStations)
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)");
+        d3.selectAll(".yStations")
+                .transition().duration(1500).ease("sin-in-out")
+                .call(yAxisStations);
+
+        function transform(d) {
+          return d3.select(this)
+                .transition().duration(1500).ease("sin-in-out")
+                .attr("y", function (d) {return yStations(d.TotalAlighting);})
+                .attr("height", function (d) {return innerHeightStations - yStations(d.TotalAlighting);});
+        }
+
+        bar.on("mouseenter", function () {
+          var thisObj = d3.select(this);
+          var d = thisObj.datum();
+          //var id = "#i" + d.CurrentStationID.toString();  // See comment further up. "i" is added because Firefox fails if ID starts with a nunber
+          var CurrentCircle = d3.select("circle.id" + d.CurrentStationID);
+
+          if (d.CurrentStationID <= 104) {
+            thisObj.style("fill", "brown");
+          }
+
+          // todo: in drawStations and drawPassengers: class circles according to pidas_id/stationid
+          if (!CurrentCircle.empty()) {
+            CurrentCircle.style("fill", "brown");
+          }
+          return false; //todo: consider adding stop propagation
+        });
+
+        bar.on("mouseleave", function () {
+          thisObj = d3.select(this);
+          var d = thisObj.datum();
+          //var id = "#i" + d.CurrentStationID.toString();
+          var CurrentCircle = d3.select("circle.id" + d.CurrentStationID);
+
+          if (d.CurrentStationID <= 104) {
+            thisObj.style("fill", "steelblue");
+          }
+
+          if (!CurrentCircle.empty()) {
+            CurrentCircle.style("fill", LineColor[CurrentCircle.datum().value.passengers.LineNumber - 1]);
+
+          }
+          return false; //todo: consider adding stop propagation
+        });
+      }; // DrawStationsBarChart()
+
+
+      // -- Trains --
+      //
+
+      var initDrawSporfelt = function () {
+        var strVisibility = d3.select("#sporfeltchbox").property('checked') ? "visible" : "hidden";
+        d3.selectAll(".ctsberth").style("visibility", strVisibility);
+      };
+      var initDrawTrains = function () {
+        var strVisibility = d3.select("#trainchbox").property('checked') ? "visible" : "hidden";
+        d3.selectAll(".train").style("visibility", strVisibility);
+      };
+
+      var initDrawOwnModules = function () {
+
+        // Show or hide ownModules elements
+        var strVisibility = d3.select("#ownmoduleschbox").property('checked') ? "visible" : "hidden";
+        d3.select("#ownmodulediv").style("visibility", strVisibility);
+        d3.select("#ownmoduleheader").style("visibility", strVisibility);
+
+        // Get dimensions of nearby elements
+        var optionsBoundingRect = d3.select("#options").node().getBoundingClientRect();
+        var stationsBoundingRect = d3.select("#bardivstations").node().getBoundingClientRect();
+        var headerBoundingrect = d3.select("#ownmoduleheader").node().getBoundingClientRect();
+
+        // Calculate top attribute for header and div
+        var airBetweenOptionsAndOwnModuleDiv = 40;
+        var topOwnModuleHeader = optionsBoundingRect.bottom + airBetweenOptionsAndOwnModuleDiv;
+        var topOwnModuleDiv = topOwnModuleHeader + headerBoundingrect.height;
+
+        d3.select("#ownmoduleheader").style("top", topOwnModuleHeader + "px");
+        d3.select("#ownmoduleheader").style("width", optionsBoundingRect.width + "px");
+        d3.select("#ownmodulediv").style("top", topOwnModuleDiv + "px");
+        d3.select("#ownmodulediv").style("width", optionsBoundingRect.width + "px");
+        d3.select("#ownmodulediv").style("height", (stationsBoundingRect.top - topOwnModuleDiv) + "px");
+      };
+
+      var DrawOwnModuleChart = function (data) {
+        var margin = {top: 2, right: 5, bottom: 0, left: 5};
+        var imageHeight = 20;
+        var textHeight = 12;
+        var groupGap = 2; // space between "trains"
+        var groupHeight = imageHeight + textHeight + groupGap;
+        var groupWidth = parseInt(d3.select("#ownmodulediv").style("width")) - margin.left - margin.right;
+
+        $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) { return d.TotalAlighting; } ).toString());
+        //$("#nowPax").text("Passasjerer ombord: " + d3.sum(data, function (d) { return d.TotalBoarding - d.TotalAlighting; } ).toString());
+        $("#nowAPC").text("Tog med passasjertelling: " + data.filter(function(obj) { return obj.TotalBoarding > 0; }).length.toString()); // Consider train to be in traffic if passengers have boarded
+
+        var markerOwnModule = d3.select("#ownmodules");
+        var ownmodulesHeight = margin.top + (data.length * (groupHeight + groupGap));
+        markerOwnModule.style("height", ownmodulesHeight + "px");
+        markerOwnModule.style("width", groupWidth + "px");
+
+        // TODO: Save max onBoard seen so far today per train, display small triangle indicating max
+
+        //  JOIN section
+        // sort data according to number of passengers onboard, largest number of passengers first
+        // add Onboard and index as properties.  Somewhat dirty, but hey, its javascript :-)
+        var dataSorted = data.sort(function (a, b) { return (b.TotalBoarding - b.TotalAlighting) - (a.TotalBoarding - a.TotalAlighting);})
+          .map(function (obj, i) {obj.Onboard = obj.TotalBoarding - obj.TotalAlighting;obj.index = i; return obj;});
+
+        var containerElems = markerOwnModule.selectAll("g")
+              .data(dataSorted, function (d) { return d.OwnModuleNo.toString(); });
+
+        // Add Trains not seen before
+        var newGroup = containerElems.enter()
+              .append("svg:g")
+              .style("height", groupHeight + "px")
+              .style("width", groupWidth + "px");
+
+        var im = newGroup.append("svg:image")
+              .attr("height", imageHeight + "px")
+              .attr("width", groupWidth + "px")
+              .attr("xlink:href", "MX3000bk.png");
+
+        var rect = newGroup.append("svg:rect")
+                .attr("height", imageHeight + "px")
+                .attr("width", function (d) { return (Math.max(d.Onboard/400,0) * groupWidth) + "px"; })
+                .style("opacity", .5)
+                .style("fill", "steelblue");
+
+        var text = newGroup.append("svg:text")
+              .attr("text-anchor", "middle")
+              .attr("x", (groupWidth/2) + "px")
+              .attr("y", imageHeight + "px")
+              .attr("dy", ".9em")
+              .attr("font-size", "10px")
+              .style("fill", "black")
+              .style("font-weight", "thinner")
+              .text(function (d) { return d.OwnModuleNo.toString(); })
+
+        // Update AND Enter section
+        containerElems.selectAll("rect")   // When key (OwnModuleNo in this case) exist, d3 do not automatically bind updated attributes to children ...
+              .data(dataSorted, function (d) { return d.OwnModuleNo.toString(); })// transition().delay(2000).duration(1500).ease("sin-in-out")
+                .attr("width", function (d) { return (Math.abs(d.Onboard/200) * groupWidth) + "px"; })
+                .style("fill", "steelblue") // Siemens sometimes report less than zero people onboard
+              .filter(function (d) { return d.Onboard < 0 })
+                .style("fill", "red"); // Siemens sometimes report less than zero people onboard
+
+        containerElems.transition().delay(2000).duration(1500).ease("sin-in-out")
+          .attr("transform", function (d, i) { return "translate(" + margin.left + "," + (margin.top + (groupHeight * i)) + ")"; }); // margin.left.toString()
+
+        // Exit section
+        containerElems.exit()
+          .remove();
+
+        /*
+        function transform(d,i) {
+          return d3.select(this)
+              .transition().delay(2000).duration(1500).ease("sin-in-out")
+              .attr("transform", function (d) { return "translate(" + groupPadding.toString() + "," + (groupPadding + (groupHeight * d.index)).toString() + ")";});
+        }
+        */
+
+        /*
+        im.on("mouseenter", function () {
+          var thisObj = d3.select(this);
+          var d = thisObj.datum();
+          // Todo: highlight present position of train om geographic map
+          var CurrentTrain = d3.select("rect.id" + getIDFromName(d.values.address));
+
+          thisObj.style("fill", "brown");
+
+          if (!CurrentTrain.empty()) {
+            CurrentTrain.style("fill", "brown");
+          }
+          return false; //todo: consider adding stop propagation
+        });
+
+        im.on("mouseleave", function () {
+          thisObj = d3.select(this);
+          var d = thisObj.datum();
+          var CurrentTrain = d3.select("rect.id" + getIDFromName(d.values.address));
+
+          thisObj.style("fill", "transparent");
+          return false; //todo: consider adding stop propagation
+        });
+        */
+      }; // DrawOwnModuleChart
+
+       var removeTrain = function (trainNo) {
+        var remTrain = OM_DrawLayer.select("#train_id" + getIDFromName(trainNo));
+        if (remTrain.empty()) {
+          console.log("Tried to remove train " + trainNo + " , but it was not found.");
+          return;
+        }
+        //trainRect.property("oldFill", trainRect.style("fill"));
+        remTrain.select("rect")
+                .property("oldclr", function (d) {
+                  return d3.select(this).style("fill");
+                })
+                .transition()
+                .duration(1 * 1000)
+                .style("fill", "lightgrey")
+                .transition()
+                .delay(5 * 1000)
+                .each("start", function () {
+                  d3.select(this).style("fill", "darkgrey");
+                })
+                .transition()
+                .delay(10 * 1000)
+                .each("start", function () {
+                  d3.select(this).style("fill", "lightgrey");
+                })
+                .transition()
+                .delay(15 * 1000)
+                .duration(5 * 1000)
+                .each("start", function () {
+                  d3.select(this).style("opacity", 0.3);
+                });
+        //.attr("opacity", 0);
+
+        remTrain.selectAll("*").transition().delay(20 * 1000).remove();
+        remTrain.transition().delay(21 * 1000).remove();
+
+        console.log("Received removetrain notification and succesfully removed train: " + trainNo);
+      }; // removeTrain()
+
+      var nextBlinkGroupID = 0;
+      var showBlinkAlarms = false;
+
+      // input: array of svg´s (rect, circle, etc) to blink that is to be blinked "together"
+      // function: class the svg´s as "blinking" and assign unique blinkinggroupid-class to the elements
+      // so they are flashed by the blinkTimer
+      function setBlinkAlarm(nodes) {
+        if (!showBlinkAlarms || !nodes || !Array.isArray(nodes))
+          return;
+
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].empty())
+            break;
+
+          nodes[i].classed("blinking", true);
+          nodes[i].classed("blinkgroupid" + nextBlinkGroupID, true);
+          nodes[i].property("oldclr", function (d) {
+            return d3.select(this).style("fill");
+          });
+          nodes[i].property("blinkgroupid", nextBlinkGroupID);
+          //var d = nodes[i].datum();
+          //d.blinkGroupID = nextBlinkGroupID;
+          //nodes[i].datum(d);
+        }
+        ++nextBlinkGroupID;
+      } // setBlinkAlarm()
+
+      var toggleBlink = 0;
+      var blinkTimer = setInterval(function () {
+        var blinkingObjects = d3.selectAll(".blinking").filter(function (d) {
+          return d3.select(this).property("hold") != true;
+        });
+        if (blinkingObjects.empty())
+          return;
+
+        if (toggleBlink == 0) {
+          toggleBlink = 1;
+          blinkingObjects.each(function (d) {
+            if (this.tagName.toLowerCase() === "image") {
+              d3.select(this).style("opacity", 0);
+            }
+            else {
+              d3.select(this).style("fill", "white");
+            }
+          });
+        }
+        else {
+          toggleBlink = 0;
+          blinkingObjects.each(function (d) {
+            if (this.tagName.toLowerCase() === "image") {
+              d3.select(this).style("opacity", 1);
+            }
+            else {
+              d3.select(this).style("fill", "purple");
+            }
+          });
+          /*
+           if (blinkingObjects.tagName.toLowerCase() === "image")
+           blinkingObjects.style("opacity", 1);
+           else
+           blinkingObjects.style("fill","purple");
+           */
+        }
+      }, 1000 * 1);  // check every 1 sec for objects to blink
+
+
+      // todo: only takes a single berth as parameter, not an array
+      // should be rewritten for consistency
+      var addGhost = function (berth) {
+        var Projection = OM_ProjectionLayer.getProjection();
+        var padding = 10;
+        var containerElements = OM_DrawLayer.selectAll("svg.ghost")
+                .data([berth], function (d) {
+                  return d.Name;
+                });
+
+        // Add Ghosts not seen before
+        var newContainerElements = containerElements.enter()
+                .append("svg:svg")
+                .classed("ghost", true)
+                .style("height", 20 + "px")
+                .style("width", 20 + "px");
+        /*
+         var rect = newGroup.append("svg:rect")
+         .classed("ghost", true)
+         .attr("height", 20 + "px")
+         .attr("width", 20 + "px")
+         .style("fill", "green");
+         */
+
+        var newImages = newContainerElements.append("svg:image")
+                //.classed("ghost", true)
+                .attr("height", 20 + "px")
+                .attr("width", 20 + "px")
+                .attr("xlink:href", "ghost.png");
+
+        containerElements.each(transform);
+
+        //g.attr("transform", function (d) { return transform(d.StartLatitude, d.StartLongitude); }); // return "translate(" + x(d.StartLatitude) + "," + y(d.StartLongitude) + ")" });
+        containerElements.on("mouseenter", handleMouse);
+        containerElements.on("mouseleave", handleMouse);
+
+        setBlinkAlarm([newImages]);
+
+        function transform(d) {
+          var LatLng = new google.maps.LatLng(d.StartLongitude, d.StartLatitude); // new google.maps.LatLng(d.StartLatitude, d.StartLongitude);
+          var pixel = Projection.fromLatLngToDivPixel(LatLng);
+          return d3.select(this)
+                  .style("left", (pixel.x - padding) + "px") // pixel.x
+                  .style("top", (pixel.y - padding) + "px"); // pixel.y
+        }
+      }; //addGhost()
+
+      //
+      // Helpers
+      //
+
+
+      function getIDFromName(Name) {
+        var tmp;
+        var tmp2;
+        if (!Name) {
+          console.error("getIDFromName missing input parameter.");
+          return;
+        }
+        tmp = Name.toString().split(' ').join('_').replace("/", "_");
+        tmp2 = tmp.replace(/\*/g, "star"); // replace "*" with "star"
+        //console.log ("tmp2: " + tmp2);
+        return tmp2;
+      } // getIDFromName ()
+
+      // if current element is part of blinking alarm group, highlight all members of group with orange fill
+      var handleMouse = function (d, i) {
+        var d3_target = d3.select(d3.event.target);
+        var blinkGroupID = d3_target.property("blinkgroupid");
+        var blinkers = null;
+
+        if (d3_target.classed("blinking") && blinkGroupID) {
+          d3.event.preventDefault();
+          blinkers = vis.selectAll(".blinkgroupid" + blinkGroupID.toString());
+          if (d3.event.type === "mouseenter") {
+            blinkers.property("hold", true);
+            blinkers.style("fill", "orange");
+          }
+          else if (d3.event.type === "mouseleave") {
+            blinkers.property("hold", false);
+          }
+        }
+      }; // handleMouse()
+
+      var bContextMenuShowing = false;
+
+      var handleContextMenu = function (d, i) {
+        var htmltext = "<br/>"; // add blank line on top
+        var attribute;
+        var d3_target;
+
+        if (bContextMenuShowing) {
+          d3.event.preventDefault();
+          bContextMenuShowing = false;
+          toolTip.transition()
+                  .duration(50) // micro-delay but still let user "see" that menu fades away
+                  .style("opacity", 0);
+        } else {
+          d3_target = d3.select(d3.event.target);
+
+          if (d3_target.classed("blinking")) {
+            d3.event.preventDefault();
+
+            // get the blink-group-id
+            var blinkGroupID = d3_target.property("blinkgroupid");
+            var blinkers = vis.selectAll(".blinkgroupid" + blinkGroupID.toString());
+            if (blinkers.empty()) {
+              console.error("Error: empty blinking selection!");
+              return; // should not be possible
+            }
+            blinkers.classed("blinkgroupid" + blinkGroupID.toString(), false);
+            blinkers.classed("blinking", false);
+            // set back to original color
+            blinkers.style("fill", function (d) {
+              return d3.select(this).property("oldclr");
+            });
+            blinkers.property("blinkgroupid", null);
+            blinkers.property("oldclr", null);
+            blinkers.property("hold", null);
+          }
+          else if (d3_target.classed("berth") || d3_target.classed("endberth") || d3_target.classed("trackline") || d3_target.classed("trackswitch") || d3_target.classed("station") || d3_target.classed("train") || d3_target.classed("ghost")) {
+            d3.event.preventDefault();
+            bContextMenuShowing = true;
+            d = d3_target.datum();
+
+            if (d3_target.classed("trackline")) { // user is hovering over a railroad track
+              htmltext += "Banenavn: " + d.key + "<br/>" + "Antall sporfelt: " + d.value.length;
+            }
+            else if (d3_target.classed("train")) {
+              htmltext += "<em>Tog: " + d.values.address + "</em><br/>";
+              for (attribute in d.values) {
+                if (attribute != "from_infra_berth" && attribute != "to_infra_berth") {
+                  htmltext += attribute + ": " + d.values[attribute] + "<br/>"
+                }
+              }
+              htmltext += "<em>from_infra_berth:</em><br/>";
+              for (attribute in d.values.from_infra_berth) {
+                if (d.values.from_infra_berth[attribute] != null && d.values.from_infra_berth[attribute] != "" && d.values.from_infra_berth[attribute] != undefined) {
+                  htmltext += "   -" + attribute + ": " + d.values.from_infra_berth[attribute] + "<br/>"
+                }
+              }
+              htmltext += "<em>to_infra_berth:</em><br/>";
+              for (attribute in d.values.to_infra_berth) {
+                if (d.values.to_infra_berth[attribute] != null && d.values.to_infra_berth[attribute] != "" && d.values.to_infra_berth[attribute] != undefined) {
+                  htmltext += "   -" + attribute + ": " + d.values.to_infra_berth[attribute] + "<br/>"
+                }
+              }
+            }
+            else {
+              for (attribute in d) {
+                if (d[attribute] != null && d[attribute] != "" && d[attribute] != undefined) {
+                  htmltext += attribute + ": " + d[attribute] + "<br/>"
+                }
+              }
+            }
+            htmltext += "<br/>"; // add blank line at the end
+
+            toolTip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+            toolTip
+                    .html(htmltext)
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY - 28) + "px");
+          }
+        }
+      }; // handleContextMenu()
+
+      var showToolTip = function (d) {
+        var htmltext = "<br/>"; // add blank line on top
+        var attribute;
+
+        if (this.tagName.toLowerCase() === "path") { // user is hovering over a railroad track
+          htmltext += "Banenavn: " + d.key + "<br/>" + "Antall sporfelt: " + d.value.length;
+        }
+        else if (d3.select(this).classed("train")) {
+          htmltext += "<em>Tog: " + d.values.address + "</em><br/>";
+          for (attribute in d.values) {
+            if (d.values[attribute] != null && d.values[attribute] != "" && d.values[attribute] != undefined && attribute != "from_infra_berth" && attribute != "to_infra_berth") {
+              htmltext += attribute + ": " + d.values[attribute] + "<br/>"
+            }
+          }
+          htmltext += "<em>from_infra_berth:</em><br/>";
+          for (attribute in d.values.from_infra_berth) {
+            if (d.values.from_infra_berth[attribute] != null && d.values.from_infra_berth[attribute] != "" && d.values.from_infra_berth[attribute] != undefined) {
+              htmltext += "   -" + attribute + ": " + d.values.from_infra_berth[attribute] + "<br/>"
+            }
+          }
+          htmltext += "<em>to_infra_berth:</em><br/>";
+          for (attribute in d.values.to_infra_berth) {
+            if (d.values.to_infra_berth[attribute] != null && d.values.to_infra_berth[attribute] != "" && d.values.to_infra_berth[attribute] != undefined) {
+              htmltext += "   -" + attribute + ": " + d.values.to_infra_berth[attribute] + "<br/>"
+            }
+          }
+        }
+        else {
+          for (attribute in d) {
+            if (d[attribute] != null && d[attribute] != "" && d[attribute] != undefined) {
+              htmltext += attribute + ": " + d[attribute] + "<br/>"
+            }
+          }
+        }
+        htmltext += "<br/>"; // add blank line at the end
+
+        toolTip.transition()
+                .duration(200)
+                .style("opacity", .9);
+        toolTip
+                .html(htmltext)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+      }; // showToolTip
+
+      var hideToolTip = function (d) {
+        toolTip.transition()
+                .duration(500)
+                .style("opacity", 0);
+      }; // hideToolTip ()
+
+      //
+      // User Interaction
+      //
+
+      $('.checker').change(function () {
+        handleOptions(this.value, this.checked);
+      });
+
+      var handleOptions = function (Option, bChecked) {
+        var strVisible = bChecked ? "visible" : "hidden";
+
+        if (Option === "Linjestatistikk") {
+          d3.select('#bardivlines').style("visibility", strVisible);
+          //bShowLines = bChecked?true:false;
+        }
+        else if (Option === "Stasjonstatistikk") {
+          d3.select('#bardivstations').style("visibility", strVisible);
+        }
+        else if (Option === "OwnModules") {
+          d3.select('#ownmodulediv').style("visibility", strVisible);
+          d3.select('#ownmoduleheader').style("visibility", strVisible);
+        }
+        else if (Option === "Trafikk") {
+          trafficLayer.setMap(bChecked ? map : null);
+        }
+        else if (Option === "Varmekart" && heatmapLayer != null && OM_ProjectionLayer != null) {
+          heatmapLayer.setMap(bChecked ? map : null);
+        }
+        else if (Option === "Banekart") {
+          transitLayer.setMap(bChecked ? map : null);
+        }
+        else if (Option === "Pax") {
+          d3.selectAll(".passengerselement").style("visibility", strVisible);
+          //d3.selectAll(".passengers").style("visibility", strVisible);
+        }
+        else if (Option === "Sporfelt") {
+          d3.selectAll(".ctsberth").style("visibility", strVisible);
+        }
+        else if (Option === "Tog") {
+          d3.selectAll(".train").style("visibility", strVisible);
+        }
+        else if (Option === "Sykkelkart") {
+          bikeLayer.setMap(bChecked ? map : null);
+          // removed the checkbox as google would not display bike routes combined with other elements properly (traffic, metrolayer, ..)
+        }
+        // add Urthecast?
+        // add weather stations? Would be useful in winter to optimize the handling of snowfalls during winter
+      }; // handleOptions()
+
+      // Inform user of the time when the newest passenger boarding/alighting actually took place, i.e. the time recorded by Siemens onboard the train
+      var setLastPaxUpdateTime = function (timestamp) {
+        d3.select("#lastPaxReceived").text("Siste av/påstigning: " + new Date(timestamp).toTimeString().split(' ')[0]);
+      }; // setLastPaxUpdateTime()
+      var setTrainsInTraffic = function (noTrains) {
+        d3.select("#nowTrains").text("Tog i trafikk nå: " + noTrains);
+      }; // setTrainsInTraffic()
+
+      //
+      // Helpers
+      //
+
+
+
+      //
+      // Start the ball rolling
+      //
+
+      initDrawLinesBarChart();
+      initDrawStationsBarChart();
+      initDrawOwnModules();
+      initDrawSporfelt();
+      initDrawTrains();
+
+
+      //
+      // Socket.io section, i.e. receive data from server
+      //
+
+      var socket = io();
+
+      socket.on("connect", function (data) {
+        d3.select("#clockTime").style("background-color", "whitesmoke");
+        console.log("connect: " + JSON.stringify(data));
+      });
+      socket.on("id", function (data) {
+        console.log("id: " + data);
+      });
+      socket.on("ip", function (data) {
+        console.log("ip: " + data);
+      });
+
+      socket.on("reconnect", function (data) {
+        console.log("reconnect: " + JSON.stringify(data));
+        d3.selectAll(".train").remove();
+        // Ask server for trains, i.e. array with lists of berth passings
+        socket.emit("alltailsrequest", {"maxBerths": 10}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths berths
+          if (!data || data.length == 0) {
+            return;
+          }
+          for (var i = 0; i < data.length; i++) {
+            //drawTrain(data[i]); // array of berths for 1 train
+          } // for-loop
+        });  // emit-function()
+      });
+
+      socket.on("disconnect", function (data) {
+        d3.select("#clockTime").style("background-color", "red");
+        d3.select("#clockTime").text("Kontakter...");
+      });
+
+      socket.on("timetick", function (data) {
+        d3.select("#clockTime").text(new Date(data).toTimeString().split(' ')[0]);
+      });
+
+      socket.on("chat message", function (data) {
+        console.log("chat message: " + JSON.stringify(data, undefined, 2));
+      });
+
+      var bInitInfrastructure = false;
+      //
+      // Receive stations, berths, track switches
+      // ... and ask server for initial train positions
+      socket.on("initinfrastructure", function (data) {
+        // data: {"stations": stationTable, "berths", ctsBerthTable, "trackswitches": ctsTrackSwitchTable}
+        if (!bInitInfrastructure) { // only initialize once - not on reconnect
+          drawInfrastructure(data);
+          bInitInfrastructure = true;
+        }
+      });
+
+      //
+      // CTS
+      //
+
+      // receive continuosly updated train positions
+      // one or more trains and their newest berth passings
+      socket.on("cts", function (msg) {
+        if (bInitInfrastructure) {
+          drawTrain(msg); // array of berths for 1 train
+        }
+      });
+
+      socket.on("cts_special_code", function (msg) {
+        drawTrainSpecialCode(msg);
+      });
+
+      socket.on("cts_ghost_train", function (msg) {
+        drawTrainGhost(msg);
+      });
+
+      socket.on("cts_trainnumber_changed", function (msg) {
+        drawTrainNumberChanged(msg);
+      });
+      socket.on("cts_trainnumber_first_time", function (msg) {
+        //console.log("cts_trainnumber_first_time: ", ": train " + msg.values.address);
+      });
+
+      var resetToNormalColors = false;
+      socket.on("okberths", function (msg) {
+        ctsOKObject = msg;
+        colorOKBerths (resetToNormalColors);
+        resetToNormalColors = !resetToNormalColors;
+        //drawBerths(); //ctsBerthOverlay();
+      });
+      socket.on("blinkalarms", function (msg) {
+        showBlinkAlarms = !showBlinkAlarms;
+        console.log ("blink alarm: " + showBlinkAlarms);
+      });
+
+      // The physical strain still exist:-) but the TrainNo the server has had no CTS signals from the logical train
+      // for so long that the server has decided that the train has changed its logical number
+      // since the cts do not inform us about this as it happens, our only soloution for the time beeing is to
+      // remove the logical trains after a server-decided time limit...
+      socket.on("removetrain", function (msg) {
+        removeTrain(msg);
+      });
+
+      // Received information about physical trains
+      socket.on("trains", function (msg) {
+        //DrawOwnModuleChart(msg) // todo: change the name of this function ...drawAPCinfo...
+      });
+
+      //
+      // PAX
+      //
+      socket.on("pax", function (msg) {
+        passengerTable = msg;
+        DrawPassengers(msg); //PassengersOverlay();
+      });
+      socket.on("LastPaxUpdateTime", function (msg) {
+        setLastPaxUpdateTime(msg);
+      });
+      socket.on("trainsintraffic", function (msg) {
+        setTrainsInTraffic(msg);
+      });
+
+      socket.on("LineAggregate", function (msg) {
+        //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
+        DrawLinesBarChart(msg);
+      });
+      socket.on("StationAggregate", function (msg) {
+        DrawStationsBarChart(msg);
+        addHeatmapData(msg);
+      });
+      socket.on("OwnModuleAggregate", function (msg) {
+        DrawOwnModuleChart(msg);
+      });
+
+      //
+      // HISTORY
+      //
+      socket.on("history start", function (data) {
+        console.log("history start: " + JSON.stringify(data));
+        bHistory = true;
+        OM_DrawLayer.selectAll(".train").remove();
+      });
+      socket.on("history stop", function (data) {
+        console.log("history stop: " + data);
+        //vis.selectAll(".train").remove();
+      });
+      socket.on("realtime", function (data) {
+        OM_DrawLayer.selectAll(".train").remove();
+        console.log("realtime: " + data);
+        bHistory = false;
+      });

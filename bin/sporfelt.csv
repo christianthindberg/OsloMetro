@@ -1,0 +1,1330 @@
+Sporfeltkode;Sporfeltnavn;Banekode;Banenavn;Retning;NesteSporfeltkode;StartposisjonBreddegrad;StartposisjonLengdegrad;SluttposisjonBreddegrad;SluttposisjonLengdegrad;MeterFraNullpunkt;Sporfeltstypekode;Sporfeltstypenavn;KildekodeCTSBERTH;MeterLengde;Plattformkode;Stasjonskode;Stasjonsnavn;PlattformposisjonBreddegrad;PlattformposisjonLengdegrad;KildekodePIDASID
+A ENDE U;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.913585;10.549857;;;;E;Endepunkt;;;;;;;;
+A01;A01;A;Avløs driftsområde;Østover;;59.914458;10.551995;;;;V;Sporveksel;A0101;;A01A;;;;;
+A01 P;A01;K;Kolsåsbanen;Vestover;;59.914458;10.551995;;;12846.252;V;Sporveksel;A0102;;A01B;;;;;
+A02;A02;A;Avløs driftsområde;Østover;;59.914586;10.5523;;;;V;Sporveksel;A0201;;A02A;;;;;
+A02 P;A02;K;Kolsåsbanen;Vestover;;59.914586;10.5523;;;12824.014;V;Sporveksel;A0202;;A02B;;;;;
+A03;A03;A;Avløs driftsområde;Østover;;59.914697;10.55263;;;;V;Sporveksel;;;;;;;;
+A04;A04;A;Avløs driftsområde;Østover;;59.914816;10.553033;;;;V;Sporveksel;;;;;;;;
+A05;A05;A;Avløs driftsområde;Østover;;59.914937;10.553443;;;;V;Sporveksel;;;;;;;;
+A06;A06;A;Avløs driftsområde;Østover;;59.914812;10.553155;;;;V;Sporveksel;;;;;;;;
+A07;A07;A;Avløs driftsområde;Østover;;59.914686;10.552849;;;;V;Sporveksel;;;;;;;;
+A08;A08;A;Avløs driftsområde;Østover;;59.914742;10.553231;;;;V;Sporveksel;;;;;;;;
+A09;A09;A;Avløs driftsområde;Østover;;59.914817;10.553599;;;;V;Sporveksel;;;;;;;;
+A1;A1;Y;Ryen driftsområde;Østover;;59.89296;10.801876;;;;V;Sporveksel;;;;;;;;
+A10;A10;A;Avløs driftsområde;Østover;;59.914931;10.554319;;;;V;Sporveksel;;;;;;;;
+A11;A11;A;Avløs driftsområde;Østover;;59.914732;10.553375;;;;V;Sporveksel;;;;;;;;
+A12;A12;A;Avløs driftsområde;Østover;;59.914804;10.554022;;;;V;Sporveksel;;;;;;;;
+A1263;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.915835;10.55529;;;;F;Sporfelt;K1263;;A17B;;;;;
+A1271;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.915457;10.554404;;;;F;Sporfelt;K1271;;A17A;;;;;
+A1277;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.91503;10.553369;;;;F;Sporfelt;K1277;;;;;;;
+A1281;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.914739;10.552665;;;;F;Sporfelt;K1281;;;;;;;
+A1287;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.914445;10.551965;;;;F;Sporfelt;K1287;;;;;;;
+A1291;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.914221;10.551431;;;;F;Sporfelt;K1291;;A18A;;;;;
+A1297;A-Spor 17/18;A;Avløs driftsområde;Østover;;59.913894;10.550647;;;;F;Sporfelt;K1297;;A18B;;;;;
+A13;A13;A;Avløs driftsområde;Østover;;59.91475;10.553771;;;;V;Sporveksel;;;;;;;;
+A14;A14;A;Avløs driftsområde;Østover;;59.914886;10.55497;;;;V;Sporveksel;;;;;;;;
+A2;A2;Y;Ryen driftsområde;Østover;;59.892787;10.801992;;;;V;Sporveksel;;;;;;;;
+A4;A4;Y;Ryen driftsområde;Østover;;59.892744;10.80207;;;;V;Sporveksel;;;;;;;;
+A5;A5;Y;Ryen driftsområde;Østover;;59.892749;10.802144;;;;V;Sporveksel;;;;;;;;
+A6;A6;Y;Ryen driftsområde;Østover;;59.892579;10.80234;;;;V;Sporveksel;;;;;;;;
+A7;A7;Y;Ryen driftsområde;Østover;;59.89244;10.802614;;;;V;Sporveksel;;;;;;;;
+B1;B1;Y;Ryen driftsområde;Østover;;59.893494;10.801396;;;;V;Sporveksel;;;;;;;;
+B1268A;B1268A;K;Kolsåsbanen;Vestover;;59.915646;10.554542;;;12677.138;V;Sporveksel;K1268A;;;;;;;
+B2;B2;Y;Ryen driftsområde;Østover;;59.893163;10.801694;;;;V;Sporveksel;;;;;;;;
+B4;B4;Y;Ryen driftsområde;Østover;;59.89297;10.801867;;;;V;Sporveksel;;;;;;;;
+B5;B5;Y;Ryen driftsområde;Østover;;59.892979;10.801938;;;;V;Sporveksel;;;;;;;;
+B6;B6;Y;Ryen driftsområde;Østover;;59.892789;10.802108;;;;V;Sporveksel;;;;;;;;
+B7;B7;Y;Ryen driftsområde;Østover;;59.892714;10.802249;;;;V;Sporveksel;;;;;;;;
+C ENDE I;Inng.ende;C;Centrumsbanen;Østover;;59.926232;10.779829;;;9872;E;Endepunkt;;;;;;;;
+C ENDE U;Utg.ende;C;Centrumsbanen;Vestover;;59.92702;10.780128;;;9892.263;E;Endepunkt;;;;;;;;
+C ENDE U M;C-STR Midstspor;C;Centrumsbanen;Østover;;59.941797;10.779808;;;7929.292;E;Endepunkt;;;;;;;;
+C0006T;Utg;C;Centrumsbanen;Vestover;C0014T;59.915148;10.732703;59.915967;10.73146;14.784;F;Sporfelt;T006;115423;NAT2;NAT;Nationaltheatret;59.915535;10.732038;54
+C0014T;Utg;C;Centrumsbanen;Vestover;C0034T;59.915967;10.73146;59.917712;10.730024;130.207;F;Sporfelt;T014;210408;;;;;;
+C0015T;Inng;C;Centrumsbanen;Østover;;59.915084;10.732714;;;11;F;Sporfelt;T015;;NAT1;NAT;Nationaltheatret;59.915536;10.731928;54
+C0033T;Inng;C;Centrumsbanen;Østover;C0015T;59.916079;10.731232;59.915084;10.732714;150.262;F;Sporfelt;T033;139262;;;;;;
+C0034T;Utg;C;Centrumsbanen;Vestover;C0052T;59.917712;10.730024;59.919237;10.729013;340.615;F;Sporfelt;T034;179;;;;;;
+C0043T;Inng;C;Centrumsbanen;Østover;C0033T;59.917333;10.730123;59.916079;10.731232;303.001;F;Sporfelt;T043;152739;;;;;;
+C0052T;Utg;C;Centrumsbanen;Vestover;C0086T;59.919237;10.729013;59.922132;10.727093;519.615;F;Sporfelt;T052;340292;HOM2;;;;;
+C0063T;Inng;C;Centrumsbanen;Østover;C0043T;59.918521;10.729305;59.917333;10.730123;442.928;F;Sporfelt;T063;139927;;;;;;
+C0079T;Inng;C;Centrumsbanen;Østover;C0063T;59.920096;10.728261;59.918521;10.729305;627.928;F;Sporfelt;T079;185;;;;;;
+C0086T;Utg;C;Centrumsbanen;Vestover;C0122T;59.922132;10.727093;59.92481;10.723958;859.907;F;Sporfelt;T086;350297;;;;;;
+C0122T;Utg;C;Centrumsbanen;Vestover;C0128T;59.92481;10.723958;59.926065;10.721932;1210.204;F;Sporfelt;T122;179999;;;;;;
+C0125T;Inng;C;Centrumsbanen;Østover;C0079T;59.921757;10.72716;59.920096;10.728261;822.929;F;Sporfelt;T125;195001;HOM1;;;;;
+C0128T;Utg;C;Centrumsbanen;Vestover;C0158T;59.926065;10.721932;59.927328;10.719894;1390.203;F;Sporfelt;T128;181001;;;;;;
+C0158T;Utg;C;Centrumsbanen;Vestover;C0174T;59.927328;10.719894;59.928506;10.717593;1571.204;F;Sporfelt;T158;183782;;;;;;
+C0169T;Inng;C;Centrumsbanen;Østover;C0125T;59.925118;10.72336;59.921757;10.72716;1259.275;F;Sporfelt;T169;436346;;;;;;
+C0174T;Utg;C;Centrumsbanen;Vestover;C0186T;59.928506;10.717593;59.929165;10.716407;1754.986;F;Sporfelt;T174;99212;;;;;;
+C0184T;C-Spor3-Start;M;Majorstuen driftsområde;Østover;;59.929606;10.715597;;;1920.706;F;Sporfelt;T184;;MAJA;MAJ;Majorstuen;;;48
+C0186T;Utg;C;Centrumsbanen;Vestover;C0198T;59.929165;10.716407;59.929853;10.715285;1854.198;F;Sporfelt;T176;98802;;;;;;
+C0189T;Inng;C;Centrumsbanen;Østover;C0193T;59.929757;10.71526;59.92813;10.718254;1946.891;F;Sporfelt;T189;246891;MAJ1;MAJ;Majorstuen;59.930285;10.714399;48
+C0193T;Inng;C;Centrumsbanen;Østover;C0169T;59.92813;10.718254;59.925118;10.72336;1700;F;Sporfelt;T193;440725;;;;;;
+C0196T;C-Spor3;M;Majorstuen driftsområde;Østover;;59.930075;10.714832;;;1988.256;F;Sporfelt;;;;;;;;
+C0198T;Utg;C;Centrumsbanen;Vestover;C0210T;59.929853;10.715285;59.930406;10.714402;1953;F;Sporfelt;T198;79;MAJY;MAJ;Majorstuen;;;48
+C0200T;Inng;C;Centrumsbanen;Østover;C0189T;59.930145;10.714625;59.929757;10.71526;2002.863;F;Sporfelt;T200;55972;;;;;;
+C0204T;C-Spor4-Start;M;Majorstuen driftsområde;Østover;;59.930569;10.714342;;;2047.97;F;Sporfelt;T204;;MAJ4;MAJ;Majorstuen;;;48
+C0207T;Inng;C;Centrumsbanen;Østover;C0200T;59.930495;10.714094;59.930145;10.714625;2052;F;Sporfelt;T207;49137;;;;;;
+C0208T;Utg;C;Centrumsbanen;Vestover;C0215T;59.93085;10.713795;59.931235;10.71318;2092;F;Sporfelt;T208;55;;;;;;
+C0208T P;C-Spor4;M;Majorstuen driftsområde;Østover;;59.931004;10.713659;;;2109;F;Sporfelt;;;;;;;;
+C0209T;C-Spor3;M;Majorstuen driftsområde;Østover;;59.930533;10.714131;;;2052.634;F;Sporfelt;;;;;;;;
+C0210T;Utg;C;Centrumsbanen;Vestover;C0208T;59.930406;10.714402;59.93085;10.713795;2032;F;Sporfelt;T210;60;MAJ2;MAJ;Majorstuen;59.930333;10.714507;48
+C0212T;C-Spor3;M;Majorstuen driftsområde;Østover;;59.931217;10.713117;;;2147.658;F;Sporfelt;;;;;;;;
+C0213T;C-Spor3;M;Majorstuen driftsområde;Østover;;59.930858;10.713685;;;2096.529;F;Sporfelt;;;;;;;;
+C0214T;Inng;C;Centrumsbanen;Østover;C0222T;59.931307;10.712885;59.93085;10.713608;2165;F;Sporfelt;T214;65;;;;;;
+C0215T;Utg;C;Centrumsbanen;Vestover;C0226T;59.931235;10.71318;59.931544;10.712689;2147;F;Sporfelt;T215;44;;;;;;
+C0222T;Inng;C;Centrumsbanen;Østover;C0207T;59.93085;10.713608;59.930495;10.714094;2100;F;Sporfelt;T222;48;;;;;;
+C0226T;Utg;C;Centrumsbanen;Vestover;C0228T;59.931544;10.712689;59.932068;10.711853;2191;F;Sporfelt;T226;74;;;;;;
+C0227T;Inng;C;Centrumsbanen;Østover;C0229T;59.931797;10.712103;59.931468;10.712628;2235;F;Sporfelt;T227;47;;;;;;
+C0228T;Utg;C;Centrumsbanen;Vestover;C0238T;59.932068;10.711853;59.932442;10.711158;2265;F;Sporfelt;T228;56562;;;;;;
+C0229T;Inng;C;Centrumsbanen;Østover;C0214T;59.931468;10.712628;59.931307;10.712885;2188;F;Sporfelt;T229;23;;;;;;
+C0231T;C-Spor3;M;Majorstuen driftsområde;Østover;;59.931954;10.711943;;;2252.798;F;Sporfelt;;;;;;;;
+C0237T;Inng;C;Centrumsbanen;Østover;C0227T;59.93261;10.710566;59.931797;10.712103;2350.745;F;Sporfelt;T237;115745;;;;;;
+C0238T;Utg;C;Centrumsbanen;Vestover;C0254T;59.932442;10.711158;59.932826;10.710306;2321.562;F;Sporfelt;T238;64482;MAJT;MAJ;Majorstuen;;;48
+C0245T;Inng;C;Centrumsbanen;Østover;C0237T;59.932971;10.709896;59.93261;10.710566;2406;F;Sporfelt;T245;55255;;;;;;
+C0251T;Inng;C;Centrumsbanen;Østover;C0245T;59.933483;10.70928;59.932971;10.709896;2473;F;Sporfelt;T251;67;MAJG;MAJ;Majorstuen;;;48
+C0254T;Utg;C;Centrumsbanen;Vestover;C0280T;59.932826;10.710306;59.934056;10.709167;2386.044;F;Sporfelt;S254;155.84;;;;;;
+C0271T;Inng;C;Centrumsbanen;Østover;C0251T;59.933974;10.70909;59.933483;10.70928;2529;F;Sporfelt;T271;56;MAJS;MAJ;Majorstuen;;;48
+C0280T;Utg;C;Centrumsbanen;Vestover;C0298T;59.934056;10.709167;59.936164;10.709657;2541.884;F;Sporfelt;S280;238413;;;;;;
+C0281T;Inng;C;Centrumsbanen;Østover;C0271T;59.935514;10.709228;59.933974;10.70909;2701;F;Sporfelt;S281;172;;;;;;
+C0298T;Utg;C;Centrumsbanen;Vestover;C0324T;59.936164;10.709657;59.937662;10.711838;2780.297;F;Sporfelt;S298;210823;;;;;;
+C0307T;Inng;C;Centrumsbanen;Østover;C0281T;59.936837;10.710206;59.935514;10.709228;2859;F;Sporfelt;S307;158;;;;;;
+C0324T;Utg;C;Centrumsbanen;Vestover;C0332T;59.937662;10.711838;59.938984;10.714487;2991.12;F;Sporfelt;S324;210775;;;;;;
+C0329T;Inng;C;Centrumsbanen;Østover;C0307T;59.938005;10.712679;59.936837;10.710206;3052;F;Sporfelt;S329;193;;;;;;
+C0332T;Utg;C;Centrumsbanen;Vestover;C0340T;59.938984;10.714487;59.939642;10.71542;3201.895;F;Sporfelt;S332;90;;;;;;
+C0339T;Inng;C;Centrumsbanen;Østover;C0329T;59.939007;10.714421;59.938005;10.712679;3201;F;Sporfelt;S339;149;;;;;;
+C0340T;Utg;C;Centrumsbanen;Vestover;C0366T;59.939642;10.71542;59.940527;10.716674;3291.895;F;Sporfelt;S340;121;BLI2;BLI;Blindern;59.940117;10.716094;8
+C0345T;Inng;C;Centrumsbanen;Østover;C0339T;59.939658;10.715344;59.939007;10.714421;3290;F;Sporfelt;S345;89;BLI1;BLI;Blindern;59.940148;10.716038;8
+C0366T;Utg;C;Centrumsbanen;Vestover;C0388T;59.940527;10.716674;59.942594;10.718673;3412.895;F;Sporfelt;S366;256913;;;;;;
+C0371T;Inng;C;Centrumsbanen;Østover;C0345T;59.940677;10.716778;59.939658;10.715344;3429;F;Sporfelt;S371;139;;;;;;
+C0388T;Utg;C;Centrumsbanen;Vestover;C0404T;59.942594;10.718673;59.943374;10.720063;3669.808;F;Sporfelt;S388;116753;FOR2;FOR;Forskningsparken;59.9437;10.720918;20
+C0403T;Inng;C;Centrumsbanen;Østover;C0371T;59.942843;10.718932;59.940677;10.716778;3700;F;Sporfelt;S403;271;FOR1;FOR;Forskningsparken;59.943723;10.720854;20
+C0404T;Utg;C;Centrumsbanen;Vestover;C0410T;59.943374;10.720063;59.944333;10.72393;3786.561;F;Sporfelt;S404;244007;;;;;;
+C0410T;Utg;C;Centrumsbanen;Vestover;C0434T;59.944333;10.72393;59.944536;10.725451;4030.568;F;Sporfelt;S410;88676;;;;;;
+C0413T;Inng;C;Centrumsbanen;Østover;C0403T;59.944436;10.724394;59.942843;10.718932;4061;F;Sporfelt;S413;361;;;;;;
+C0433T;Inng;C;Centrumsbanen;Østover;C0413T;59.944624;10.725719;59.944436;10.724394;4138;F;Sporfelt;S433;77;;;;;;
+C0434T;Utg;C;Centrumsbanen;Vestover;C0454T;59.944536;10.725451;59.945347;10.728666;4119.244;F;Sporfelt;S434;201543;;;;;;
+C0453T;Inng;C;Centrumsbanen;Østover;C0433T;59.945446;10.728803;59.944624;10.725719;4334;F;Sporfelt;S453;196;;;;;;
+C0454T;Utg;C;Centrumsbanen;Vestover;C0462T;59.945347;10.728666;59.946279;10.731162;4320.787;F;Sporfelt;S454;174244;;;;;;
+C0462T;Utg;C;Centrumsbanen;Vestover;C0474T;59.946279;10.731162;59.947435;10.733438;4495.031;F;Sporfelt;S462;180676;UST2;UST;Ullevål stadion;59.946649;10.731917;81
+C0471T;Inng;C;Centrumsbanen;Østover;C0453T;59.946435;10.731392;59.945446;10.728803;4516;F;Sporfelt;S471;182;UST1;UST;Ullevål stadion;59.946805;10.732122;81
+C0474T;Utg;C;Centrumsbanen;Vestover;C0484T;59.947435;10.733438;59.947853;10.734248;4675.707;F;Sporfelt;S474;65;;;;;;
+C0475T;Inng;C;Centrumsbanen;Østover;C0471T;59.947462;10.733393;59.946435;10.731392;4676;F;Sporfelt;S475;160;;;;;;
+C0481T;Inng;C;Centrumsbanen;Østover;C0475T;59.947881;10.734203;59.947462;10.733393;4741;F;Sporfelt;S481;65;USTA;UST;Ullevål stadion;;;81
+C0484T;Utg;C;Centrumsbanen;Vestover;C0488T;59.947853;10.734248;59.948426;10.735358;4740.707;F;Sporfelt;S484;89.22;USTB;UST;Ullevål stadion;;;81
+C0488T;Utg;C;Centrumsbanen;Vestover;C0496T;59.948426;10.735358;59.948799;10.736081;4829.927;F;Sporfelt;S488;58;;;;;;
+C0489T;Inng;C;Centrumsbanen;Østover;C0481T;59.948447;10.7353;59.947881;10.734203;4829;F;Sporfelt;S489;88;;;;;;
+C0491T;Inng;C;Centrumsbanen;Østover;C0489T;59.948897;10.736149;59.948447;10.7353;4898;F;Sporfelt;S491;69;;;;;;
+C0496T;Utg;C;Centrumsbanen;Vestover;C0498T;59.948799;10.736081;59.949725;10.737694;4887.927;F;Sporfelt;S496;137;;;;;;
+C0497T;Inng;C;Centrumsbanen;Østover;C0491T;59.949761;10.737659;59.948897;10.736149;5026;F;Sporfelt;S497;128;;;;;;
+C0498T;Utg;C;Centrumsbanen;Vestover;C0522T;59.949725;10.737694;59.950671;10.740438;5024.927;F;Sporfelt;S498;188073;;;;;;
+C0513T;Inng;C;Centrumsbanen;Østover;C0497T;59.950407;10.739185;59.949761;10.737659;5138;F;Sporfelt;C513;112;;;;;;
+C0522T;Utg;C;Centrumsbanen;Vestover;C0544T;59.950671;10.740438;59.95079;10.744531;5213;F;Sporfelt;C522;232;;;;;;
+C0533T;Inng;C;Centrumsbanen;Østover;C0513T;59.950914;10.742611;59.950407;10.739185;5340;F;Sporfelt;C533;202;;;;;;
+C0544T;Utg;C;Centrumsbanen;Vestover;C0562T;59.95079;10.744531;59.950571;10.747704;5445;F;Sporfelt;C544;179;;;;;;
+C0553T;Inng;C;Centrumsbanen;Østover;C0533T;59.950712;10.746182;59.950914;10.742611;5541;F;Sporfelt;C553;201;;;;;;
+C0562T;Utg;C;Centrumsbanen;Vestover;C0580T;59.950571;10.747704;59.950351;10.750895;5624;F;Sporfelt;C562;180;;;;;;
+C0573T;Inng;C;Centrumsbanen;Østover;C0553T;59.950468;10.749728;59.950712;10.746182;5741;F;Sporfelt;C573;200;;;;;;
+C0580T;Utg;C;Centrumsbanen;Vestover;C0596T;59.950351;10.750895;59.950172;10.753501;5804;F;Sporfelt;C580;147;;;;;;
+C0593T;Inng;C;Centrumsbanen;Østover;C0573T;59.950231;10.753167;59.950468;10.749728;5935;F;Sporfelt;C593;194;NYDA;NYD;Nydalen;;;55
+C0596T;Utg;C;Centrumsbanen;Vestover;C0610T;59.950172;10.753501;59.950001;10.755983;5951;F;Sporfelt;C596;140;NYDB;NYD;Nydalen;;;55
+C0609T;Inng;C;Centrumsbanen;Østover;C0593T;59.950038;10.755968;59.950231;10.753167;6093;F;Sporfelt;C609;158;;;;;;
+C0610T;Utg;C;Centrumsbanen;Vestover;C0624T;59.950001;10.755983;59.949813;10.758713;6091;F;Sporfelt;C610;154;;;;;;
+C0623T;Inng;C;Centrumsbanen;Østover;C0609T;59.949845;10.758769;59.950038;10.755968;6251;F;Sporfelt;C623;158;;;;;;
+C0624T;Utg;C;Centrumsbanen;Vestover;C0644T;59.949813;10.758713;59.94959;10.762228;6245;F;Sporfelt;C624;198;;;;;;
+C0641T;Inng;C;Centrumsbanen;Østover;C0623T;59.949654;10.761732;59.949845;10.758769;6418;F;Sporfelt;C641;167;;;;;;
+C0644T;Utg;C;Centrumsbanen;Vestover;C0662T;59.94959;10.762228;59.949358;10.765248;6443;F;Sporfelt;C644;171;;;;;;
+C0662T;Utg;C;Centrumsbanen;Vestover;C0674T;59.949358;10.765248;59.949064;10.767425;6614;F;Sporfelt;C662;126;NYD2;NYD;Nydalen;59.949209;10.766354;55
+C0663T;Inng;C;Centrumsbanen;Østover;C0641T;59.949455;10.765217;59.949654;10.761732;6614;F;Sporfelt;C663;196;NYD1;NYD;Nydalen;59.949334;10.766427;55
+C0673T;Inng;C;Centrumsbanen;Østover;C0663T;59.949157;10.767573;59.949455;10.765217;6750;F;Sporfelt;C673;136;;;;;;
+C0674T;Utg;C;Centrumsbanen;Vestover;C0686T;59.949064;10.767425;59.94874;10.76966;6740;F;Sporfelt;C674;130.2;;;;;;
+C0686T;Utg;C;Centrumsbanen;Vestover;C0696T;59.94874;10.76966;59.948458;10.771358;6870.2;F;Sporfelt;C686;100.2;;;;;;
+C0696T;Utg;C;Centrumsbanen;Vestover;C0710T;59.948458;10.771358;59.948056;10.773561;6970.4;F;Sporfelt;C696;130.2;;;;;;
+C0701T;Inng;C;Centrumsbanen;Østover;C0673T;59.948374;10.772069;59.949157;10.767573;7016;F;Sporfelt;C701;266;;;;;;
+C0710T;Utg;C;Centrumsbanen;Vestover;C0722T;59.948056;10.773561;59.947568;10.775586;7100.6;F;Sporfelt;C710;126;;;;;;
+C0717T;Inng;C;Centrumsbanen;Østover;C0701T;59.947871;10.774692;59.948374;10.772069;7173;F;Sporfelt;C717;157;;;;;;
+C0722T;Utg;C;Centrumsbanen;Vestover;C0736T;59.947568;10.775586;59.946733;10.777216;7226.6;F;Sporfelt;C722;131;;;;;;
+C0735T;Inng;C;Centrumsbanen;Østover;C0717T;59.946769;10.777256;59.947871;10.774692;7364;F;Sporfelt;C735;191;;;;;;
+C0736T;Utg;C;Centrumsbanen;Vestover;C0756T;59.946733;10.777216;59.945011;10.778216;7357.6;F;Sporfelt;C736;202;;;;;;
+C0756T;Utg;C;Centrumsbanen;Vestover;C0768T;59.945011;10.778216;59.943937;10.778728;7559.6;F;Sporfelt;C756;123;STR2;STR;Storo;59.944461;10.778477;73
+C0757T;Inng;C;Centrumsbanen;Østover;C0735T;59.945021;10.778436;59.946769;10.777256;7571;F;Sporfelt;C757;207;STR1;STR;Storo;59.944489;10.778691;73
+C0767T;Inng;C;Centrumsbanen;Østover;C0757T;59.943948;10.77895;59.945021;10.778436;7694;F;Sporfelt;C767;123;;;;;;
+C0768T;Utg;C;Centrumsbanen;Vestover;C0782T;59.943937;10.778728;59.94279;10.779243;7682.6;F;Sporfelt;C768;131;;;;;;
+C0780T;C-STR Midstspor;C;Centrumsbanen;Østover;;59.942799;10.779351;;;7814.776;F;Sporfelt;C780;;STRX;STR;Storo;;;73
+C0781T;Inng;C;Centrumsbanen;Østover;;59.942798;10.77944;;;7825;F;Sporfelt;C781;;STRC;STR;Storo;;;73
+C0782T;Utg;C;Centrumsbanen;Vestover;C0792T;59.94279;10.779243;59.941793;10.779699;7813.6;F;Sporfelt;C782;114;STRD;STR;Storo;;;73
+C0792T;Utg;C;Centrumsbanen;Vestover;C0806T;59.941793;10.779699;59.940827;10.780251;7927.6;F;Sporfelt;C792;112;;;;;;
+C0793T;Inng;C;Centrumsbanen;Østover;C0781T;59.941799;10.779881;59.942798;10.77944;7939;F;Sporfelt;C793;114;;;;;;
+C0799T;Inng;C;Centrumsbanen;Østover;C0793T;59.941256;10.780129;59.941799;10.779881;8001;F;Sporfelt;C799;62;;;;;;
+C0806T;Utg;C;Centrumsbanen;Vestover;C0822T;59.940827;10.780251;59.93942;10.780821;8039.6;F;Sporfelt;C806;160;STRB;STR;Storo;;;73
+C0811T;Inng;C;Centrumsbanen;Østover;C0799T;59.940154;10.780632;59.941256;10.780129;8127;F;Sporfelt;C811;126;STRA;STR;Storo;;;73
+C0822T;Utg;C;Centrumsbanen;Vestover;C0840T;59.93942;10.780821;59.937919;10.781358;8199.6;F;Sporfelt;C822;170;;;;;;
+C0823T;Inng;C;Centrumsbanen;Østover;C0811T;59.939206;10.781033;59.940154;10.780632;8235;F;Sporfelt;C823;108;;;;;;
+C0839T;Inng;C;Centrumsbanen;Østover;C0823T;59.937846;10.781618;59.939206;10.781033;8390;F;Sporfelt;C839;155;SIN1;SIN;Sinsen;59.937269;10.781884;67
+C0840T;Utg;C;Centrumsbanen;Vestover;C0850T;59.937919;10.781358;59.936642;10.781947;8369.6;F;Sporfelt;C840;146;SIN2;SIN;Sinsen;59.937237;10.781673;67
+C0850T;Utg;C;Centrumsbanen;Vestover;C0878T;59.936642;10.781947;59.934577;10.783394;8515.6;F;Sporfelt;C850;245.4;;;;;;
+C0851T;Inng;C;Centrumsbanen;Østover;C0839T;59.936674;10.782159;59.937846;10.781618;8524;F;Sporfelt;C851;134;;;;;;
+C0877T;Inng;C;Centrumsbanen;Østover;C0851T;59.9346;10.783451;59.936674;10.782159;8767;F;Sporfelt;C877;243;;;;;;
+C0878T;Utg;C;Centrumsbanen;Vestover;C0888T;59.934577;10.783394;59.933612;10.784426;8761;F;Sporfelt;C878;122;;;;;;
+C0887T;Inng;C;Centrumsbanen;Østover;C0877T;59.933635;10.784482;59.9346;10.783451;8889;F;Sporfelt;C887;122;;;;;;
+C0888T;Utg;C;Centrumsbanen;Vestover;C0900T;59.933612;10.784426;59.933066;10.78501;8883;F;Sporfelt;C888;69;;;;;;
+C0899;Inng;C;Centrumsbanen;Østover;C0887T;59.932673;10.785484;59.933635;10.784482;9010;F;Sporfelt;;121;;;;;;
+C0900T;Utg;C;Centrumsbanen;Vestover;C0916T;59.933066;10.78501;59.931242;10.786078;8952;F;Sporfelt;C902;213.6;SINB;SIN;Sinsen;;;67
+C0901T;Inng;C;Centrumsbanen;Østover;;59.932673;10.785484;;;9010;F;Sporfelt;;;;;;;;
+C0902T;Utg;C;Centrumsbanen;Vestover;;59.932632;10.78544;;;9006;F;Sporfelt;;;;;;;;
+C0915T;Inng;C;Centrumsbanen;Østover;C0899;59.931421;10.786146;59.932673;10.785484;9155;F;Sporfelt;C915;145;;;;;;
+C0916T;Utg;C;Centrumsbanen;Vestover;C0940T;59.931242;10.786078;59.929314;10.78483;9165.6;F;Sporfelt;C916;230;;;;;;
+C0937T;Inng;C;Centrumsbanen;Østover;C0915T;59.929505;10.785497;59.931421;10.786146;9374;F;Sporfelt;C937;219;;;;;;
+C0940T;Utg;C;Centrumsbanen;Vestover;C0956T;59.929314;10.78483;59.92839;10.782689;9395.6;F;Sporfelt;C940;159;;;;;;
+C0956T;Utg;C;Centrumsbanen;Vestover;;59.92839;10.782689;;;9554.6;F;Sporfelt;C956;;;;;;;
+C0959T;Inng;C;Centrumsbanen;Østover;C0937T;59.927951;10.782919;59.929505;10.785497;9602;F;Sporfelt;C959;228;;;;;;
+C1;C1;Y;Ryen driftsområde;Østover;;59.893495;10.801474;;;;V;Sporveksel;;;;;;;;
+C196;C196;C;Centrumsbanen;Vestover;;59.930076;10.714831;;;1988.328;V;Sporveksel;TP196;;;;;;;
+C199;C199;C;Centrumsbanen;Vestover;;59.930407;10.7144;;;2032.168;V;Sporveksel;TP199;;;;;;;
+C2;C2;Y;Ryen driftsområde;Østover;;59.893177;10.801759;;;;V;Sporveksel;;;;;;;;
+C203;C203;C;Centrumsbanen;Østover;;59.93051;10.714074;;;2054.054;V;Sporveksel;TP203;;;;;;;
+C209;C209;C;Centrumsbanen;Vestover;;59.930864;10.713677;;;2097.333;V;Sporveksel;TP209;;;;;;;
+C211/216;C211/216;C;Centrumsbanen;Vestover;;59.93124;10.713173;;;2147.715;V;Sporveksel;TP211;;;;;;;
+C213;C213;C;Centrumsbanen;Vestover;;59.931525;10.712627;;;2191.529;V;Sporveksel;T213;;MAJB;MAJ;Majorstuen;;;48
+C214;C214;C;Centrumsbanen;Østover;;59.931314;10.712873;;;2166.036;V;Sporveksel;TP214;;;;;;;
+C218;C218;C;Centrumsbanen;Vestover;;59.931363;10.712885;;;2168.477;V;Sporveksel;TP216;;;;;;;
+C220;C220;C;Centrumsbanen;Østover;;59.931507;10.712565;;;2193.595;V;Sporveksel;;;;;;;;
+C225;C225;C;Centrumsbanen;Østover;;59.931669;10.712308;;;2216.648;V;Sporveksel;;;;;;;;
+C226;C226;C;Centrumsbanen;Vestover;;59.931557;10.712577;;;2196.059;V;Sporveksel;TP226;;;;;;;
+C227;C227;C;Centrumsbanen;Vestover;;59.931977;10.711998;;;2252.031;V;Sporveksel;TP227;;;;;;;
+C228;C228;C;Centrumsbanen;Vestover;;59.932087;10.711823;;;2267.696;V;Sporveksel;TP228;;;;;;;
+C230;C230;C;Centrumsbanen;Østover;;59.930519;10.714063;;;2055.175;V;Sporveksel;TP230;;;;;;;
+C237;C237;C;Centrumsbanen;Vestover;;59.932603;10.710582;;;2349.796;V;Sporveksel;TP237;;;;;;;
+C251;C251;C;Centrumsbanen;Vestover;;59.933497;10.70927;;;2474.687;V;Sporveksel;TP251;;;;;;;
+C3;C3;Y;Ryen driftsområde;Østover;;59.893151;10.801783;;;;V;Sporveksel;;;;;;;;
+C330;C330;C;Centrumsbanen;Vestover;;59.938996;10.714504;;;3203.612;V;Sporveksel;SP339;;;;;;;
+C332;C332;C;Centrumsbanen;Vestover;;59.93963;10.715403;;;3290.367;V;Sporveksel;SP332;;;;;;;
+C337/339;C337/339;C;Centrumsbanen;Østover;;59.939337;10.714888;;;3246.069;V;Sporveksel;SP337;;;;;;;
+C4;C4;Y;Ryen driftsområde;Østover;;59.892587;10.802503;;;;V;Sporveksel;;;;;;;;
+C470;C470;C;Centrumsbanen;Vestover;;59.948746;10.735979;;;4879.75;V;Sporveksel;SP470;;;;;;;
+C471;C471;C;Centrumsbanen;Østover;;59.947814;10.734073;;;4730.626;V;Sporveksel;SP471;;;;;;;
+C472;C472;C;Centrumsbanen;Østover;;59.948463;10.73533;;;4831.404;V;Sporveksel;SP472;;;;;;;
+C473;C473;C;Centrumsbanen;Vestover;;59.947528;10.733619;;;4690.521;V;Sporveksel;SP473;;;;;;;
+C490;C490;C;Centrumsbanen;Vestover;;59.94882;10.736121;;;4891.205;V;Sporveksel;SP490;;;;;;;
+C490 P;C490;S;Sognsvannsbanen;Vestover;;59.94882;10.736121;;;6846.166;V;Sporveksel;TP490 (duplikat);;;;;;;
+C491;C491;C;Centrumsbanen;Østover;;59.948917;10.736184;;;4901.014;V;Sporveksel;SP491;;;;;;;
+C491 P;C491;S;Sognsvannsbanen;Østover;;59.948917;10.736184;;;6837.861;V;Sporveksel;TP491 (duplikat);;;;;;;
+C5;C5;Y;Ryen driftsområde;Østover;;59.892432;10.80271;;;;V;Sporveksel;;;;;;;;
+C6;C6;Y;Ryen driftsområde;Østover;;59.892259;10.80294;;;;V;Sporveksel;;;;;;;;
+C609;C609;C;Centrumsbanen;Østover;;59.950034;10.756026;;;6096.298;V;Sporveksel;CP609;;;;;;;
+C615;C615;C;Centrumsbanen;Vestover;;59.949914;10.757244;;;6162.127;V;Sporveksel;CP615;;;;;;;
+C616;C616;C;Centrumsbanen;Vestover;;59.949897;10.757494;;;6176.238;V;Sporveksel;CP616;;;;;;;
+C624;C624;C;Centrumsbanen;Østover;;59.949848;10.758731;;;6248.886;V;Sporveksel;CP624;;;;;;;
+C7;C7;Y;Ryen driftsområde;Østover;;59.892106;10.803143;;;;V;Sporveksel;;;;;;;;
+C773;C773;C;Centrumsbanen;Østover;;59.943485;10.779153;;;7746.795;V;Sporveksel;CP773;;;;;;;
+C774;C774;C;Centrumsbanen;Vestover;;59.943492;10.778931;;;7733.888;V;Sporveksel;CP774;;;;;;;
+C781;C781;C;Centrumsbanen;Vestover;;59.942811;10.779345;;;7813.334;V;Sporveksel;CP781;;;;;;;
+C790;C790;C;Centrumsbanen;Vestover;;59.941784;10.779814;;;7930.785;V;Sporveksel;CP790;;;;;;;
+C798;C798;C;Centrumsbanen;Østover;;59.941293;10.780112;;;7996.811;V;Sporveksel;CP798;;;;;;;
+C799;C799;C;Centrumsbanen;Østover;;59.941224;10.780143;;;8004.64;V;Sporveksel;;;;;;;;
+C8;C8;Y;Ryen driftsområde;Østover;;59.891566;10.803515;;;;V;Sporveksel;;;;;;;;
+C805;C805;C;Centrumsbanen;Vestover;;59.940753;10.780285;;;8048.407;V;Sporveksel;CP805;;;;;;;
+C806;C806;C;Centrumsbanen;Østover;;59.940651;10.780499;;;8071.323;V;Sporveksel;;;;;;;;
+C878;C878;C;Centrumsbanen;Vestover;;59.93452;10.783455;;;8768.169;V;Sporveksel;CP878;;;;;;;
+C882;C882;C;Centrumsbanen;Østover;;59.934216;10.783861;;;8815.566;V;Sporveksel;CP882;;;;;;;
+C883;C883;C;Centrumsbanen;Østover;;59.934058;10.78403;;;8835.574;V;Sporveksel;CP883;;;;;;;
+C887;C887;C;Centrumsbanen;Vestover;;59.93372;10.78431;;;8869.274;V;Sporveksel;CP887;;;;;;;
+C889;C889;C;Centrumsbanen;Østover;;59.933577;10.784545;;;8896.395;V;Sporveksel;CP889;;;;;;;
+C892;C892;C;Centrumsbanen;Vestover;;59.93356;10.784482;;;8889.558;V;Sporveksel;CP892;;;;;;;
+C9;C9;Y;Ryen driftsområde;Østover;;59.891235;10.803736;;;;V;Sporveksel;;;;;;;;
+D0899T;Inng;D;Lørenbanen;Østover;;59.932716;10.785621;;;9010;F;Sporfelt;D899;;SINE;SIN;Sinsen;;;67
+D0900T;Utg;D;Lørenbanen;Vestover;D0924T;59.932615;10.785232;59.930111;10.789314;9003;F;Sporfelt;D900;246;SINF;SIN;Sinsen;;;67
+D0924T;Utg;D;Lørenbanen;Vestover;D0938T;59.930111;10.789314;59.930791;10.787425;9249;F;Sporfelt;D924;131;;;;;;
+D0925T;Inng;D;Lørenbanen;Østover;D0899T;59.930924;10.787566;59.932716;10.785621;9240;F;Sporfelt;D925;230;;;;;;
+D0937T;Inng;D;Lørenbanen;Østover;D0925T;59.930219;10.789485;59.930924;10.787566;9373;F;Sporfelt;D937;133;LØR2;LØR;Løren;59.929787;10.790215;75
+D0938T;Utg;D;Lørenbanen;Vestover;D0950T;59.930791;10.787425;59.929463;10.791116;9380;F;Sporfelt;D938;124;LØR1;LØR;Løren;59.929895;10.790386;75
+D0950T;Utg;D;Lørenbanen;Vestover;D0972T;59.929463;10.791116;59.927909;10.793003;9504;F;Sporfelt;D950;211;;;;;;
+D0951T;Inng;D;Lørenbanen;Østover;D0937T;59.929571;10.791287;59.930219;10.789485;9497;F;Sporfelt;;124;;;;;;
+D0971T;Inng;D;Lørenbanen;Østover;D0951T;59.927915;10.793078;59.929571;10.791287;9716;F;Sporfelt;D971;219;;;;;;
+D0972T;Utg;D;Lørenbanen;Vestover;D0984T;59.927909;10.793003;59.92683;10.793248;9715;F;Sporfelt;D972;121;;;;;;
+D0983T;Inng;D;Lørenbanen;Østover;D0971T;59.926835;10.793322;59.927915;10.793078;9837;F;Sporfelt;D983;121;LØRB;LØR;Løren;;;75
+D0984T;Utg;D;Lørenbanen;Vestover;D1014T;59.92683;10.793248;59.925067;10.796555;9836;F;Sporfelt;D984;294;LØRA;LØR;Løren;;;75
+D1;D1;Y;Ryen driftsområde;Østover;;59.892413;10.802775;;;;V;Sporveksel;;;;;;;;
+D1013T;Inng;D;Lørenbanen;Østover;D0983T;59.925104;10.796572;59.926835;10.793322;10126;F;Sporfelt;;289;;;;;;
+D1014T;Utg;D;Lørenbanen;Vestover;;59.925067;10.796555;;;10130;F;Sporfelt;;;;;;;;
+D2;D2;Y;Ryen driftsområde;Østover;;59.892591;10.802656;;;;V;Sporveksel;;;;;;;;
+D3;D3;Y;Ryen driftsområde;Østover;;59.8926;10.802607;;;;V;Sporveksel;;;;;;;;
+D4;D4;Y;Ryen driftsområde;Østover;;59.892846;10.802251;;;;V;Sporveksel;;;;;;;;
+D5;D5;Y;Ryen driftsområde;Østover;;59.893071;10.80208;;;;V;Sporveksel;;;;;;;;
+E01;E01;E;Etterstad driftsområde;Østover;;59.909956;10.805622;;;;V;Sporveksel;;;;;;;;
+E02;E02;E;Etterstad driftsområde;Østover;;59.910127;10.805376;;;;V;Sporveksel;;;;;;;;
+E03;E03;E;Etterstad driftsområde;Østover;;59.910281;10.805172;;;;V;Sporveksel;;;;;;;;
+E04;E04;E;Etterstad driftsområde;Østover;;59.910451;10.804978;;;;V;Sporveksel;;;;;;;;
+E05;E05;E;Etterstad driftsområde;Østover;;59.910432;10.804879;;;;V;Sporveksel;;;;;;;;
+E06;E06;E;Etterstad driftsområde;Østover;;59.91065;10.804572;;;;V;Sporveksel;;;;;;;;
+E07;E07;E;Etterstad driftsområde;Østover;;59.910454;10.804795;;;;V;Sporveksel;;;;;;;;
+E08;E08;E;Etterstad driftsområde;Østover;;59.910246;10.804974;;;;V;Sporveksel;;;;;;;;
+E09;E09;E;Etterstad driftsområde;Østover;;59.910259;10.805016;;;;V;Sporveksel;;;;;;;;
+E1;E1;Y;Ryen driftsområde;Østover;;59.891574;10.803623;;;;V;Sporveksel;;;;;;;;
+E10;E10;E;Etterstad driftsområde;Østover;;59.910268;10.805095;;;;V;Sporveksel;;;;;;;;
+E11;E11;E;Etterstad driftsområde;Østover;;59.91086;10.804334;;;;V;Sporveksel;;;;;;;;
+E12;E12;E;Etterstad driftsområde;Østover;;59.910486;10.804995;;;;V;Sporveksel;;;;;;;;
+E14/E15;E14/E15;E;Etterstad driftsområde;Østover;;59.911301;10.803833;;;;V;Sporveksel;;;;;;;;
+E16;E16;E;Etterstad driftsområde;Østover;;59.911661;10.803517;;;;V;Sporveksel;;;;;;;;
+E17;E17;E;Etterstad driftsområde;Østover;;59.911924;10.803083;;;;V;Sporveksel;;;;;;;;
+E2;E2;Y;Ryen driftsområde;Østover;;59.891912;10.803612;;;;V;Sporveksel;;;;;;;;
+E3;E3;Y;Ryen driftsområde;Østover;;59.891978;10.803501;;;;V;Sporveksel;;;;;;;;
+E4;E4;Y;Ryen driftsområde;Østover;;59.891969;10.803385;;;;V;Sporveksel;;;;;;;;
+F ENDE I;Inng.ende;F;Furusetbanen;Vestover;;59.935043;10.919158;;;13150.549;E;Endepunkt;;;;;;;;
+F ENDE U;Utg.ende;F;Furusetbanen;Østover;;59.93502;10.919103;;;13142.613;E;Endepunkt;;;;;;;;
+F0652T;Utg;F;Furusetbanen;Østover;F0682T;59.910102;10.832671;59.910673;10.837131;6530;F;Sporfelt;F652;277.15;;;;;;
+F0682T;Utg;F;Furusetbanen;Østover;F0702T;59.910673;10.837131;59.912391;10.839748;6807.15;F;Sporfelt;F682;240829;;;;;;
+F0689T;Inng;F;Furusetbanen;Vestover;;59.910312;10.832101;;;6490.12;F;Sporfelt;F689;;;;;;;
+F0695T;Inng;F;Furusetbanen;Vestover;F0689T;59.910394;10.835279;59.910312;10.832101;6668.875;F;Sporfelt;F695;178755;;;;;;
+F0702T;Utg;F;Furusetbanen;Østover;F0712T;59.912391;10.839748;59.912826;10.84041;7047.979;F;Sporfelt;F702;60982;;;;;;
+F0703T;Inng;F;Furusetbanen;Vestover;F0695T;59.912393;10.839652;59.910394;10.835279;7045.253;F;Sporfelt;F703;376378;;;;;;
+F0712T;Utg;F;Furusetbanen;Østover;F0734T;59.912826;10.84041;59.914524;10.842992;7108.961;F;Sporfelt;F712;237759;TVE1;TVE;Tveita;59.914039;10.842254;79
+F0734T;Utg;F;Furusetbanen;Østover;F0762T;59.914524;10.842992;59.916447;10.845928;7346.72;F;Sporfelt;F734;270.31;;;;;;
+F0741T;Inng;F;Furusetbanen;Vestover;F0703T;59.91362;10.841518;59.912393;10.839652;7217.325;F;Sporfelt;F741;172072;TVE2;TVE;Tveita;59.914062;10.84219;79
+F0762T;Utg;F;Furusetbanen;Østover;F0798T;59.916447;10.845928;59.918401;10.850343;7617.03;F;Sporfelt;F762;329.97;;;;;;
+F0791T;Inng;F;Furusetbanen;Vestover;F0741T;59.916471;10.845865;59.91362;10.841518;7617;F;Sporfelt;F791;399675;;;;;;
+F0798T;Utg;F;Furusetbanen;Østover;F0818T;59.918401;10.850343;59.92022;10.852625;7947;F;Sporfelt;F798;241276;;;;;;
+F0818T;Utg;F;Furusetbanen;Østover;F0836T;59.92022;10.852625;59.921648;10.854044;8188.276;F;Sporfelt;F818;178;;;;;;
+F0825T;Inng;F;Furusetbanen;Vestover;F0791T;59.918422;10.850284;59.916471;10.845865;7947.138;F;Sporfelt;F825;330138;;;;;;
+F0836T;Utg;F;Furusetbanen;Østover;F0856T;59.921648;10.854044;59.92268;10.855201;8366.276;F;Sporfelt;F836;131.78;HAU1;HAU;Haugerud;59.922125;10.854578;30
+F0837T;Inng;F;Furusetbanen;Vestover;F0825T;59.920729;10.852976;59.918422;10.850284;8247.082;F;Sporfelt;F837;299944;;;;;;
+F0847T;Inng;F;Furusetbanen;Vestover;F0837T;59.921668;10.853984;59.920729;10.852976;8366;F;Sporfelt;F847;118918;HAU2;HAU;Haugerud;59.922146;10.854519;30
+F0856T;Utg;F;Furusetbanen;Østover;F0890T;59.92268;10.855201;59.92556;10.85959;8498.056;F;Sporfelt;F856;406234;;;;;;
+F0877T;Inng;F;Furusetbanen;Vestover;F0847T;59.922693;10.855133;59.921668;10.853984;8497;F;Sporfelt;F877;131;;;;;;
+F0890T;Utg;F;Furusetbanen;Østover;F0926T;59.92556;10.85959;59.927339;10.866753;8904.29;F;Sporfelt;F890;457623;TRO1;TRO;Trosterud;59.927156;10.865222;78
+F0917T;Inng;F;Furusetbanen;Vestover;F0877T;59.924641;10.857738;59.922693;10.855133;8758.804;F;Sporfelt;F917;261804;;;;;;
+F0926T;Utg;F;Furusetbanen;Østover;F0958T;59.927339;10.866753;59.927992;10.871039;9361.913;F;Sporfelt;F926;251164;;;;;;
+F0957T;Inng;F;Furusetbanen;Vestover;F0917T;59.927076;10.864213;59.924641;10.857738;9220;F;Sporfelt;F957;461196;TRO2;TRO;Trosterud;59.927188;10.865153;78
+F0958T;Utg;F;Furusetbanen;Østover;F1002T;59.927992;10.871039;59.930137;10.876626;9613.077;F;Sporfelt;F958;396072;;;;;;
+F0991T;Inng;F;Furusetbanen;Vestover;F0957T;59.927603;10.868614;59.927076;10.864213;9472.765;F;Sporfelt;F991;252765;;;;;;
+F1;F1;Y;Ryen driftsområde;Østover;;59.894359;10.803675;;;;V;Sporveksel;;;;;;;;
+F1002T;Utg;F;Furusetbanen;Østover;F1028T;59.930137;10.876626;59.931852;10.880113;10009.149;F;Sporfelt;F1002;272972;;;;;;
+F1028T;Utg;F;Furusetbanen;Østover;F1040T;59.931852;10.880113;59.932586;10.88161;10282.121;F;Sporfelt;F1028;116879;;;;;;
+F1031T;Inng;F;Furusetbanen;Vestover;F0991T;59.929725;10.875685;59.927603;10.868614;9939.801;F;Sporfelt;F1031;467036;;;;;;
+F1033A;F1033A;F;Furusetbanen;Vestover;;59.932187;10.880687;;;10331.733;V;Sporveksel;F1033A;;;;;;;
+F1033B;F1033B;F;Furusetbanen;Østover;;59.93254;10.881517;;;10391.676;V;Sporveksel;F1033B;;;;;;;
+F1035T;Inng;F;Furusetbanen;Vestover;F1031T;59.932107;10.880524;59.929725;10.875685;10318.802;F;Sporfelt;F1035;379001;;;;;;
+F1040T;Utg;F;Furusetbanen;Østover;F1056T;59.932586;10.88161;59.933371;10.883207;10399;F;Sporfelt;F1040;125;LIB1;LIB;Lindeberg;59.932956;10.882364;45
+F1056T;Utg;F;Furusetbanen;Østover;F1078T;59.933371;10.883207;59.935067;10.886657;10524;F;Sporfelt;F1056;269792;;;;;;
+F1063T;Inng;F;Furusetbanen;Vestover;F1035T;59.932616;10.881559;59.932107;10.880524;10400.301;F;Sporfelt;F1063;81499;LIB2;LIB;Lindeberg;59.93298;10.8823;45
+F1078T;Utg;F;Furusetbanen;Østover;F1128T;59.935067;10.886657;59.938466;10.892015;10793.792;F;Sporfelt;F1078;486.76;;;;;;
+F1099T;Inng;F;Furusetbanen;Vestover;F1063T;59.934161;10.884702;59.932616;10.881559;10645.978;F;Sporfelt;F1099;245677;;;;;;
+F1128T;Utg;F;Furusetbanen;Østover;F1152T;59.938466;10.892015;59.940282;10.894596;11280.552;F;Sporfelt;F1128;251713;;;;;;
+F1135T;Inng;F;Furusetbanen;Vestover;F1099T;59.936284;10.889021;59.934161;10.884702;10984.36;F;Sporfelt;F1135;338382;;;;;;
+F1152T;Utg;F;Furusetbanen;Østover;F1160T;59.940282;10.894596;59.940719;10.895639;11532.265;F;Sporfelt;F1152;75501;;;;;;
+F1153T;Inng;F;Furusetbanen;Vestover;F1135T;59.938978;10.892484;59.936284;10.889021;11343.185;F;Sporfelt;F1153;358825;;;;;;
+F1154A;F1154A;F;Furusetbanen;Østover;;59.940303;10.894647;;;11535.661;V;Sporveksel;F1154A;;;;;;;
+F1154B;F1154B;F;Furusetbanen;Vestover;;59.940682;10.895428;;;11597.436;V;Sporveksel;F1154B;;;;;;;
+F1155A;F1155A;F;Furusetbanen;Vestover;;59.940333;10.894596;;;11536.79;V;Sporveksel;F1155A;;;;;;;
+F1155B;F1155B;F;Furusetbanen;Østover;;59.940652;10.895479;;;11596.308;V;Sporveksel;F1155B;;;;;;;
+F1159T;Inng;F;Furusetbanen;Vestover;F1153T;59.940311;10.894544;59.938978;10.892484;11533;F;Sporfelt;F1159;189815;;;;;;
+F1160T;Utg;F;Furusetbanen;Østover;F1186T;59.940719;10.895639;59.941903;10.899367;11607.766;F;Sporfelt;F1160;250219;FUR1;FUR;Furuset;59.941047;10.896422;21
+F1185T;Inng;F;Furusetbanen;Vestover;F1159T;59.940743;10.895573;59.940311;10.894544;11608.002;F;Sporfelt;F1185;75002;FUR2;FUR;Furuset;59.941071;10.896356;21
+F1186T;Utg;F;Furusetbanen;Østover;F1234T;59.941903;10.899367;59.939876;10.907061;11857.985;F;Sporfelt;F1186;501637;;;;;;
+F1227T;Inng;F;Furusetbanen;Vestover;F1185T;59.941952;10.899449;59.940743;10.895573;11867.283;F;Sporfelt;F1227;259281;;;;;;
+F1234T;Utg;F;Furusetbanen;Østover;F1260T;59.939876;10.907061;59.938507;10.910627;12359.622;F;Sporfelt;F1234;251001;;;;;;
+F1260T;Utg;F;Furusetbanen;Østover;F1274T;59.938507;10.910627;59.937744;10.912616;12610.623;F;Sporfelt;F1260;140499;;;;;;
+F1273T;Inng;F;Furusetbanen;Vestover;F1227T;59.940447;10.905695;59.941952;10.899449;12268;F;Sporfelt;F1273;400717;;;;;;
+F1274T;Utg;F;Furusetbanen;Østover;F1288T;59.937744;10.912616;59.93704;10.914448;12751.122;F;Sporfelt;F1274;129;;;;;;
+F1278A;F1278A;F;Furusetbanen;Østover;;59.93765;10.912859;;;12768.112;V;Sporveksel;F1278A;;;;;;;
+F1278B;F1278B;F;Furusetbanen;Vestover;;59.937366;10.91372;;;12832.911;V;Sporveksel;F1278B;;;;;;;
+F1279A;F1279A;F;Furusetbanen;Vestover;;59.937679;10.912903;;;12775.4;V;Sporveksel;F1279A;;;;;;;
+F1279B;F1279B;F;Furusetbanen;Østover;;59.937337;10.913676;;;12825.622;V;Sporveksel;F1279B;;;;;;;
+F1287T;Inng;F;Furusetbanen;Vestover;F1273T;59.937889;10.912357;59.940447;10.905695;12737.101;F;Sporfelt;F1287;469101;;;;;;
+F1288T;Utg;F;Furusetbanen;Østover;F1300T;59.93704;10.914448;59.936369;10.916195;12880.122;F;Sporfelt;F1288;123288;ELÅ1;ELÅ;Ellingsrudåsen;59.936735;10.915244;18
+F1300T;Utg;F;Furusetbanen;Østover;;59.936369;10.916195;;;13003.41;F;Sporfelt;F1300;;;;;;;
+F1301T;Inng;F;Furusetbanen;Vestover;F1287T;59.93707;10.914488;59.937889;10.912357;12887;F;Sporfelt;F1301;149899;ELÅ2;ELÅ;Ellingsrudåsen;59.936803;10.915184;18
+F1311T;Inng;F;Furusetbanen;Vestover;F1301T;59.936399;10.916235;59.93707;10.914488;13009.789;F;Sporfelt;F1311;122789;ELÅB;ELÅ;Ellingsrudåsen;;;18
+F2;F2;Y;Ryen driftsområde;Østover;;59.894238;10.803471;;;;V;Sporveksel;;;;;;;;
+F3;F3;Y;Ryen driftsområde;Østover;;59.893691;10.803559;;;;V;Sporveksel;;;;;;;;
+F711A;F711A;F;Furusetbanen;Vestover;;59.91241;10.839678;;;7047.431;V;Sporveksel;FP711A;;;;;;;
+F711B;F711B;F;Furusetbanen;Østover;;59.912819;10.840399;;;7107.974;V;Sporveksel;FP711B;;;;;;;
+G ENDE I;Inng.ende;G;Grorudbanen;Vestover;;59.975764;10.929487;;;15951.203;E;Endepunkt;;;;;;;;
+G ENDE U;Utg.ende;G;Grorudbanen;Østover;;59.975596;10.929562;;;15937.98;E;Endepunkt;;;;;;;;
+G ENDE U M;Vei midtspor ende;G;Grorudbanen;Østover;;59.946665;10.850331;;;9318.997;E;Endepunkt;;;;;;;;
+G0274T;Utg;G;Grorudbanen;Østover;G0280T;59.915987;10.776486;59.916287;10.777076;2732.19;F;Sporfelt;;47;;;;;;
+G0280T;utg;G;Grorudbanen;Østover;G0290T;59.916287;10.777076;59.916866;10.778688;2779.19;F;Sporfelt;G280;110.81;;;;;;
+G0283T;Inng;G;Grorudbanen;Vestover;G0291T;59.914871;10.774576;59.915659;10.775478;2562;F;Sporfelt;;102;;;;;;
+G0290T;utg;G;Grorudbanen;Østover;G0304T;59.916866;10.778688;59.918013;10.779935;2890;F;Sporfelt;G290;149;;;;;;
+G0291T;Inng;G;Grorudbanen;Vestover;G0313T;59.915659;10.775478;59.916608;10.776814;2664;F;Sporfelt;G291;130;;;;;;
+G0304T;Utg;G;Grorudbanen;Østover;G0318T;59.918013;10.779935;59.919357;10.779856;3039;F;Sporfelt;G304;150;;;;;;
+G0313T;Inng;G;Grorudbanen;Vestover;G0339T;59.916608;10.776814;59.917461;10.778651;2794;F;Sporfelt;G313;140;;;;;;
+G0318T;utg;G;Grorudbanen;Østover;G0324T;59.919357;10.779856;59.91985;10.779804;3189;F;Sporfelt;G318;54984;;;;;;
+G0324T;utg;G;Grorudbanen;Østover;G0354T;59.91985;10.779804;59.922575;10.779513;3243.984;F;Sporfelt;G324;304016;;;;;;
+G0339T;Inng;G;Grorudbanen;Vestover;G0353T;59.917461;10.778651;59.918899;10.779831;2934;F;Sporfelt;G339;179;;;;;;
+G0353T;Inng;G;Grorudbanen;Vestover;G0363T;59.918899;10.779831;59.92123;10.779585;3113;F;Sporfelt;G353;260;;;;;;
+G0354T;utg;G;Grorudbanen;Østover;G0364T;59.922575;10.779513;59.924018;10.779359;3548;F;Sporfelt;G354;161;;;;;;
+G0363T;Inng;G;Grorudbanen;Vestover;G0383T;59.92123;10.779585;59.922574;10.779442;3373;F;Sporfelt;G363;150;;;;;;
+G0364T;utg;G;Grorudbanen;Østover;G0386T;59.924018;10.779359;59.925074;10.779414;3709;F;Sporfelt;G364;118;;;;;;
+G0383T;Inng;G;Grorudbanen;Vestover;G0385T;59.922574;10.779442;59.924017;10.779288;3523;F;Sporfelt;G383;161;;;;;;
+G0385T;Inng;G;Grorudbanen;Vestover;G0397T;59.924017;10.779288;59.925188;10.77938;3684;F;Sporfelt;G385;131;CBP2;CBP;Carl Berners plass;59.925771;10.77959;14
+G0386T;utg;G;Grorudbanen;Østover;G0406T;59.925074;10.779414;59.927105;10.780285;3827;F;Sporfelt;G386;232;CBP1;CBP;Carl Berners plass;59.925764;10.77966;14
+G0396T;utg;G;Grorudbanen;Østover;G0980T;59.926232;10.779829;59.949818;10.855344;3958;F;Sporfelt;G396;5840.832;;;;;;
+G0396T P;Inng;C;Centrumsbanen;Østover;;59.927209;10.780715;;;9751;F;Sporfelt;;;;;;;;
+G0397T;Inng;G;Grorudbanen;Vestover;G0419T;59.925188;10.77938;59.92798;10.781938;3815;F;Sporfelt;G397;359292;;;;;;
+G0406T;utg;G;Grorudbanen;Østover;G0428T;59.927105;10.780285;59.928134;10.783338;4059;F;Sporfelt;G406;215;;;;;;
+G0409T;Inng;G;Grorudbanen;Vestover;G1025T;59.926319;10.779787;59.949187;10.855174;3943.292;F;Sporfelt;G409;5780.725;;;;;;
+G0409T P;Utg;C;Centrumsbanen;Vestover;;59.928049;10.781703;;;9621.6;F;Sporfelt;GP409 (passiv);;;;;;;
+G0419T;Inng;G;Grorudbanen;Vestover;G0447T;59.92798;10.781938;59.92748;10.786554;4174.292;F;Sporfelt;G419;284999;;;;;;
+G0428T;utg;G;Grorudbanen;Østover;G0460T;59.928134;10.783338;59.926508;10.787416;4274;F;Sporfelt;G428;318;;;;;;
+G0447T;Inng;G;Grorudbanen;Vestover;G0483T;59.92748;10.786554;59.924562;10.789148;4459.291;F;Sporfelt;G447;357829;;;;;;
+G0460T;utg;G;Grorudbanen;Østover;G0490T;59.926508;10.787416;59.924176;10.789934;4592;F;Sporfelt;G460;302;;;;;;
+G0483T;Inng;G;Grorudbanen;Vestover;G0515T;59.924562;10.789148;59.924172;10.793679;4817.12;F;Sporfelt;G483;274564;;;;;;
+G0490T;utg;G;Grorudbanen;Østover;G0524T;59.924176;10.789934;59.924572;10.795811;4894;F;Sporfelt;G490;348;;;;;;
+G0511T;Inng;G;Grorudbanen;Vestover;;59.924172;10.793679;;;5091.684;F;Sporfelt;;;;;;;;
+G0515T;Inng;G;Grorudbanen;Vestover;G0523T;59.924172;10.793679;59.924605;10.79578;5091.684;F;Sporfelt;G511;130316;HAS2;HAS;Hasle;59.92438;10.794688;27
+G0523T;Inng;G;Grorudbanen;Vestover;G0537T;59.924605;10.79578;59.924974;10.797566;5222;F;Sporfelt;G523;108;;;;;;
+G0524T;utg;G;Grorudbanen;Østover;G0536T;59.924572;10.795811;59.92494;10.797598;5242;F;Sporfelt;G524;108;;;;;;
+G0535T;Inng;G;Grorudbanen;Vestover;;59.924974;10.797566;;;5330;F;Sporfelt;;;;;;;;
+G0536T;utg;G;Grorudbanen;Østover;G0560T;59.92494;10.797598;59.926366;10.800842;5350;F;Sporfelt;G536;246;HASC;HAS;Hasle;;;27
+G0537T;Inng;G;Grorudbanen;Vestover;GO559T;59.924974;10.797566;59.926446;10.800622;5330;F;Sporfelt;G535;241;HASD;HAS;Hasle;;;27
+G0555T;Inng;D;Lørenbanen;Østover;;59.92608;10.800279;;;10372;F;Sporfelt;;;;;;;;
+G0556T;utg;G;Grorudbanen;Østover;;59.926053;10.800362;;;5552;F;Sporfelt;;;;;;;;
+G0556T P;Utg;D;Lørenbanen;Vestover;;59.926109;10.800228;;;10380;F;Sporfelt;;;;;;;;
+G0559T;Inng;D;Lørenbanen;Østover;;59.926421;10.800709;;;10416;F;Sporfelt;;;;;;;;
+G0560T;utg;G;Grorudbanen;Østover;G0570T;59.926366;10.800842;59.927198;10.802111;5596;F;Sporfelt;;117;;;;;;
+G0560T P;Utg;D;Lørenbanen;Vestover;;59.926393;10.80076;;;10424;F;Sporfelt;;;;;;;;
+G0570T;utg;G;Grorudbanen;Østover;G0594T;59.927198;10.802111;59.928131;10.805199;5713;F;Sporfelt;G570;204;;;;;;
+G0571T;Inng;G;Grorudbanen;Vestover;G0593T;59.927223;10.80205;59.928166;10.805166;5689;F;Sporfelt;G571;206;;;;;;
+G0591T;Inng;G;Grorudbanen;Vestover;;59.928166;10.805166;;;5895;F;Sporfelt;;;;;;;;
+G0592T;utg;G;Grorudbanen;Østover;;59.928131;10.805199;;;5917;F;Sporfelt;;;;;;;;
+G0593T;Inng;G;Grorudbanen;Vestover;G0647T;59.928166;10.805166;59.928504;10.808277;5895;F;Sporfelt;G591;177698;ØKE2;ØKE;Økern;59.928284;10.806249;56
+G0594T;utg;G;Grorudbanen;Østover;G0608T;59.928131;10.805199;59.928429;10.807943;5917;F;Sporfelt;G592;157;ØKE1;ØKE;Økern;59.928251;10.8063;56
+G0605T;Inng;G;Grorudbanen;Vestover;;59.92844;10.807682;;;6038;F;Sporfelt;;;;;;;;
+G0608T;utg;G;Grorudbanen;Østover;G0646T;59.928429;10.807943;59.92926;10.81455;6074;F;Sporfelt;G608;385;;;;;;
+G0646T;utg;G;Grorudbanen;Østover;G0684T;59.92926;10.81455;59.931605;10.819358;6459;F;Sporfelt;G646;380;;;;;;
+G0647T;Inng;G;Grorudbanen;Vestover;G0683T;59.928504;10.808277;59.929371;10.814841;6072.698;F;Sporfelt;G647;405705;;;;;;
+G0683T;Inng;G;Grorudbanen;Vestover;G0717T;59.929371;10.814841;59.931639;10.819326;6478.403;F;Sporfelt;G683;360012;;;;;;
+G0684T;utg;G;Grorudbanen;Østover;G0714T;59.931605;10.819358;59.932698;10.824064;6839;F;Sporfelt;G684;290;RLØ1;RLØ;Risløkka;59.932494;10.823168;61
+G0714T;utg;G;Grorudbanen;Østover;G0724T;59.932698;10.824064;59.933108;10.825854;7129;F;Sporfelt;G714;110;;;;;;
+G0717T;Inng;G;Grorudbanen;Vestover;G0725T;59.931639;10.819326;59.932888;10.824716;6838.415;F;Sporfelt;G717;331973;RLØ2;RLØ;Risløkka;59.932528;10.823136;61
+G0724T;utg;G;Grorudbanen;Østover;G0752T;59.933108;10.825854;59.934529;10.829754;7239;F;Sporfelt;G724;271;;;;;;
+G0725T;Inng;G;Grorudbanen;Vestover;G0753T;59.932888;10.824716;59.933221;10.826142;7170.388;F;Sporfelt;G725;87612;;;;;;
+G0752T;utg;G;Grorudbanen;Østover;G0778T;59.934529;10.829754;59.93671;10.831785;7510;F;Sporfelt;G752;270;VOL1;VOL;Vollebekk;59.935806;10.831086;86
+G0753T;Inng;G;Grorudbanen;Vestover;G0785T;59.933221;10.826142;59.934686;10.829932;7258;F;Sporfelt;G753;269;;;;;;
+G0778T;utg;G;Grorudbanen;Østover;G0814T;59.93671;10.831785;59.93942;10.834864;7780;F;Sporfelt;G778;349;;;;;;
+G0785T;Inng;G;Grorudbanen;Vestover;G0819T;59.934686;10.829932;59.936725;10.831716;7527;F;Sporfelt;G785;249468;VOL2;VOL;Vollebekk;59.935822;10.831017;86
+G0814T;utg;G;Grorudbanen;Østover;G0848T;59.93942;10.834864;59.941368;10.839722;8129;F;Sporfelt;G814;350;LIN1;LIN;Linderud;59.940914;10.838347;46
+G0819T;Inng;G;Grorudbanen;Vestover;G0855T;59.936725;10.831716;59.939927;10.835631;7776.468;F;Sporfelt;G819;420465;;;;;;
+G0848T;utg;G;Grorudbanen;Østover;G0876T;59.941368;10.839722;59.942888;10.843455;8479;F;Sporfelt;G848;269;;;;;;
+G0855T;Inng;G;Grorudbanen;Vestover;G0893T;59.939927;10.835631;59.941815;10.840838;8196.933;F;Sporfelt;G855;359894;LIN2;LIN;Linderud;59.940943;10.8383;46
+G0876T;utg;G;Grorudbanen;Østover;G0908T;59.942888;10.843455;59.944925;10.847759;8748;F;Sporfelt;G876;331;VEI1;VEI;Veitvet;59.944513;10.846961;84
+G0893T;Inng;G;Grorudbanen;Vestover;G0913T;59.941815;10.840838;59.944053;10.845966;8556.827;F;Sporfelt;G893;380152;;;;;;
+G0908T;utg;G;Grorudbanen;Østover;G0922T;59.944925;10.847759;59.945819;10.84894;9079;F;Sporfelt;G908;120;;;;;;
+G0913T;Inng;G;Grorudbanen;Vestover;G0921T;59.944053;10.845966;59.945267;10.848131;8936.979;F;Sporfelt;G913;182.32;VEI2;VEI;Veitvet;59.944542;10.846914;84
+G0921T;Inng;G;Grorudbanen;Vestover;G0937T;59.945267;10.848131;59.945953;10.848913;9119.299;F;Sporfelt;G921;88;;;;;;
+G0922T;utg;G;Grorudbanen;Østover;G0932T;59.945819;10.84894;59.946621;10.850342;9199;F;Sporfelt;G922;120;;;;;;
+G0923T;Vei midtspor;G;Grorudbanen;Østover;;59.945849;10.848883;;;9196.143;F;Sporfelt;G923;;VEIX;VEI;Veitvet;;;84
+G0932T;utg;G;Grorudbanen;Østover;G0940T;59.946621;10.850342;59.946985;10.851363;9319;F;Sporfelt;G932;70;;;;;;
+G0937T;Inng;G;Grorudbanen;Vestover;G0945T;59.945953;10.848913;59.946837;10.850681;9207.299;F;Sporfelt;G937;141;;;;;;
+G0940T;utg;G;Grorudbanen;Østover;G0396T;59.946985;10.851363;59.926232;10.779829;9389;F;Sporfelt;G940;5431;;;;;;
+G0945T;Inng;G;Grorudbanen;Vestover;G0973T;59.946837;10.850681;59.947409;10.852285;9348.299;F;Sporfelt;G945;109935;;;;;;
+G0973T;Inng;G;Grorudbanen;Vestover;G0409T;59.947409;10.852285;59.926319;10.779787;9458.234;F;Sporfelt;G973;5514.942;;;;;;
+G0980T;utg;G;Grorudbanen;Østover;G1022T;59.949818;10.855344;59.95152;10.861054;9798.832;F;Sporfelt;G980;406467;RØD1;RØD;Rødtvet;59.951378;10.859414;63
+G1;G1;Y;Ryen driftsområde;Østover;;59.88949;10.804387;;;;V;Sporveksel;;;;;;;;
+G1022T;utg;G;Grorudbanen;Østover;G1052T;59.95152;10.861054;59.95285;10.865495;10205.299;F;Sporfelt;G1022;303703;;;;;;
+G1025T;Inng;G;Grorudbanen;Vestover;G1061T;59.949187;10.855174;59.951619;10.861756;9724.017;F;Sporfelt;G1025;522819;RØD2;RØD;Rødtvet;59.951415;10.859393;63
+G1052T;utg;G;Grorudbanen;Østover;G1082T;59.95285;10.865495;59.955325;10.867418;10509.002;F;Sporfelt;G1052;295745;KAL1;KAL;Kalbakken;59.954773;10.866993;39
+G1061T;Inng;G;Grorudbanen;Vestover;G1089T;59.951619;10.861756;59.953697;10.866083;10246.836;F;Sporfelt;G1061;359017;;;;;;
+G1082T;utg;G;Grorudbanen;Østover;G1108T;59.955325;10.867418;59.95737;10.869955;10804.747;F;Sporfelt;G1082;273169;;;;;;
+G1089T;Inng;G;Grorudbanen;Vestover;G1115T;59.953697;10.866083;59.956016;10.86787;10605.853;F;Sporfelt;G1089;277231;KAL2;KAL;Kalbakken;59.954777;10.866915;39
+G1108T;utg;G;Grorudbanen;Østover;G1144T;59.95737;10.869955;59.959581;10.874337;11077.916;F;Sporfelt;G1108;349907;AMM1;AMM;Ammerud;59.958298;10.872093;1
+G1115T;Inng;G;Grorudbanen;Vestover;G1143T;59.956016;10.86787;59.957868;10.870986;10883.084;F;Sporfelt;G1115;274042;;;;;;
+G1143T;Inng;G;Grorudbanen;Vestover;G1175T;59.957868;10.870986;59.959603;10.874271;11157.126;F;Sporfelt;G1143;268967;AMM2;AMM;Ammerud;59.958326;10.872042;1
+G1144T;utg;G;Grorudbanen;Østover;G1168T;59.959581;10.874337;59.961327;10.877488;11427.823;F;Sporfelt;G1144;272.34;;;;;;
+G1168T;utg;G;Grorudbanen;Østover;G1184T;59.961327;10.877488;59.961415;10.879493;11700.163;F;Sporfelt;G1168;112832;;;;;;
+G1175T;Inng;G;Grorudbanen;Vestover;G1181T;59.959603;10.874271;59.961451;10.878436;11426.093;F;Sporfelt;G1175;330.1;;;;;;
+G1181T;Inng;G;Grorudbanen;Vestover;G1197T;59.961451;10.878436;59.961453;10.879438;11756.193;F;Sporfelt;G1181;55815;;;;;;
+G1184T;utg;G;Grorudbanen;Østover;G1198T;59.961415;10.879493;59.961399;10.881676;11812.995;F;Sporfelt;G1184;122.19;GRO1;GRO;Grorud;59.961407;10.880567;26
+G1197T;Inng;G;Grorudbanen;Vestover;G1203T;59.961453;10.879438;59.961436;10.881747;11812.008;F;Sporfelt;G1197;129424;GRO2;GRO;Grorud;59.961444;10.880566;26
+G1198T;utg;G;Grorudbanen;Østover;G1204T;59.961399;10.881676;59.96138;10.884343;11935.185;F;Sporfelt;G1198;148815;;;;;;
+G1200A;G1200A;G;Grorudbanen;Østover;;59.961399;10.881743;;;11938.723;V;Sporveksel;G1200A;;;;;;;
+G1200B;G1200B;G;Grorudbanen;Vestover;;59.961429;10.882792;;;11999.391;V;Sporveksel;G1200B;;;;;;;
+G1201A;G1201A;G;Grorudbanen;Vestover;;59.961426;10.883153;;;12019.588;V;Sporveksel;G1201A;;;;;;;
+G1201B;G1201B;G;Grorudbanen;Østover;;59.961381;10.884204;;;12076.23;V;Sporveksel;G1201B;;;;;;;
+G1203T;Inng;G;Grorudbanen;Vestover;G1215T;59.961436;10.881747;59.961417;10.884467;11941.432;F;Sporfelt;G1203;152;;;;;;
+G1204T;utg;G;Grorudbanen;Østover;G1228T;59.96138;10.884343;59.961771;10.888387;12084;F;Sporfelt;G1204;232;;;;;;
+G1215T;Inng;G;Grorudbanen;Vestover;G1251T;59.961417;10.884467;59.961508;10.88653;12093.432;F;Sporfelt;G1215;115527;;;;;;
+G1228T;utg;G;Grorudbanen;Østover;G1264T;59.961771;10.888387;59.962883;10.894799;12316;F;Sporfelt;G1228;379;RÅS1;RÅS;Romsås;59.962522;10.892718;65
+G1251T;Inng;G;Grorudbanen;Vestover;G1277T;59.961508;10.88653;59.962387;10.891718;12208.959;F;Sporfelt;G1251;305878;;;;;;
+G1264T;utg;G;Grorudbanen;Østover;G1310T;59.962883;10.894799;59.962678;10.903584;12695;F;Sporfelt;G1264;501064;;;;;;
+G1277T;Inng;G;Grorudbanen;Vestover;G1305T;59.962387;10.891718;59.963115;10.895989;12514.837;F;Sporfelt;G1277;252163;RÅS2;RÅS;Romsås;59.962566;10.89275;65
+G1305T;Inng;G;Grorudbanen;Vestover;G1349T;59.963115;10.895989;59.962975;10.901059;12767;F;Sporfelt;G1305;286717;;;;;;
+G1310T;utg;G;Grorudbanen;Østover;G1360T;59.962678;10.903584;59.961952;10.910633;13196.064;F;Sporfelt;G1310;401809;ROM1;ROM;Rommen;59.962057;10.909616;64
+G1349T;Inng;G;Grorudbanen;Vestover;G1361T;59.962975;10.901059;59.962222;10.90839;13053.717;F;Sporfelt;G1349;418;;;;;;
+G1360T;utg;G;Grorudbanen;Østover;G1368T;59.961952;10.910633;59.96184;10.912263;13597.873;F;Sporfelt;G1360;92132;;;;;;
+G1361T;Inng;G;Grorudbanen;Vestover;G1373T;59.962222;10.90839;59.961995;10.910599;13471.717;F;Sporfelt;G1361;126335;ROM2;ROM;Rommen;59.962094;10.909635;64
+G1368T;utg;G;Grorudbanen;Østover;G1408T;59.96184;10.912263;59.961643;10.91934;13690.005;F;Sporfelt;G1368;395995;;;;;;
+G1373T;Inng;G;Grorudbanen;Vestover;G1421T;59.961995;10.910599;59.961858;10.912943;13598.052;F;Sporfelt;G1373;131544;;;;;;
+G1408T;utg;G;Grorudbanen;Østover;G1474T;59.961643;10.91934;59.962366;10.924293;14086;F;Sporfelt;G1408;289;STO1;STO;Stovner;59.96212;10.922834;74
+G1421T;Inng;G;Grorudbanen;Vestover;G1447T;59.961858;10.912943;59.962001;10.921865;13729.596;F;Sporfelt;G1421;504404;;;;;;
+G1447T;Inng;G;Grorudbanen;Vestover;G1495T;59.962001;10.921865;59.963026;10.926131;14234;F;Sporfelt;G1447;268;STO2;STO;Stovner;59.962159;10.922817;74
+G1474T;utg;G;Grorudbanen;Østover;G1516T;59.962366;10.924293;59.965136;10.927745;14375;F;Sporfelt;G1474;385069;;;;;;
+G1495T;Inng;G;Grorudbanen;Vestover;G1535T;59.963026;10.926131;59.966224;10.928181;14502;F;Sporfelt;G1495;378061;;;;;;
+G1516T;utg;G;Grorudbanen;Østover;G1520T;59.965136;10.927745;59.968544;10.929341;14760.069;F;Sporfelt;G1516;390001;;;;;;
+G1520T;utg;G;Grorudbanen;Østover;G1528T;59.968544;10.929341;59.969736;10.929755;15150.07;F;Sporfelt;G1520;134.93;;;;;;
+G1528T;utg;G;Grorudbanen;Østover;G1540T;59.969736;10.929755;59.97084;10.929756;15285;F;Sporfelt;G1528;122822;;;;;;
+G1535T;Inng;G;Grorudbanen;Vestover;G1557T;59.966224;10.928181;59.970225;10.929709;14880.061;F;Sporfelt;G1535;454542;;;;;;
+G1540T;utg;G;Grorudbanen;Østover;G1556T;59.97084;10.929756;59.972069;10.929706;15407.822;F;Sporfelt;G1540;137;;;;;;
+G1556T;utg;G;Grorudbanen;Østover;G1570T;59.972069;10.929706;59.973415;10.929651;15544.822;F;Sporfelt;G1556;150178;VES1;VES;Vestli;59.972751;10.929678;85
+G1557T;Inng;G;Grorudbanen;Vestover;G1571T;59.970225;10.929709;59.972208;10.929628;15334.603;F;Sporfelt;G1557;221;;;;;;
+G1558A;G1558A;G;Grorudbanen;Østover;;59.970891;10.929754;;;15413.666;V;Sporveksel;G1558A;;;;;;;
+G1558B;G1558B;G;Grorudbanen;Vestover;;59.971404;10.929661;;;15466.443;V;Sporveksel;G1558B;;;;;;;
+G1560A;G1560A;G;Grorudbanen;Østover;;59.97344;10.92965;;;15697.74;V;Sporveksel;G1560A;;;;;;;
+G1560B;G1560B;G;Grorudbanen;Vestover;;59.973953;10.929557;;;15750.519;V;Sporveksel;G1560B;;;;;;;
+G1561A;G1561A;G;Grorudbanen;Vestover;;59.973439;10.929578;;;15693.2;V;Sporveksel;G1561A;;;;;;;
+G1561B;G1561B;G;Grorudbanen;Østover;;59.973954;10.929629;;;15755.037;V;Sporveksel;G1561B;;;;;;;
+G1570T;utg;G;Grorudbanen;Østover;G1580T;59.973415;10.929651;59.973963;10.929629;15695;F;Sporfelt;G1570;61;;;;;;
+G1571T;Inng;G;Grorudbanen;Vestover;G1577T;59.972208;10.929628;59.97341;10.929579;15555.603;F;Sporfelt;G1571;134;VES2;VES;Vestli;59.972755;10.929606;85
+G1577T;Inng;G;Grorudbanen;Vestover;G1589T;59.97341;10.929579;59.973958;10.929557;15689.603;F;Sporfelt;G1577;61;;;;;;
+G1580T;utg;G;Grorudbanen;Østover;;59.973963;10.929629;;;15756;F;Sporfelt;G1580;;VESA;VES;Vestli;;;85
+G1589T;Inng;G;Grorudbanen;Vestover;G1590T;59.973958;10.929557;59.974927;10.929517;15750.603;F;Sporfelt;G1589;107999;VESB;VES;Vestli;;;85
+G1590T;Inng;G;Grorudbanen;Vestover;G0274T;59.974927;10.929517;59.915987;10.776486;15858.602;F;Sporfelt;G1590;13126.412;VESD;VES;Vestli;;;85
+G3;G3;Y;Ryen driftsområde;Østover;;59.889667;10.804406;;;;V;Sporveksel;;;;;;;;
+G322;G322;G;Grorudbanen;Østover;;59.91986;10.779803;;;3245.042;V;Sporveksel;GP322;;;;;;;
+G360A;G360A;G;Grorudbanen;Østover;;59.922747;10.779495;;;3567.145;V;Sporveksel;GP360A;;;;;;;
+G360B;G360B;G;Grorudbanen;Vestover;;59.923256;10.779369;;;3599.107;V;Sporveksel;GP360B;;;;;;;
+G361A;G361A;G;Grorudbanen;Vestover;;59.923471;10.779346;;;3623.063;V;Sporveksel;GP361A;;;;;;;
+G361B;G361B;G;Grorudbanen;Østover;;59.923984;10.779363;;;3705.19;V;Sporveksel;GP361B;;;;;;;
+G396;G396;G;Grorudbanen;Østover;;59.926237;10.779831;;;3958.616;V;Sporveksel;GP396;;;;;;;
+G4;G4;Y;Ryen driftsområde;Østover;;59.889848;10.804494;;;;V;Sporveksel;;;;;;;;
+G409;G409;G;Grorudbanen;Vestover;;59.927379;10.78053;;;4069.56;V;Sporveksel;GP409;;;;;;;
+G5;G5;Y;Ryen driftsområde;Østover;;59.890347;10.80445;;;;V;Sporveksel;;;;;;;;
+G524A;G524A;G;Grorudbanen;Østover;;59.924585;10.795876;;;5245.906;V;Sporveksel;GP524A;;;;;;;
+G524B;G524B;G;Grorudbanen;Vestover;;59.92476;10.796531;;;5267.406;V;Sporveksel;GP524B;;;;;;;
+G529A;G529A;G;Grorudbanen;Vestover;;59.924829;10.796864;;;5287.55;V;Sporveksel;GP529A;;;;;;;
+G529B;G529B;G;Grorudbanen;Østover;;59.924936;10.797578;;;5348.809;V;Sporveksel;GP529B;;;;;;;
+G570;G570;G;Grorudbanen;Østover;;59.927162;10.802038;;;5707.254;V;Sporveksel;;;;;;;;
+G571;G571;G;Grorudbanen;Vestover;;59.927193;10.801989;;;5684.187;V;Sporveksel;GP571A;;;;;;;
+G720A;G720A;G;Grorudbanen;Østover;;59.936913;10.831944;;;7804.345;V;Sporveksel;GP720A;;;;;;;
+G720B;G720B;G;Grorudbanen;Vestover;;59.937511;10.832385;;;7871.227;V;Sporveksel;GP720B;;;;;;;
+G721A;G721A;G;Grorudbanen;Vestover;;59.937706;10.832575;;;7895.364;V;Sporveksel;GP721A;;;;;;;
+G721B;G721B;G;Grorudbanen;Østover;;59.938244;10.833246;;;7969.713;V;Sporveksel;GP721B;;;;;;;
+G915A;G915A;G;Grorudbanen;Vestover;;59.945313;10.848183;;;9124.898;V;Sporveksel;GP915A;;;;;;;
+G915B;G915B;G;Grorudbanen;Vestover;;59.945762;10.848785;;;9194.213;V;Sporveksel;GP915B;;;;;;;
+G916A;G916A;G;Grorudbanen;Østover;;59.94534;10.848395;;;9137.527;V;Sporveksel;GP916A;;;;;;;
+G916B;G916B;G;Grorudbanen;Vestover;;59.945834;10.848866;;;9320.497;V;Sporveksel;GP916B;;;;;;;
+G935A;G935A;G;Grorudbanen;Vestover;;59.946722;10.850491;;;9389.744;V;Sporveksel;GP935A;;;;;;;
+G935B;G935B;G;Grorudbanen;Vestover;;59.947064;10.851318;;;9391.699;V;Sporveksel;GP935B;;;;;;;
+G936A;G936A;G;Grorudbanen;Vestover;;59.946672;10.850353;;;9329.997;V;Sporveksel;GP936A;;;;;;;
+G936B;G936B;G;Grorudbanen;Østover;;59.946952;10.851269;;;9382.555;V;Sporveksel;;;;;;;;
+GO555T;Inng;G;Grorudbanen;Vestover;;59.926137;10.800147;;;5527;F;Sporfelt;;;;;;;;
+GO559T;Inng;G;Grorudbanen;Vestover;G0571T;59.926446;10.800622;59.927223;10.80205;5571;F;Sporfelt;G555;118;;;;;;
+H ENDE U;Utg.ende;H;Holmenkollbanen;Vestover;;59.980476;10.678068;;;13834;E;Endepunkt;;;;;;;;
+H0242;Utg;H;Holmenkollbanen;Vestover;H0256;59.933099;10.710214;59.934333;10.709439;2412;F;Sporfelt;;147;;;;;;
+H0256;Utg;H;Holmenkollbanen;Vestover;H0276;59.934333;10.709439;59.935895;10.708173;2559;F;Sporfelt;H256;188146;FRØ2;FRØ;Frøen;59.934411;10.709399;89
+H0275;Inng;H;Holmenkollbanen;Østover;;59.934335;10.708945;;;2571;F;Sporfelt;T275;;FRØ1;FRØ;Frøen;59.934488;10.70894;89
+H0276;Utg;H;Holmenkollbanen;Vestover;H0294;59.935895;10.708173;59.937425;10.706358;2747.146;F;Sporfelt;H276;199312;;;;;;
+H0279;Inng;H;Holmenkollbanen;Østover;H0275;59.93615;10.707868;59.934335;10.708945;2784;F;Sporfelt;H279;213;;;;;;
+H0294;Utg;H;Holmenkollbanen;Vestover;H0302;59.937425;10.706358;59.938026;10.705543;2946.458;F;Sporfelt;H294;80542;;;;;;
+H0295;Inng;H;Holmenkollbanen;Østover;H0279;59.937402;10.706301;59.93615;10.707868;2949;F;Sporfelt;H295;165;;;;;;
+H0302;Utg;H;Holmenkollbanen;Vestover;H0332;59.938026;10.705543;59.940441;10.703947;3027;F;Sporfelt;H302;289;STE2;STE;Steinerud;59.939008;10.70444;100
+H0305;Inng;H;Holmenkollbanen;Østover;H0295;59.938011;10.705477;59.937402;10.706301;3031;F;Sporfelt;H305;82;STE1;STE;Steinerud;59.938994;10.704377;100
+H0332;Utg;H;Holmenkollbanen;Vestover;H0352;59.940441;10.703947;59.942287;10.70461;3316;F;Sporfelt;H332;210;VIN2;VIN;Vinderen;59.942015;10.704427;102
+H0333;Inng;H;Holmenkollbanen;Østover;H0305;59.940696;10.703886;59.938011;10.705477;3350;F;Sporfelt;H333;319;;;;;;
+H0352;Utg;H;Holmenkollbanen;Vestover;H0378;59.942287;10.70461;59.944237;10.706904;3526;F;Sporfelt;H352;253;;;;;;
+H0355;Inng;H;Holmenkollbanen;Østover;H0333;59.942514;10.704719;59.940696;10.703886;3559;F;Sporfelt;H355;209;VIN1;VIN;Vinderen;59.942751;10.704935;102
+H0378;Utg;H;Holmenkollbanen;Vestover;H0398;59.944237;10.706904;59.94537;10.709385;3779;F;Sporfelt;H378;189;;;;;;
+H0381;Inng;H;Holmenkollbanen;Østover;H0355;59.944391;10.707024;59.942514;10.704719;3805;F;Sporfelt;H381;246;;;;;;
+H0398;Utg;H;Holmenkollbanen;Vestover;H0428;59.94537;10.709385;59.947242;10.708776;3968;F;Sporfelt;H398;301;GAU2;GAU;Gaustad;59.945592;10.709826;90
+H0407;Inng;H;Holmenkollbanen;Østover;H0381;59.945931;10.710197;59.944391;10.707024;4054;F;Sporfelt;H407;249;GAU1;GAU;Gaustad;59.946068;10.710331;90
+H0428;Utg;H;Holmenkollbanen;Vestover;H0444;59.947242;10.708776;59.947509;10.706102;4269;F;Sporfelt;H428;160;;;;;;
+H0429;Inng;H;Holmenkollbanen;Østover;H0407;59.947186;10.708593;59.945931;10.710197;4278;F;Sporfelt;H429;224;;;;;;
+H0444;Utg;H;Holmenkollbanen;Vestover;H0454;59.947509;10.706102;59.948142;10.704363;4429;F;Sporfelt;H444;120;RIS2;RIS;Ris;59.947936;10.704928;96
+H0445;Inng;H;Holmenkollbanen;Østover;H0429;59.94749;10.706033;59.947186;10.708593;4432;F;Sporfelt;H445;154;;;;;;
+H0453;Inng;H;Holmenkollbanen;Østover;H0445;59.947917;10.704859;59.94749;10.706033;4513.012;F;Sporfelt;H453;81012;RIS1;RIS;Ris;59.948154;10.704207;96
+H0454;Utg;H;Holmenkollbanen;Vestover;H0476;59.948142;10.704363;59.948721;10.700856;4549;F;Sporfelt;H454;211;;;;;;
+H0476;Utg;H;Holmenkollbanen;Vestover;H0490;59.948721;10.700856;59.949421;10.698654;4760;F;Sporfelt;H476;147;;;;;;
+H0477;Inng;H;Holmenkollbanen;Østover;H0453;59.948683;10.700848;59.947917;10.704859;4759.1;F;Sporfelt;H477;246088;;;;;;
+H0490;Utg;H;Holmenkollbanen;Vestover;H0520;59.949421;10.698654;59.950754;10.694596;4907;F;Sporfelt;H490;300;;;;;;
+H0499;Inng;H;Holmenkollbanen;Østover;H0477;59.949498;10.697214;59.948683;10.700848;4987.87;F;Sporfelt;H499;228.77;;;;;;
+H0520;Utg;H;Holmenkollbanen;Vestover;H0550;59.950754;10.694596;59.952885;10.695414;5207;F;Sporfelt;H520;297;SLE2;SLE;Slemdal;59.950983;10.694352;99
+H0521;Inng;H;Holmenkollbanen;Østover;H0499;59.95074;10.694527;59.949498;10.697214;5210.536;F;Sporfelt;H521;222666;SLE1;SLE;Slemdal;59.950891;10.694367;99
+H0547;Inng;H;Holmenkollbanen;Østover;H0521;59.952699;10.69457;59.95074;10.694527;5462.658;F;Sporfelt;H547;252122;;;;;;
+H0550;Utg;H;Holmenkollbanen;Vestover;H0580;59.952885;10.695414;59.954049;10.70021;5504;F;Sporfelt;H550;299;;;;;;
+H0565;Inng;H;Holmenkollbanen;Østover;H0547;59.953396;10.697275;59.952699;10.69457;5632.518;F;Sporfelt;H565;169.86;;;;;;
+H0580;Utg;H;Holmenkollbanen;Vestover;H0596;59.954049;10.70021;59.955106;10.701714;5803;F;Sporfelt;H580;145;GRÅ2;GRÅ;Gråkammen;59.954966;10.701554;91
+H0593;Inng;H;Holmenkollbanen;Østover;H0565;59.954813;10.701261;59.953396;10.697275;5915;F;Sporfelt;H593;282482;GRÅ1;GRÅ;Gråkammen;59.954924;10.701413;91
+H0596;Utg;H;Holmenkollbanen;Vestover;H0614;59.955106;10.701714;59.956141;10.699783;5948;F;Sporfelt;H596;196;;;;;;
+H0614;Utg;H;Holmenkollbanen;Vestover;H0644;59.956141;10.699783;59.956649;10.695854;6144;F;Sporfelt;H614;298;GUL2;GUL;Gulleråsen;59.955743;10.69702;92
+H0615;Inng;H;Holmenkollbanen;Østover;H0593;59.9561;10.699724;59.954813;10.701261;6146;F;Sporfelt;H615;231;;;;;;
+H0635;Inng;H;Holmenkollbanen;Østover;H0615;59.955843;10.696348;59.9561;10.699724;6346.817;F;Sporfelt;H635;200817;GUL1;GUL;Gulleråsen;;;92
+H0644;Utg;H;Holmenkollbanen;Vestover;H0660;59.956649;10.695854;59.958061;10.696244;6442;F;Sporfelt;H644;160;;;;;;
+H0660;Utg;H;Holmenkollbanen;Vestover;H0672;59.958061;10.696244;59.95904;10.695987;6602;F;Sporfelt;H660;110;;;;;;
+H0661;Inng;H;Holmenkollbanen;Østover;H0635;59.95808;10.696166;59.955843;10.696348;6610;F;Sporfelt;H661;263183;;;;;;
+H0672;Utg;H;Holmenkollbanen;Vestover;H0698;59.95904;10.695987;59.960821;10.693833;6712;F;Sporfelt;H672;254;VET2;VET;Vettakollen;59.959671;10.69582;101
+H0673;Inng;H;Holmenkollbanen;Østover;H0661;59.959041;10.695914;59.95808;10.696166;6718;F;Sporfelt;H673;108;VET1;VET;Vettakollen;59.960132;10.695521;101
+H0698;Utg;H;Holmenkollbanen;Vestover;H0708;59.960821;10.693833;59.961149;10.691941;6966;F;Sporfelt;H698;112;;;;;;
+H0699;Inng;H;Holmenkollbanen;Østover;H0673;59.960798;10.693735;59.959041;10.695914;6971;F;Sporfelt;H699;253;;;;;;
+H0708;Utg;H;Holmenkollbanen;Vestover;H0738;59.961149;10.691941;59.962123;10.687803;7078;F;Sporfelt;H708;302;SKÅ2;SKÅ;Skådalen;59.961789;10.690827;98
+H0717;Inng;H;Holmenkollbanen;Østover;H0699;59.96159;10.690984;59.960798;10.693735;7154.491;F;Sporfelt;H717;183491;SKÅ1;SKÅ;Skådalen;59.961705;10.690843;98
+H0733;Inng;H;Holmenkollbanen;Østover;H0717;59.962327;10.688609;59.96159;10.690984;7326.008;F;Sporfelt;H733;171517;;;;;;
+H0738;Utg;H;Holmenkollbanen;Vestover;H0754;59.962123;10.687803;59.961153;10.686164;7380;F;Sporfelt;H738;145;;;;;;
+H0751;Inng;H;Holmenkollbanen;Østover;H0733;59.961166;10.686416;59.962327;10.688609;7508.974;F;Sporfelt;H751;182966;MID1;MID;Midtstuen;59.961306;10.683033;95
+H0754;Utg;H;Holmenkollbanen;Vestover;H0780;59.961153;10.686164;59.960956;10.681876;7525;F;Sporfelt;H754;262;MID2;MID;Midtstuen;59.961342;10.683013;95
+H0779;Inng;H;Holmenkollbanen;Østover;H0751;59.960913;10.681904;59.961166;10.686416;7785.27;F;Sporfelt;H779;276296;;;;;;
+H0780;Utg;H;Holmenkollbanen;Vestover;H0800;59.960956;10.681876;59.959947;10.678606;7787;F;Sporfelt;H780;219;;;;;;
+H0800;Utg;H;Holmenkollbanen;Vestover;H0828;59.959947;10.678606;59.958253;10.675058;8006;F;Sporfelt;H800;275;;;;;;
+H0801;Inng;H;Holmenkollbanen;Østover;H0779;59.959934;10.678698;59.960913;10.681904;7999.27;F;Sporfelt;H801;214;;;;;;
+H0827;Inng;H;Holmenkollbanen;Østover;H0801;59.95825;10.675177;59.959934;10.678698;8272;F;Sporfelt;H827;272.73;;;;;;
+H0828;Utg;H;Holmenkollbanen;Vestover;H0858;59.958253;10.675058;59.95808;10.670539;8281;F;Sporfelt;H828;301;BES2;BES;Besserud;59.957966;10.674192;87
+H0837;Inng;H;Holmenkollbanen;Østover;H0827;59.957774;10.673682;59.95825;10.675177;8371;F;Sporfelt;H837;99;BES1;BES;Besserud;59.957688;10.673389;87
+H0858;Utg;H;Holmenkollbanen;Vestover;H0872;59.95808;10.670539;59.958895;10.668836;8582;F;Sporfelt;H858;138;;;;;;
+H0861;Inng;H;Holmenkollbanen;Østover;H0837;59.958139;10.670379;59.957774;10.673682;8596;F;Sporfelt;H861;225;;;;;;
+H0872;Utg;H;Holmenkollbanen;Vestover;H0890;59.958895;10.668836;59.959107;10.666019;8720;F;Sporfelt;H872;173;;;;;;
+H0873;Inng;H;Holmenkollbanen;Østover;H0861;59.958856;10.668731;59.958139;10.670379;8725;F;Sporfelt;H873;129;;;;;;
+H0890;Utg;H;Holmenkollbanen;Vestover;H0902;59.959107;10.666019;59.959878;10.664296;8893;F;Sporfelt;H890;129;;;;;;
+H0891;Inng;H;Holmenkollbanen;Østover;H0873;59.959078;10.665973;59.958856;10.668731;8895;F;Sporfelt;H891;170;;;;;;
+H0902;Utg;H;Holmenkollbanen;Vestover;H0918;59.959878;10.664296;59.960581;10.661788;9022;F;Sporfelt;H902;161;HOK2;HOK;Holmenkollen;59.960313;10.66282;93
+H0903;Inng;H;Holmenkollbanen;Østover;H0891;59.959867;10.664211;59.959078;10.665973;9027.339;F;Sporfelt;H903;132339;HOK1;HOK;Holmenkollen;59.960299;10.662709;93
+H0918;Utg;H;Holmenkollbanen;Vestover;H0930;59.960581;10.661788;59.961474;10.66065;9183;F;Sporfelt;H918;121;;;;;;
+H0919;Inng;H;Holmenkollbanen;Østover;H0903;59.960563;10.661691;59.959867;10.664211;9188.1;F;Sporfelt;H919;160761;;;;;;
+H0930;Utg;H;Holmenkollbanen;Vestover;H0938;59.961474;10.66065;59.961995;10.660212;9304;F;Sporfelt;H930;63;;;;;;
+H0931;Inng;H;Holmenkollbanen;Østover;H0919;59.961424;10.660613;59.960563;10.661691;9304;F;Sporfelt;H931;115.9;;;;;;
+H0938;Utg;H;Holmenkollbanen;Vestover;H0960;59.961995;10.660212;59.963892;10.659859;9367;F;Sporfelt;H938;219;HOKB;HOK;Holmenkollen;;;93
+H0939;Inng;H;Holmenkollbanen;Østover;H0931;59.961945;10.660175;59.961424;10.660613;9367;F;Sporfelt;H939;63;HOKA;HOK;Holmenkollen;;;93
+H0949;Inng;H;Holmenkollbanen;Østover;H0939;59.963058;10.659522;59.961945;10.660175;9498;F;Sporfelt;H949;131;;;;;;
+H0960;Utg;H;Holmenkollbanen;Vestover;H0976;59.963892;10.659859;59.965311;10.659825;9586;F;Sporfelt;H960;160;;;;;;
+H0967;Inng;H;Holmenkollbanen;Østover;H0949;59.96447;10.659787;59.963058;10.659522;9657;F;Sporfelt;H967;159;;;;;;
+H0976;Utg;H;Holmenkollbanen;Vestover;H1004;59.965311;10.659825;59.966831;10.657021;9746;F;Sporfelt;H976;295;;;;;;
+H0993;Inng;H;Holmenkollbanen;Østover;H0967;59.966532;10.659432;59.96447;10.659787;9898.912;F;Sporfelt;H993;241912;;;;;;
+H1;H1;Y;Ryen driftsområde;Østover;;59.892932;10.80367;;;;V;Sporveksel;;;;;;;;
+H1004;Utg;H;Holmenkollbanen;Vestover;H1034;59.966831;10.657021;59.968133;10.652954;10041;F;Sporfelt;H1004;299;VLA2;VLA;Voksenlia;59.966933;10.654836;104
+H1015;Inng;H;Holmenkollbanen;Østover;H0993;59.966842;10.65529;59.966532;10.659432;10136.809;F;Sporfelt;H1015;237897;VLA1;VLA;Voksenlia;59.966903;10.654786;104
+H1034;Utg;H;Holmenkollbanen;Vestover;H1058;59.968133;10.652954;59.969905;10.650704;10340;F;Sporfelt;H1034;235;;;;;;
+H1043;Inng;H;Holmenkollbanen;Østover;H1015;59.96877;10.652245;59.966842;10.65529;10425.23;F;Sporfelt;H1043;288421;;;;;;
+H1058;Utg;H;Holmenkollbanen;Vestover;H1074;59.969905;10.650704;59.971189;10.64945;10575;F;Sporfelt;H1058;160;;;;;;
+H1073;Inng;H;Holmenkollbanen;Østover;H1043;59.971039;10.649488;59.96877;10.652245;10723.156;F;Sporfelt;H1073;297926;;;;;;
+H1074;Utg;H;Holmenkollbanen;Vestover;H1102;59.971189;10.64945;59.973571;10.648014;10735;F;Sporfelt;H1074;278;;;;;;
+H1102;Utg;H;Holmenkollbanen;Vestover;H1120;59.973571;10.648014;59.975133;10.647542;11013;F;Sporfelt;H1102;176;;;;;;
+H1103;Inng;H;Holmenkollbanen;Østover;H1073;59.973555;10.647945;59.971039;10.649488;11017;F;Sporfelt;H1103;293844;;;;;;
+H1111A;H1111A;H;Holmenkollbanen;Østover;;59.973983;10.647814;;;11065.278;V;Sporveksel;H1111A;;;;;;;
+H1111B;H1111B;H;Holmenkollbanen;Vestover;;59.974351;10.647776;;;11100.859;V;Sporveksel;H1111B;;;;;;;
+H1117;Inng;H;Holmenkollbanen;Østover;H1103;59.974744;10.647585;59.973555;10.647945;11151;F;Sporfelt;H1117;134;SKO1;SKO;Skogen;59.975028;10.647499;97
+H1120;Utg;H;Holmenkollbanen;Vestover;H1150;59.975133;10.647542;59.977737;10.648204;11189;F;Sporfelt;H1120;296;SKO2;SKO;Skogen;59.975374;10.647485;97
+H1147;Inng;H;Holmenkollbanen;Østover;H1117;59.977437;10.6479;59.974744;10.647585;11455.389;F;Sporfelt;H1147;304389;;;;;;
+H1150;Utg;H;Holmenkollbanen;Vestover;H1176;59.977737;10.648204;59.979146;10.651257;11485;F;Sporfelt;H1150;274;;;;;;
+H1163;Inng;H;Holmenkollbanen;Østover;H1147;59.978791;10.648957;59.977437;10.6479;11617;F;Sporfelt;H1163;161611;;;;;;
+H1176;Utg;H;Holmenkollbanen;Vestover;H1206;59.979146;10.651257;59.980614;10.652834;11759;F;Sporfelt;H1176;298;LIV2;LIV;Lillevann;59.980331;10.653303;94
+H1179;Inng;H;Holmenkollbanen;Østover;H1163;59.979182;10.651289;59.978791;10.648957;11772.866;F;Sporfelt;H1179;155866;;;;;;
+H1203;Inng;H;Holmenkollbanen;Østover;H1179;59.980352;10.65317;59.979182;10.651289;12025.176;F;Sporfelt;H1203;252.31;LIV1;LIV;Lillevann;59.980713;10.65258;94
+H1206;Utg;H;Holmenkollbanen;Vestover;H1232;59.980614;10.652834;59.981787;10.654918;12057;F;Sporfelt;H1206;258;;;;;;
+H1232;Utg;H;Holmenkollbanen;Vestover;H1260;59.981787;10.654918;59.981765;10.659576;12315;F;Sporfelt;H1232;285306;;;;;;
+H1233;Inng;H;Holmenkollbanen;Østover;H1203;59.981844;10.65483;59.980352;10.65317;12321.571;F;Sporfelt;H1233;296395;;;;;;
+H1260;Utg;H;Holmenkollbanen;Vestover;H1276;59.981765;10.659576;59.980864;10.6618;12600.306;F;Sporfelt;H1260;160116;;;;;;
+H1263;Inng;H;Holmenkollbanen;Østover;H1233;59.981828;10.659556;59.981844;10.65483;12609.894;F;Sporfelt;H1263;288323;;;;;;
+H1276;Utg;H;Holmenkollbanen;Vestover;H1300;59.980864;10.6618;59.980013;10.665864;12760.422;F;Sporfelt;H1276;248578;;;;;;
+H1279;Inng;H;Holmenkollbanen;Østover;H1263;59.980916;10.661786;59.981828;10.659556;12770.827;F;Sporfelt;H1279;160933;VKO1;VKO;Voksenkollen;59.980078;10.665303;103
+H1300;Utg;H;Holmenkollbanen;Vestover;H1314;59.980013;10.665864;59.979955;10.667859;13009;F;Sporfelt;H1300;112;VKO2;VKO;Voksenkollen;59.980043;10.665294;103
+H1303;Inng;H;Holmenkollbanen;Østover;H1279;59.98005;10.665801;59.980916;10.661786;13018.277;F;Sporfelt;H1303;247.45;;;;;;
+H1305A;H1305A;H;Holmenkollbanen;Østover;;59.980047;10.666194;;;13039.946;V;Sporveksel;H1305A;;;;;;;
+H1305B;H1305B;H;Holmenkollbanen;Vestover;;59.980008;10.666921;;;13068.04;V;Sporveksel;H1305B;;;;;;;
+H1314;Utg;H;Holmenkollbanen;Vestover;H1336;59.979955;10.667859;59.979404;10.671454;13121;F;Sporfelt;H1314;214;;;;;;
+H1315;Inng;H;Holmenkollbanen;Østover;H1303;59.97996;10.66807;59.98005;10.665801;13146.129;F;Sporfelt;H1315;127852;;;;;;
+H1336;Utg;H;Holmenkollbanen;Vestover;H1352;59.979404;10.671454;59.979222;10.674646;13335;F;Sporfelt;H1336;180;;;;;;
+H1337;Inng;H;Holmenkollbanen;Østover;H1315;59.979441;10.671549;59.97996;10.66807;13353;F;Sporfelt;H1337;206871;FRS1;FRS;Frognerseteren;59.979118;10.676651;88
+H1352;Utg;H;Holmenkollbanen;Vestover;;59.979222;10.674646;;;13515;F;Sporfelt;H1352;;FRS2;FRS;Frognerseteren;59.979073;10.675807;88
+H1366;Utg;H;Holmenkollbanen;Vestover;H1337;59.979119;10.676996;59.979441;10.671549;13649;F;Sporfelt;H1366;296;;;;;;
+H1366 Ø;Inng;H;Holmenkollbanen;Østover;;59.979168;10.677049;;;13665;F;Sporfelt;;;;;;;;
+H1366V;Inng;H;Holmenkollbanen;Østover;;59.979168;10.677049;;;13665;F;Sporfelt;;;;;;;;
+H1370;Utg;H;Holmenkollbanen;Vestover;H1366;59.9794;10.677794;59.979119;10.676996;13704;F;Sporfelt;H1370;55;FRSA;FRS;Frognerseteren;;;88
+H1370 Ø;Inng.ende;H;Holmenkollbanen;Østover;;59.979406;10.677808;;;13715;F;Sporfelt;;;;;;;;
+H1370V;Inng.ende;H;Holmenkollbanen;Østover;;59.979406;10.677808;;;13715;F;Sporfelt;;;;;;;;
+H1371;H1371;H;Holmenkollbanen;Vestover;;59.979406;10.677808;;;13705.042;V;Sporveksel;HP1371;;;;;;;
+H2;H2;Y;Ryen driftsområde;Østover;;59.890414;10.804403;;;;V;Sporveksel;;;;;;;;
+H294A;H294A;H;Holmenkollbanen;Vestover;;59.937423;10.70636;;;2945.832;V;Sporveksel;HP294A;;;;;;;
+H294B/303A;H294B/303A;H;Holmenkollbanen;Østover;;59.937705;10.705891;;;2989.807;V;Sporveksel;HP294B;;;;;;;
+H3;H3;Y;Ryen driftsområde;Østover;;59.890939;10.804137;;;;V;Sporveksel;;;;;;;;
+H303B;H303B;H;Holmenkollbanen;Vestover;;59.938027;10.705541;;;3027.177;V;Sporveksel;HP303B;;;;;;;
+H4;H4;Y;Ryen driftsområde;Østover;;59.892579;10.803739;;;;V;Sporveksel;;;;;;;;
+H444A;H444A;H;Holmenkollbanen;Østover;;59.947494;10.706023;;;4432.687;V;Sporveksel;HP444A;;;;;;;
+H444B/453A;H444B/453A;H;Holmenkollbanen;Vestover;;59.947736;10.705479;;;4472.007;V;Sporveksel;HP444B;;;;;;;
+H453B;H453B;H;Holmenkollbanen;Østover;;59.947921;10.704849;;;4513.732;V;Sporveksel;HP453B;;;;;;;
+H664A;H664A;H;Holmenkollbanen;Vestover;;59.958315;10.696178;;;6630.517;V;Sporveksel;HP664A;;;;;;;
+H664B/H671A;H664B/H671A;H;Holmenkollbanen;Østover;;59.958671;10.696011;;;6676.475;V;Sporveksel;HP664B;;;;;;;
+H671B;H671B;H;Holmenkollbanen;Vestover;;59.959038;10.695987;;;6711.794;V;Sporveksel;HP671B;;;;;;;
+H894A;H894A;H;Holmenkollbanen;Vestover;;59.959381;10.665406;;;8938.881;V;Sporveksel;HP894A;;;;;;;
+H894B/H903A;H894B/H903A;H;Holmenkollbanen;Østover;;59.959598;10.664814;;;8981.862;V;Sporveksel;HP894B;;;;;;;
+H903B;H903B;H;Holmenkollbanen;Vestover;;59.959868;10.664319;;;9020.298;V;Sporveksel;HP903B;;;;;;;
+H930A;H930A;H;Holmenkollbanen;Vestover;;59.961499;10.660629;;;9307.026;V;Sporveksel;HP930A;;;;;;;
+H930B;H930B;H;Holmenkollbanen;Østover;;59.961962;10.660161;;;9369.031;V;Sporveksel;HP930B;;;;;;;
+K ENDE I;Inng.ende;K;Kolsåsbanen;Østover;;59.9145;10.501;;;16396;E;Endepunkt;;;;;;;;
+K ENDE U;Utg.ende;K;Kolsåsbanen;Vestover;;59.914511;10.501114;;;16413;E;Endepunkt;;;;;;;;
+K1000;Utg;K;Kolsåsbanen;Vestover;K1014;59.919279;10.596124;59.918602;10.594058;10005;F;Sporfelt;K1000;138;;;;;;
+K1001;Inng;K;Kolsåsbanen;Østover;K981;59.918904;10.595113;59.919247;10.59616;9981;F;Sporfelt;K1001;196;;;;;;
+K1004A;K1004A;K;Kolsåsbanen;Vestover;;59.919238;10.595999;;;10013.336;V;Sporveksel;K1004A;;;;;;;
+K1004B;K1004B;K;Kolsåsbanen;Østover;;59.918873;10.595019;;;10057.296;V;Sporveksel;K1004B;;;;;;;
+K1005;Inng;K;Kolsåsbanen;Østover;K1001;59.918334;10.593377;59.918904;10.595113;10051;F;Sporfelt;K1005;70;;;;;;
+K1007B;K1007B;K;Kolsåsbanen;Vestover;;59.91862;10.594116;;;10139.159;V;Sporveksel;K1007B;;;;;;;
+K1014;Utg;K;Kolsåsbanen;Vestover;K1020;59.918602;10.594058;59.918219;10.592765;10143;F;Sporfelt;K1014;84;;;;;;
+K1016;K1016;K;Kolsåsbanen;Vestover;;59.918569;10.593958;;;10149.668;V;Sporveksel;KP1016;;;;;;;
+K1017A;K1017A;K;Kolsåsbanen;Østover;;59.918315;10.593319;;;10170.872;V;Sporveksel;K1017A;;;;;;;
+K1017B;K1017B;K;Kolsåsbanen;Østover;;59.918145;10.592666;;;10211.84;V;Sporveksel;K1017B;;;;;;;
+K1019;Inng;K;Kolsåsbanen;Østover;K1005;59.917514;10.590877;59.918334;10.593377;10167;F;Sporfelt;K1019;116;;;;;;
+K1020;Utg;K;Kolsåsbanen;Vestover;K1032;59.918219;10.592765;59.917795;10.591294;10227;F;Sporfelt;K1020;95;;;;;;
+K1022;K1022;K;Kolsåsbanen;Østover;;59.918067;10.592428;;;102227.742;V;Sporveksel;KP1022;;;;;;;
+K1032;Utg;K;Kolsåsbanen;Vestover;K1050;59.917795;10.591294;59.916886;10.588681;10322;F;Sporfelt;K1032;178;BEK2;BEK;Bekkestua;59.917554;10.59056;4
+K1039;Inng;K;Kolsåsbanen;Østover;K1019;59.916822;10.588768;59.917514;10.590877;10334;F;Sporfelt;K1039;167;BEK1;BEK;Bekkestua;59.917181;10.58986;4
+K1050;Utg;K;Kolsåsbanen;Vestover;K1066;59.916886;10.588681;59.915808;10.586804;10500;F;Sporfelt;K1050;160;;;;;;
+K1051;Inng;K;Kolsåsbanen;Østover;K1039;59.915786;10.586863;59.916822;10.588768;10475;F;Sporfelt;K1051;141;;;;;;
+K1066;Utg;K;Kolsåsbanen;Vestover;K1088;59.915808;10.586804;59.914506;10.584087;10660;F;Sporfelt;K1066;215;;;;;;
+K1067;Inng;K;Kolsåsbanen;Østover;K1051;59.914468;10.584103;59.915786;10.586863;10632.915;F;Sporfelt;K1067;157915;;;;;;
+K1087;Inng;K;Kolsåsbanen;Østover;K1067;59.914661;10.581183;59.914468;10.584103;10851;F;Sporfelt;K1087;218085;;;;;;
+K1088;Utg;K;Kolsåsbanen;Vestover;K1104;59.914506;10.584087;59.914694;10.581218;10875;F;Sporfelt;K1088;167;;;;;;
+K1104;Utg;K;Kolsåsbanen;Vestover;K1118;59.914694;10.581218;59.915446;10.579081;11042;F;Sporfelt;K1104;146;GJØ2;GJØ;Gjønnes;59.915074;10.580134;23
+K1105;Inng;K;Kolsåsbanen;Østover;K1087;59.915413;10.579046;59.914661;10.581183;11021;F;Sporfelt;K1105;170;GJØ1;GJØ;Gjønnes;59.915046;10.580084;23
+K1118;Utg;K;Kolsåsbanen;Vestover;K1138;59.915446;10.579081;59.916173;10.575821;11188;F;Sporfelt;K1118;200;;;;;;
+K1119;Inng;K;Kolsåsbanen;Østover;K1105;59.916137;10.575803;59.915413;10.579046;11167.466;F;Sporfelt;K1119;146466;;;;;;
+K1138;Utg;K;Kolsåsbanen;Vestover;K1158;59.916173;10.575821;59.916492;10.572501;11388;F;Sporfelt;K1138;192;;;;;;
+K1139;Inng;K;Kolsåsbanen;Østover;K1119;59.916456;10.572519;59.916137;10.575803;11366.469;F;Sporfelt;K1139;199003;;;;;;
+K1158;Utg;K;Kolsåsbanen;Vestover;K1170;59.916492;10.572501;59.915974;10.56929;11580;F;Sporfelt;K1158;190;;;;;;
+K1159;Inng;K;Kolsåsbanen;Østover;K1139;59.915942;10.569325;59.916456;10.572519;11556;F;Sporfelt;K1159;189531;;;;;;
+K1170;Utg;K;Kolsåsbanen;Vestover;K1192;59.915974;10.56929;59.915329;10.56675;11770;F;Sporfelt;K1170;160;;;;;;
+K1171;Inng;K;Kolsåsbanen;Østover;K1159;59.915292;10.566769;59.915942;10.569325;11745;F;Sporfelt;K1171;189;;;;;;
+K1192;Utg;K;Kolsåsbanen;Vestover;K1208;59.915329;10.56675;59.915059;10.564032;11930;F;Sporfelt;K1192;155;HAL2;HAL;Haslum;59.915182;10.565314;28
+K1193;Inng;K;Kolsåsbanen;Østover;K1171;59.91502;10.564052;59.915292;10.566769;11906;F;Sporfelt;K1193;161;HAL1;HAL;Haslum;59.915145;10.565332;28
+K1208;Utg;K;Kolsåsbanen;Vestover;K1226;59.915059;10.564032;59.915092;10.560965;12085;F;Sporfelt;K1208;175;;;;;;
+K1209;Inng;K;Kolsåsbanen;Østover;K1193;59.915054;10.560918;59.91502;10.564052;12061;F;Sporfelt;K1209;155;;;;;;
+K1226;Utg;K;Kolsåsbanen;Vestover;K1244;59.915092;10.560965;59.916084;10.558362;12260;F;Sporfelt;K1226;184;;;;;;
+K1227;Inng;K;Kolsåsbanen;Østover;K1209;59.916048;10.55834;59.915054;10.560918;12240;F;Sporfelt;K1227;179;;;;;;
+K1244;Utg;K;Kolsåsbanen;Vestover;K1268;59.916084;10.558362;59.91567;10.554598;12444;F;Sporfelt;K1244;229;;;;;;
+K1245;Inng;K;Kolsåsbanen;Østover;K1227;59.915641;10.554644;59.916048;10.55834;12423;F;Sporfelt;K1245;183;;;;;;
+K1268;Utg;K;Kolsåsbanen;Vestover;K1288;59.91567;10.554598;59.914471;10.551771;12673;F;Sporfelt;K1268;207;;;;;;
+K1268B;K1268B;K;Kolsåsbanen;Østover;;59.915283;10.553803;;;12709.692;V;Sporveksel;K1268B;;;;;;;
+K1269;Inng;K;Kolsåsbanen;Østover;K1245;59.915235;10.55369;59.915641;10.554644;12648;F;Sporfelt;K1269;225;;;;;;
+K1275;Inng;K;Kolsåsbanen;Østover;K1269;59.914471;10.551886;59.915235;10.55369;12718;F;Sporfelt;K1275;70;AVLZ;AVL;Avløs;;;3
+K1275A;K1275A;K;Kolsåsbanen;Vestover;;59.914741;10.552669;;;12797.106;V;Sporveksel;K1275A;;;;;;;
+K1275A Ø;K1275A;K;Kolsåsbanen;Østover;;59.915172;10.553542;;;12728.847;V;Sporveksel;K1275B;;;;;;;
+K1275AV;K1275A;K;Kolsåsbanen;Østover;;59.915172;10.553542;;;12728.847;V;Sporveksel;;;;;;;;
+K1288;Utg;K;Kolsåsbanen;Vestover;K1306;59.914471;10.551771;59.913477;10.549282;12880;F;Sporfelt;K1288;178;;;;;;
+K1289;Inng;K;Kolsåsbanen;Østover;K1275;59.913447;10.549329;59.914471;10.551886;12850;F;Sporfelt;K1289;132;;;;;;
+K1289A;K1289A;K;Kolsåsbanen;Vestover;;59.914394;10.551844;;;12857.286;V;Sporveksel;K1289A;;;;;;;
+K1289B;K1289B;K;Kolsåsbanen;Østover;;59.914011;10.550791;;;12929.816;V;Sporveksel;K1289B;;;;;;;
+K1295A;K1295A;K;Kolsåsbanen;Østover;;59.91416;10.551148;;;12903.853;V;Sporveksel;K1295A;;;;;;;
+K1295B;K1295B;K;Kolsåsbanen;Vestover;;59.913648;10.549745;;;13025.825;V;Sporveksel;K1295B;;;;;;;
+K1306;Utg;K;Kolsåsbanen;Vestover;K1322;59.913477;10.549282;59.912643;10.54702;13058;F;Sporfelt;K1306;157;AVL2;AVL;Avløs;59.913121;10.548317;3
+K1307;Inng;K;Kolsåsbanen;Østover;K1289;59.912613;10.547067;59.913447;10.549329;13033;F;Sporfelt;K1307;183;AVL1;AVL;Avløs;59.913091;10.548364;3
+K1322;Utg;K;Kolsåsbanen;Vestover;K1340;59.912643;10.54702;59.911481;10.543818;13215;F;Sporfelt;K1322;221;;;;;;
+K1323;Inng;K;Kolsåsbanen;Østover;K1307;59.911688;10.544539;59.912613;10.547067;13190;F;Sporfelt;K1323;157;;;;;;
+K1340;Utg;K;Kolsåsbanen;Vestover;K1358;59.911481;10.543818;59.910718;10.541523;13436;F;Sporfelt;K1340;154;;;;;;
+K1341;Inng;K;Kolsåsbanen;Østover;K1323;59.910689;10.54157;59.911688;10.544539;13365.226;F;Sporfelt;K1341;175226;;;;;;
+K1348;K1348;K;Kolsåsbanen;Vestover;;59.911262;10.543179;;;13479.287;V;Sporveksel;;;;;;;;
+K1358;Utg;K;Kolsåsbanen;Vestover;K1382;59.910718;10.541523;59.909684;10.53807;13590;F;Sporfelt;K1358;225;;;;;;
+K1359;Inng;K;Kolsåsbanen;Østover;K1341;59.90965;10.538101;59.910689;10.54157;13565;F;Sporfelt;K1359;199774;;;;;;
+K1382;Utg;K;Kolsåsbanen;Vestover;K1402;59.909684;10.53807;59.909141;10.534691;13815;F;Sporfelt;K1382;200;;;;;;
+K1383;Inng;K;Kolsåsbanen;Østover;K1359;59.909105;10.534705;59.90965;10.538101;13791;F;Sporfelt;K1383;226;;;;;;
+K1402;Utg;K;Kolsåsbanen;Vestover;K1418;59.909141;10.534691;59.908757;10.531827;14015;F;Sporfelt;K1402;166;;;;;;
+K1403;Inng;K;Kolsåsbanen;Østover;K1383;59.908724;10.531858;59.909105;10.534705;13992;F;Sporfelt;K1403;201;;;;;;
+K1418;Utg;K;Kolsåsbanen;Vestover;K1434;59.908757;10.531827;59.908257;10.529243;14181;F;Sporfelt;K1418;155;GJE2;GJE;Gjettum;59.908551;10.530684;22
+K1419;Inng;K;Kolsåsbanen;Østover;K1403;59.908224;10.529274;59.908724;10.531858;14157.406;F;Sporfelt;K1419;165406;GJE1;GJE;Gjettum;59.908511;10.530682;22
+K1434;Utg;K;Kolsåsbanen;Vestover;K1450;59.908257;10.529243;59.907603;10.52662;14336;F;Sporfelt;K1434;164;;;;;;
+K1435;Inng;K;Kolsåsbanen;Østover;K1419;59.907569;10.526651;59.908224;10.529274;14312.083;F;Sporfelt;K1435;154677;;;;;;
+K1450;Utg;K;Kolsåsbanen;Vestover;K1492;59.907603;10.52662;59.906009;10.519983;14500;F;Sporfelt;K1450;419;;;;;;
+K1451;Inng;K;Kolsåsbanen;Østover;K1435;59.906574;10.523484;59.907569;10.526651;14476;F;Sporfelt;K1451;163917;;;;;;
+K1471;Utg;K;Kolsåsbanen;Vestover;K1451;59.906603;10.523438;59.906574;10.523484;14710;F;Sporfelt;K1471;234;;;;;;
+K1471 Ø;Inng;K;Kolsåsbanen;Østover;;59.905972;10.51998;;;14685.422;F;Sporfelt;;;;;;;;
+K1471V;Inng;K;Kolsåsbanen;Østover;;59.905972;10.51998;;;14685.422;F;Sporfelt;;;;;;;;
+K1492;Utg;K;Kolsåsbanen;Vestover;K1512;59.906009;10.519983;59.906803;10.516675;14919;F;Sporfelt;K1492;209;;;;;;
+K1493;Inng;K;Kolsåsbanen;Østover;K1471;59.906776;10.516623;59.906603;10.523438;14897.09;F;Sporfelt;K1493;187.09;;;;;;
+K1512;Utg;K;Kolsåsbanen;Vestover;K1534;59.906803;10.516675;59.908522;10.515441;15128;F;Sporfelt;K1512;209;;;;;;
+K1513;Inng;K;Kolsåsbanen;Østover;K1493;59.908519;10.515367;59.906776;10.516623;15109.07;F;Sporfelt;K1513;211.98;;;;;;
+K1534;Utg;K;Kolsåsbanen;Vestover;K1554;59.908522;10.515441;59.910141;10.513702;15337;F;Sporfelt;K1534;210;;;;;;
+K1535;Inng;K;Kolsåsbanen;Østover;K1513;59.910115;10.513651;59.908519;10.515367;15320.869;F;Sporfelt;K1535;211799;;;;;;
+K1554;Utg;K;Kolsåsbanen;Vestover;K1572;59.910141;10.513702;59.910911;10.5111;15547;F;Sporfelt;K1554;170;;;;;;
+K1555;Inng;K;Kolsåsbanen;Østover;K1535;59.910875;10.511079;59.910115;10.513651;15528;F;Sporfelt;K1555;207131;;;;;;
+K1572;Utg;K;Kolsåsbanen;Vestover;K1586;59.910911;10.5111;59.91143;10.508665;15717;F;Sporfelt;K1572;148;HAE2;HAE;Hauger;59.911174;10.509866;29
+K1573;Inng;K;Kolsåsbanen;Østover;K1555;59.911394;10.508644;59.910875;10.511079;15696.438;F;Sporfelt;K1573;168438;HAE1;HAE;Hauger;59.911141;10.509829;29
+K1586;Utg;K;Kolsåsbanen;Vestover;K1598;59.91143;10.508665;59.911852;10.506889;15865;F;Sporfelt;K1586;110;;;;;;
+K1587;Inng;K;Kolsåsbanen;Østover;K1573;59.911819;10.506852;59.911394;10.508644;15844;F;Sporfelt;K1587;147562;;;;;;
+K1598;Utg;K;Kolsåsbanen;Vestover;K1610;59.911852;10.506889;59.912488;10.505053;15975;F;Sporfelt;K1598;125;;;;;;
+K1599;Inng;K;Kolsåsbanen;Østover;K1587;59.912461;10.505001;59.911819;10.506852;15955;F;Sporfelt;K1599;111;;;;;;
+K1610;Utg;K;Kolsåsbanen;Vestover;K1616;59.912488;10.505053;59.912911;10.504057;16100;F;Sporfelt;K1610;73;;;;;;
+K1611;Inng;K;Kolsåsbanen;Østover;K1599;59.912971;10.503801;59.912461;10.505001;16080.659;F;Sporfelt;K1611;125659;;;;;;
+K1612A;K1612A;K;Kolsåsbanen;Vestover;;59.912604;10.504779;;;16120.048;V;Sporveksel;K1612A;;;;;;;
+K1612B;K1612B;K;Kolsåsbanen;Østover;;59.912915;10.503934;;;16159.185;V;Sporveksel;K1612B;;;;;;;
+K1616;Utg;K;Kolsåsbanen;Vestover;K1628;59.912911;10.504057;59.913596;10.502596;16173;F;Sporfelt;K1616;112;;;;;;
+K1619;Inng;K;Kolsåsbanen;Østover;K1611;59.913539;10.502486;59.912971;10.503801;16168.692;F;Sporfelt;K1619;88033;;;;;;
+K1619A;K1619A;K;Kolsåsbanen;Østover;;59.913002;10.503729;;;16174.256;V;Sporveksel;K1619A;;;;;;;
+K1619B;K1619B;K;Kolsåsbanen;Vestover;;59.913412;10.502912;;;16258.015;V;Sporveksel;K1619B;;;;;;;
+K1628;Utg;K;Kolsåsbanen;Vestover;;59.913596;10.502596;;;16285;F;Sporfelt;K1628;;KOL2;KOL;Kolsås;59.914076;10.501818;41
+K1629;Inng;K;Kolsåsbanen;Østover;K1619;59.914449;10.500953;59.913539;10.502486;16266.154;F;Sporfelt;K1629;97462;KOL1;KOL;Kolsås;59.914011;10.501661;41
+K457;Inng;K;Kolsåsbanen;Østover;;59.938991;10.672991;;;4548.115;F;Sporfelt;K457;;;;;;;
+K458;Utg;K;Kolsåsbanen;Vestover;K474;59.939703;10.67479;59.938814;10.672689;4595;F;Sporfelt;K458;159;;;;;;
+K474;Utg;K;Kolsåsbanen;Vestover;K484;59.938814;10.672689;59.93802;10.671813;4754;F;Sporfelt;K474;101;;;;;;
+K475;Inng;K;Kolsåsbanen;Østover;K457;59.938004;10.67189;59.938991;10.672991;4700.775;F;Sporfelt;K475;152.66;;;;;;
+K481A;K481A;K;Kolsåsbanen;Vestover;;59.937999;10.67179;;;4857.729;V;Sporveksel;KP481A;;;;;;;
+K481B;K481B;K;Kolsåsbanen;Østover;;59.937632;10.67148;;;4874.383;V;Sporveksel;KP481B;;;;;;;
+K484;Utg;K;Kolsåsbanen;Vestover;K492;59.93802;10.671813;59.937282;10.670999;4855;F;Sporfelt;K484;94;;;;;;
+K485;Inng;K;Kolsåsbanen;Østover;K475;59.937266;10.671076;59.938004;10.67189;4827;F;Sporfelt;K485;126225;;;;;;
+K492;Utg;K;Kolsåsbanen;Vestover;K510;59.937282;10.670999;59.936325;10.669368;4949;F;Sporfelt;K492;142;HUSB;;;;;
+K493;Inng;K;Kolsåsbanen;Østover;K485;59.936287;10.669415;59.937266;10.671076;4921;F;Sporfelt;K493;94;HUSA;;;;;
+K503A;K503A;K;Kolsåsbanen;Østover;;59.930403;10.654537;;;6171.729;V;Sporveksel;KP503A;;;;;;;
+K503B;K503B;K;Kolsåsbanen;Vestover;;59.937305;10.671024;;;4946.081;V;Sporveksel;KP503B;;;;;;;
+K509;Inng;K;Kolsåsbanen;Østover;K493;59.935583;10.667775;59.936287;10.669415;5066;F;Sporfelt;K509;145;;;;;;
+K510;Utg;K;Kolsåsbanen;Vestover;K520;59.936325;10.669368;59.93561;10.667724;5091;F;Sporfelt;K510;122;;;;;;
+K519;Inng;K;Kolsåsbanen;Østover;K509;59.935214;10.667122;59.935583;10.667775;5187;F;Sporfelt;K519;121;;;;;;
+K520;Utg;K;Kolsåsbanen;Vestover;K526;59.93561;10.667724;59.935241;10.667072;5213;F;Sporfelt;K520;55;;;;;;
+K526;Utg;K;Kolsåsbanen;Vestover;K540;59.935241;10.667072;59.934421;10.665624;5268;F;Sporfelt;K526;122;MON2;MON;Montebello;59.934851;10.666384;51
+K527;Inng;K;Kolsåsbanen;Østover;K519;59.934394;10.665675;59.935214;10.667122;5242;F;Sporfelt;K527;55;MON1;MON;Montebello;59.934824;10.666434;51
+K539;Inng;K;Kolsåsbanen;Østover;K527;59.933416;10.663253;59.934394;10.665675;5364;F;Sporfelt;K539;122;;;;;;
+K540;Utg;K;Kolsåsbanen;Vestover;K556;59.934421;10.665624;59.933459;10.663219;5390;F;Sporfelt;K540;174;;;;;;
+K556;Utg;K;Kolsåsbanen;Vestover;K574;59.933459;10.663219;59.933222;10.660158;5564;F;Sporfelt;K556;174;;;;;;
+K557;Inng;K;Kolsåsbanen;Østover;K539;59.933185;10.66019;59.933416;10.663253;5540.231;F;Sporfelt;K557;176231;;;;;;
+K573;Inng;K;Kolsåsbanen;Østover;K557;59.932244;10.657052;59.933185;10.66019;5714.463;F;Sporfelt;K573;174232;;;;;;
+K574;Utg;K;Kolsåsbanen;Vestover;K594;59.933222;10.660158;59.932341;10.6571;5738;F;Sporfelt;K574;201;;;;;;
+K593;Inng;K;Kolsåsbanen;Østover;K573;59.930845;10.65514;59.932244;10.657052;5922.601;F;Sporfelt;K593;208138;ULL1;ULL;Ullernåsen;59.931437;10.655949;80
+K594;Utg;K;Kolsåsbanen;Vestover;K614;59.932341;10.6571;59.930869;10.655085;5939;F;Sporfelt;K594;199;ULL2;ULL;Ullernåsen;59.931461;10.655894;80
+K613;Inng;K;Kolsåsbanen;Østover;K593;59.929449;10.652835;59.930845;10.65514;6112;F;Sporfelt;K613;189399;;;;;;
+K614;Utg;K;Kolsåsbanen;Vestover;K634;59.930869;10.655085;59.929483;10.652784;6138;F;Sporfelt;K614;202;;;;;;
+K614A;K614A;K;Kolsåsbanen;Vestover;;59.93085;10.655059;;;6140.527;V;Sporveksel;KP614A;;;;;;;
+K614B;K614B;K;Kolsåsbanen;Østover;;59.929193;10.652122;;;6364.086;V;Sporveksel;KP614B;;;;;;;
+K634;Utg;K;Kolsåsbanen;Vestover;K654;59.929483;10.652784;59.928913;10.649478;6340;F;Sporfelt;K634;200;;;;;;
+K635;Inng;K;Kolsåsbanen;Østover;K613;59.928871;10.649478;59.929449;10.652835;6315;F;Sporfelt;K635;203;;;;;;
+K639A;K639A;K;Kolsåsbanen;Østover;;59.926147;10.629675;;;7747.196;V;Sporveksel;KP639A;;;;;;;
+K639B;K639B;K;Kolsåsbanen;Vestover;;59.928986;10.650851;;;6462.668;V;Sporveksel;KP639B;;;;;;;
+K654;Utg;K;Kolsåsbanen;Vestover;K676;59.928913;10.649478;59.928793;10.645642;6540;F;Sporfelt;K654;215;ÅSJ2;ÅSJ;Åsjordet;59.928882;10.648317;2
+K655;Inng;K;Kolsåsbanen;Østover;K635;59.928751;10.64566;59.928871;10.649478;6517.792;F;Sporfelt;K655;202792;ÅSJ1;ÅSJ;Åsjordet;59.92884;10.648318;2
+K675;Inng;K;Kolsåsbanen;Østover;K655;59.927489;10.642598;59.928751;10.64566;6732.192;F;Sporfelt;K675;214.4;;;;;;
+K676;Utg;K;Kolsåsbanen;Vestover;K698;59.928793;10.645642;59.927519;10.642531;6755;F;Sporfelt;K676;232;;;;;;
+K698;Utg;K;Kolsåsbanen;Vestover;K714;59.927519;10.642531;59.927006;10.639946;6987;F;Sporfelt;K698;161;;;;;;
+K699;Inng;K;Kolsåsbanen;Østover;K675;59.926965;10.63993;59.927489;10.642598;6961;F;Sporfelt;K699;228808;;;;;;
+K714;Utg;K;Kolsåsbanen;Vestover;K736;59.927006;10.639946;59.927125;10.636291;7148;F;Sporfelt;K714;207;;;;;;
+K715;Inng;K;Kolsåsbanen;Østover;K699;59.927087;10.63631;59.926965;10.63993;7127;F;Sporfelt;K715;166;;;;;;
+K735;Inng;K;Kolsåsbanen;Østover;K715;59.926102;10.633379;59.927087;10.63631;7332;F;Sporfelt;K735;205;BJØ1;BJØ;Bjørnsletta;59.926508;10.634486;7
+K736;Utg;K;Kolsåsbanen;Vestover;K756;59.927125;10.636291;59.926136;10.633345;7355;F;Sporfelt;K736;199;BJØ2;BJØ;Bjørnsletta;59.926538;10.634442;7
+K755;Inng;K;Kolsåsbanen;Østover;K735;59.925995;10.630463;59.926102;10.633379;7530;F;Sporfelt;K755;198;;;;;;
+K756;Utg;K;Kolsåsbanen;Vestover;K772;59.926136;10.633345;59.926033;10.630498;7554;F;Sporfelt;K756;166;;;;;;
+K771;Inng;K;Kolsåsbanen;Østover;K755;59.92615;10.629662;59.925995;10.630463;7700;F;Sporfelt;K771;170;;;;;;
+K772;Utg;K;Kolsåsbanen;Vestover;K786;59.926033;10.630498;59.926516;10.627994;7720;F;Sporfelt;K772;150;;;;;;
+K772A;K772A;K;Kolsåsbanen;Vestover;;59.926043;10.630442;;;7723.344;V;Sporveksel;KP772A;;;;;;;
+K772B;K772B;K;Kolsåsbanen;Østover;;59.92625;10.629142;;;7779.184;V;Sporveksel;KP772B;;;;;;;
+K779;Inng;K;Kolsåsbanen;Østover;K771;59.92653;10.627674;59.92615;10.629662;7748;F;Sporfelt;K779;48;LYSA;;;;;
+K779A;K779A;K;Kolsåsbanen;Østover;;59.926546;10.625519;;;7988.863;V;Sporveksel;KP779A;;;;;;;
+K779B;K779B;K;Kolsåsbanen;Vestover;;59.92649;10.628129;;;7861.932;V;Sporveksel;KP779B;;;;;;;
+K786;Utg;K;Kolsåsbanen;Vestover;K796;59.926516;10.627994;59.92664;10.626456;7870;F;Sporfelt;K786;88;;;;;;
+K787;Inng;K;Kolsåsbanen;Østover;K779;59.926599;10.626368;59.92653;10.627674;7867;F;Sporfelt;K787;119;;;;;;
+K796;Utg;K;Kolsåsbanen;Vestover;K804;59.92664;10.626456;59.92658;10.62548;7958;F;Sporfelt;;55;;;;;;
+K799;Inng;K;Kolsåsbanen;Østover;K787;59.926542;10.625463;59.926599;10.626368;7941;F;Sporfelt;K799;74;;;;;;
+K801;K801;K;Kolsåsbanen;Østover;;59.925292;10.61745;;;8502.527;V;Sporveksel;KP801A;;;;;;;
+K803;K803;K;Kolsåsbanen;Vestover;;59.926584;10.625551;;;8009.016;V;Sporveksel;KP803A;;;;;;;
+K804;Utg;K;Kolsåsbanen;Vestover;K820;59.92658;10.62548;59.926735;10.62234;8013;F;Sporfelt;K804;179;;;;;;
+K805;Inng;K;Kolsåsbanen;Østover;K799;59.926698;10.622323;59.926542;10.625463;7992;F;Sporfelt;K805;51;;;;;;
+K819;Inng;K;Kolsåsbanen;Østover;K805;59.926159;10.619099;59.926698;10.622323;8171;F;Sporfelt;K819;179;;;;;;
+K820;Utg;K;Kolsåsbanen;Vestover;K838;59.926735;10.62234;59.926186;10.61905;8192;F;Sporfelt;K820;202;;;;;;
+K838;Utg;K;Kolsåsbanen;Vestover;K850;59.926186;10.61905;59.925336;10.617433;8394;F;Sporfelt;K838;131;JAR2;JAR;Jar;59.925764;10.618248;37
+K839;Inng;K;Kolsåsbanen;Østover;K819;59.925308;10.617482;59.926159;10.619099;8369;F;Sporfelt;K839;198;JAR1;JAR;Jar;59.925738;10.618299;37
+K850;Utg;K;Kolsåsbanen;Vestover;K856;59.925336;10.617433;59.924875;10.616556;8525;F;Sporfelt;K850;71;;;;;;
+K851;Inng;K;Kolsåsbanen;Østover;K839;59.924847;10.616605;59.925308;10.617482;8500;F;Sporfelt;K851;131;;;;;;
+K852A;K852A;K;Kolsåsbanen;Vestover;;59.925317;10.617398;;;8527.82;V;Sporveksel;KP852A;;;;;;;
+K853A;K853A;K;Kolsåsbanen;Østover;;59.924443;10.615835;;;8633.363;V;Sporveksel;KP853A;;;;;;;
+K856;Utg;K;Kolsåsbanen;Vestover;K866;59.924875;10.616556;59.924446;10.615741;8596;F;Sporfelt;K856;66;;;;;;
+K857;Inng;K;Kolsåsbanen;Østover;K851;59.924419;10.61579;59.924847;10.616605;8570.705;F;Sporfelt;K857;70705;;;;;;
+K864B;K864B;K;Kolsåsbanen;Vestover;;59.924468;10.615783;;;8658.657;V;Sporveksel;;;;;;;;
+K865B;K865B;K;Kolsåsbanen;Østover;;59.924404;10.615761;;;8639.365;V;Sporveksel;KP865A;;;;;;;
+K866;Utg;K;Kolsåsbanen;Vestover;K876;59.924446;10.615741;59.923621;10.614174;8662;F;Sporfelt;K866;127;;;;;;
+K867;Inng;K;Kolsåsbanen;Østover;K857;59.923594;10.614222;59.924419;10.61579;8636.705;F;Sporfelt;K867;66;;;;;;
+K867A;K867A;K;Kolsåsbanen;Østover;;59.923616;10.614263;;;8760.681;V;Sporveksel;KP867A;;;;;;;
+K867B;K867B;K;Kolsåsbanen;Vestover;;59.924054;10.614997;;;8722.323;V;Sporveksel;KP867B;;;;;;;
+K872A;K872A;K;Kolsåsbanen;Vestover;;59.924015;10.614923;;;8728.325;V;Sporveksel;KP872A;;;;;;;
+K872B;K872B;K;Kolsåsbanen;Østover;;59.918924;10.595175;;;10046.814;V;Sporveksel;KP872B;;;;;;;
+K876;Utg;K;Kolsåsbanen;Vestover;K900;59.923621;10.614174;59.922213;10.61188;8789;F;Sporfelt;K876;203;JARB;JAR;Jar;;;37
+K877;Inng;K;Kolsåsbanen;Østover;K867;59.922193;10.611941;59.923594;10.614222;8763.705;F;Sporfelt;K877;127;JARA;JAR;Jar;;;37
+K899;Inng;K;Kolsåsbanen;Østover;K877;59.920517;10.609454;59.922193;10.611941;8966.046;F;Sporfelt;K899;202341;;;;;;
+K900;Utg;K;Kolsåsbanen;Vestover;K922;59.922213;10.61188;59.920549;10.609415;8992;F;Sporfelt;K900;235;;;;;;
+K922;Utg;K;Kolsåsbanen;Vestover;K944;59.920549;10.609415;59.920084;10.605845;9227;F;Sporfelt;K922;209;;;;;;
+K923;Inng;K;Kolsåsbanen;Østover;K899;59.920047;10.605832;59.920517;10.609454;9203;F;Sporfelt;K923;236954;;;;;;
+K943;Inng;K;Kolsåsbanen;Østover;K923;59.92017;10.603;59.920047;10.605832;9415;F;Sporfelt;K943;212;RIN1;RIN;Ringstabekk;59.920115;10.604264;60
+K944;Utg;K;Kolsåsbanen;Vestover;K960;59.920084;10.605845;59.920207;10.603014;9436;F;Sporfelt;K944;159;RIN2;RIN;Ringstabekk;59.920152;10.604278;60
+K959;Inng;K;Kolsåsbanen;Østover;K943;59.920041;10.599254;59.92017;10603;9574;F;Sporfelt;K959;159;;;;;;
+K960;Utg;K;Kolsåsbanen;Vestover;K980;59.920207;10.603014;59.920077;10.599232;9595;F;Sporfelt;K960;213;;;;;;
+K980;Utg;K;Kolsåsbanen;Vestover;K1000;59.920077;10.599232;59.919279;10.596124;9808;F;Sporfelt;K980;197;;;;;;
+K981;Inng;K;Kolsåsbanen;Østover;K959;59.919247;10.59616;59.920041;10.599254;9785;F;Sporfelt;K981;211;;;;;;
+L ENDE I;Inng.ende;L;Lambertseterbanen;Vestover;;59.867077;10.821923;;;11186;E;Endepunkt;;;;;;;;
+L ENDE U;Utg.ende;L;Lambertseterbanen;Østover;;59.867039;10.821933;;;11193;E;Endepunkt;;;;;;;;
+L ENDE U M;HLF midtspor;L;Lambertseterbanen;Østover;;59.912015;10.803767;;;4678.793;E;Endepunkt;;;;;;;;
+L0011T;Inng;L;Lambertseterbanen;Vestover;;59.914774;10.733954;;;87;F;Sporfelt;T011;;;;;;;
+L0016T;Utg;L;Lambertseterbanen;Østover;L0022T;59.91449;10.735236;59.914152;10.736477;166;F;Sporfelt;T016;79;;;;;;
+L0022T;Utg;L;Lambertseterbanen;Østover;L0040T;59.914152;10.736477;59.913708;10.739436;245;F;Sporfelt;T022;174;;;;;;
+L0029T;Inng;L;Lambertseterbanen;Vestover;L0011T;59.914355;10.735884;59.914774;10.733954;205;F;Sporfelt;T029;118;;;;;;
+L0040T;Utg;L;Lambertseterbanen;Østover;L0058T;59.913708;10.739436;59.91351;10.74207;419;F;Sporfelt;T040;149;;;;;;
+L0047T;Inng;L;Lambertseterbanen;Vestover;L0029T;59.913931;10.737636;59.914355;10.735884;314;F;Sporfelt;T047;109;;;;;;
+L0057T;Inng;L;Lambertseterbanen;Vestover;L0047T;59.91364;10.740815;59.913931;10.737636;495;F;Sporfelt;T057;181;;;;;;
+L0058T;Utg;L;Lambertseterbanen;Østover;L0060T;59.91351;10.74207;59.913424;10.743201;568;F;Sporfelt;T058;64;;;;;;
+L0060T;Utg;L;Lambertseterbanen;Østover;L0068T;59.913424;10.743201;59.913352;10.744156;632;F;Sporfelt;T060;54;STT1;STT;Stortinget;59.913424;10.743201;72
+L0068T;Utg;L;Lambertseterbanen;Østover;L0074T;59.913352;10.744156;59.913229;10.74529;686;F;Sporfelt;T068;65;;;;;;
+L0069T;Inng;L;Lambertseterbanen;Vestover;L0057T;59.913532;10.742247;59.91364;10.740815;576;F;Sporfelt;T069;81;STT2;STT;Stortinget;59.913459;10.743219;72
+L0073T;Inng;L;Lambertseterbanen;Vestover;L0069T;59.913372;10.744368;59.913532;10.742247;696;F;Sporfelt;T073;120;;;;;;
+L0074T;Utg;L;Lambertseterbanen;Østover;L0084T;59.913229;10.74529;59.91291;10.746647;751;F;Sporfelt;T74;84;;;;;;
+L0081T;Inng;L;Lambertseterbanen;Vestover;L0073T;59.913263;10.745308;59.913372;10.744368;750;F;Sporfelt;T81;54;;;;;;
+L0084T;Utg;L;Lambertseterbanen;Østover;L0090T;59.91291;10.746647;59.91263;10.747645;835;F;Sporfelt;T84;64;;;;;;
+L0084T P;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.913048;10.743462;;;-14;F;Sporfelt;;;;;;;;
+L0089T;Inng;L;Lambertseterbanen;Vestover;L0081T;59.913058;10.746259;59.913263;10.745308;808;F;Sporfelt;T89;58;;;;;;
+L0090T;Utg;L;Lambertseterbanen;Østover;L0102T;59.91263;10.747645;59.912298;10.749534;899;F;Sporfelt;T90;113;;;;;;
+L0099T;Inng;L;Lambertseterbanen;Vestover;L0089T;59.912709;10.747509;59.913058;10.746259;888;F;Sporfelt;T99;80;;;;;;
+L0101T;Inng;L;Lambertseterbanen;Vestover;L0099T;59.912337;10.749538;59.912709;10.747509;1010;F;Sporfelt;T101;122;;;;;;
+L0102T;Utg;L;Lambertseterbanen;Østover;L0108T;59.912298;10.749534;59.912244;10.750565;1012;F;Sporfelt;T102;58;;;;;;
+L0108T;Utg;L;Lambertseterbanen;Østover;L0120T;59.912244;10.750565;59.912126;10.752841;1070;F;Sporfelt;T108;128;JER1;JER;Jernbanetorget;59.912186;10.751685;38
+L0120T;Utg;L;Lambertseterbanen;Østover;L0132T;59.912126;10.752841;59.912271;10.754991;1198;F;Sporfelt;T120;123;;;;;;
+L0121T;Inng;L;Lambertseterbanen;Vestover;L0101T;59.912283;10.750569;59.912337;10.749538;1068;F;Sporfelt;T121;58;JER2;JER;Jernbanetorget;59.912225;10.751689;38
+L0132T;Utg;L;Lambertseterbanen;Østover;L0142T;59.912271;10.754991;59.912655;10.756405;1321;F;Sporfelt;T132;90;;;;;;
+L0137T;Inng;L;Lambertseterbanen;Vestover;L0121T;59.912148;10.753254;59.912283;10.750569;1219;F;Sporfelt;T137;151;;;;;;
+L0142T;Utg;L;Lambertseterbanen;Østover;L0150T;59.912655;10.756405;59.912838;10.75794;1411;F;Sporfelt;T142;89;;;;;;
+L0149T;Inng;L;Lambertseterbanen;Vestover;L0137T;59.912512;10.755714;59.912148;10.753254;1365;F;Sporfelt;T149;146;;;;;;
+L0150T;Utg;L;Lambertseterbanen;Østover;L0154T;59.912838;10.75794;59.91282;10.758833;1500;F;Sporfelt;T150;50;;;;;;
+L0154T;Utg;L;Lambertseterbanen;Østover;L0170T;59.91282;10.758833;59.912738;10.761168;1550;F;Sporfelt;T154;131;GRØ1;GRØ;Grønland;59.912776;10.760081;25
+L0155T;Inng;L;Lambertseterbanen;Vestover;L0149T;59.912878;10.758123;59.912512;10.755714;1508;F;Sporfelt;T155;143;;;;;;
+L0167T;Inng;L;Lambertseterbanen;Vestover;L0155T;59.912853;10.759015;59.912878;10.758123;1558;F;Sporfelt;T167;50;GRØ2;GRØ;Grønland;59.912814;10.760102;25
+L0170T;Utg;L;Lambertseterbanen;Østover;L0174T;59.912738;10.761168;59.912697;10.76222;1681;F;Sporfelt;T170;59;;;;;;
+L0173T;Inng;L;Lambertseterbanen;Vestover;L0167T;59.912777;10.761154;59.912853;10.759015;1678;F;Sporfelt;T173;120;;;;;;
+L0174T;Utg;L;Lambertseterbanen;Østover;L0190T;59.912697;10.76222;59.912298;10.764771;1740;F;Sporfelt;T0174;150;;;;;;
+L0190T;Utg;L;Lambertseterbanen;Østover;L0204T;59.912298;10.764771;59.912074;10.767375;1890;F;Sporfelt;T190;150;;;;;;
+L0191T;Inng;L;Lambertseterbanen;Vestover;L0173T;59.912746;10.762046;59.912777;10.761154;1728;F;Sporfelt;T191;50;;;;;;
+L0201T;Inng;L;Lambertseterbanen;Vestover;L0191T;59.912434;10.764273;59.912746;10.762046;1858;F;Sporfelt;T201;130;;;;;;
+L0204T;Utg;L;Lambertseterbanen;Østover;L0224T;59.912074;10.767375;59.913066;10.770019;2040;F;Sporfelt;T0204;192;;;;;;
+L0221T;Inng;L;Lambertseterbanen;Vestover;L0201T;59.912094;10.767005;59.912434;10.764273;2017;F;Sporfelt;T221;159;;;;;;
+L0224T;Utg;L;Lambertseterbanen;Østover;L0240T;59.913066;10.770019;59.914163;10.771989;2232;F;Sporfelt;T224;168;;;;;;
+L0240T;Utg;L;Lambertseterbanen;Østover;L0256T;59.914163;10.771989;59.914725;10.774373;2400;F;Sporfelt;T0240;148;;;;;;
+L0243T;Inng;L;Lambertseterbanen;Vestover;L0221T;59.913085;10.769951;59.912094;10.767005;2225;F;Sporfelt;T243;208;;;;;;
+L0255T;Inng;L;Lambertseterbanen;Vestover;L0243T;59.914332;10.772603;59.913085;10.769951;2435;F;Sporfelt;T255;210;;;;;;
+L0256T;Utg;L;Lambertseterbanen;Østover;L0260T;59.914725;10.774373;59.915123;10.775118;2548;F;Sporfelt;T256;61;;;;;;
+L0260T;Utg;L;Lambertseterbanen;Østover;L0274T;59.915123;10.775118;59.915986;10.776487;2609;F;Sporfelt;T260;123;TØY1;TØY;Tøyen;59.9156;10.775875;77
+L0261T;Inng;L;Lambertseterbanen;Vestover;L0255T;59.914748;10.774297;59.914332;10.772603;2541;F;Sporfelt;T261;106;;;;;;
+L0273T;Inng;L;Lambertseterbanen;Vestover;L0261T;59.915219;10.775172;59.914748;10.774297;2613;F;Sporfelt;T273;72;TØY2;TØY;Tøyen;59.915626;10.775818;77
+L0274T;Utg;L;Lambertseterbanen;Østover;L0278T;59.915986;10.776487;59.916317;10.77701;2732;F;Sporfelt;T274;47;;;;;;
+L0278T;Utg;L;Lambertseterbanen;Østover;L0294T;59.916317;10.77701;59.917146;10.77878;2779;F;Sporfelt;T278;137;;;;;;
+L0279T;Inng;L;Lambertseterbanen;Vestover;L0273T;59.916027;10.776453;59.915219;10.775172;2728;F;Sporfelt;T279;115;;;;;;
+L0293T;Inng;L;Lambertseterbanen;Vestover;L0279T;59.916766;10.777646;59.916027;10.776453;2834;F;Sporfelt;T293;106;;;;;;
+L0294T;Utg;L;Lambertseterbanen;Østover;L0314T;59.917146;10.77878;59.916944;10.782492;2916;F;Sporfelt;T294;220;;;;;;
+L0309T;Inng;L;Lambertseterbanen;Vestover;L0293T;59.917217;10.778922;59.916766;10.777646;2922;F;Sporfelt;T309;88;;;;;;
+L0314T;Utg;L;Lambertseterbanen;Østover;L0334T;59.916944;10.782492;59.915379;10.784074;3136;F;Sporfelt;T314;200;;;;;;
+L0315T;Inng;L;Lambertseterbanen;Vestover;L0309T;59.917209;10.78174;59.917217;10.778922;3084;F;Sporfelt;T315;162;;;;;;
+L0331T;Inng;L;Lambertseterbanen;Vestover;L0315T;59.91686;10.782794;59.917209;10.78174;3155;F;Sporfelt;T331;71;;;;;;
+L0334T;Utg;L;Lambertseterbanen;Østover;L0348T;59.915379;10.784074;59.914628;10.785146;3336;F;Sporfelt;T334;104;;;;;;
+L0347T;Inng;L;Lambertseterbanen;Vestover;L0331T;59.915675;10.783967;59.91686;10.782794;3305;F;Sporfelt;T347;150;;;;;;
+L0348T;Utg;L;Lambertseterbanen;Østover;L0356T;59.914628;10.785146;59.914072;10.786658;3440;F;Sporfelt;T348;105;;;;;;
+L0355T;Inng;L;Lambertseterbanen;Vestover;L0347T;59.914656;10.785193;59.915675;10.783967;3440;F;Sporfelt;T355;135;;;;;;
+L0356T;Utg;L;Lambertseterbanen;Østover;L0368T;59.914072;10.786658;59.913435;10.788733;3545;F;Sporfelt;T356;136;ENS1;ENS;Ensjø;59.913739;10.787741;19
+L0367T;Inng;L;Lambertseterbanen;Vestover;L0355T;59.914065;10.78683;59.914656;10.785193;3553;F;Sporfelt;T367;113;ENS2;ENS;Ensjø;59.91377;10.787791;19
+L0368T;Utg;L;Lambertseterbanen;Østover;L0386T;59.913435;10.788733;59.913231;10.791656;3681;F;Sporfelt;T368;170;;;;;;
+L0381T;Inng;L;Lambertseterbanen;Vestover;L0367T;59.913471;10.788768;59.914065;10.78683;3680;F;Sporfelt;T381;127;;;;;;
+L0386T;Utg;L;Lambertseterbanen;Østover;L0400T;59.913231;10.791656;59.913481;10.794226;3851;F;Sporfelt;T386;147;;;;;;
+L0393T;Inng;L;Lambertseterbanen;Vestover;L0381T;59.913209;10.790992;59.913471;10.788768;3810;F;Sporfelt;T393;130;;;;;;
+L0400T;Utg;L;Lambertseterbanen;Østover;L0416T;59.913481;10.794226;59.913329;10.79685;3998;F;Sporfelt;T400;148;;;;;;
+L0405T;Inng;L;Lambertseterbanen;Vestover;L0393T;59.913451;10.793006;59.913209;10.790992;3926;F;Sporfelt;T405;116;;;;;;
+L0415T;Inng;L;Lambertseterbanen;Vestover;L0405T;59.913498;10.795141;59.913451;10.793006;4046;F;Sporfelt;T415;120;;;;;;
+L0416T;Utg;L;Lambertseterbanen;Østover;L0430T;59.913329;10.79685;59.913026;10.799437;4146;F;Sporfelt;T416;149;;;;;;
+L0430T;Utg;L;Lambertseterbanen;Østover;L0444T;59.913026;10.799437;59.912535;10.801914;4295;F;Sporfelt;T430;149;HFY1;HFY;Helsfyr;59.91273;10.800933;32
+L0433T;Inng;L;Lambertseterbanen;Vestover;L0415T;59.913365;10.796854;59.913498;10.795141;4143;F;Sporfelt;T433;97;;;;;;
+L0444T;Utg;L;Lambertseterbanen;Østover;L0456T;59.912535;10.801914;59.912076;10.803459;4444;F;Sporfelt;T444;101;;;;;;
+L0445T;Inng;L;Lambertseterbanen;Vestover;L0433T;59.912965;10.79996;59.913365;10.796854;4323;F;Sporfelt;T445;180;;;;;;
+L0455T;Inng;L;Lambertseterbanen;Vestover;L0445T;59.912572;10.801938;59.912965;10.79996;4442;F;Sporfelt;T455;119;HFY2;HFY;Helsfyr;59.912764;10.800974;32
+L0456T;Utg;L;Lambertseterbanen;Østover;L0466T;59.912076;10.803459;59.911234;10.804744;4545;F;Sporfelt;T456;119;;;;;;
+L0465T;HLF midtspor;L;Lambertseterbanen;Østover;;59.911165;10.804904;;;4562.943;F;Sporfelt;T465;;HFYX;HFY;Helsfyr;;;32
+L0466T;Utg;L;Lambertseterbanen;Østover;L0476T;59.911234;10.804744;59.910628;10.80519;4664;F;Sporfelt;T466;72;;;;;;
+L0469T;Inng;L;Lambertseterbanen;Vestover;L0455T;59.912181;10.803559;59.912572;10.801938;4543;F;Sporfelt;T469;101;;;;;;
+L0473T;Inng;L;Lambertseterbanen;Vestover;L0469T;59.911146;10.804997;59.912181;10.803559;4686;F;Sporfelt;T473;143;;;;;;
+L0476T;Utg;L;Lambertseterbanen;Østover;L0480T;59.910628;10.80519;59.909724;10.806092;4736;F;Sporfelt;T476;114;;;;;;
+L0480T;Utg;L;Lambertseterbanen;Østover;L0496T;59.909724;10.806092;59.909333;10.807747;4850;F;Sporfelt;L480;104059;;;;;;
+L0487T;Inng;L;Lambertseterbanen;Vestover;L0473T;59.910747;10.805269;59.911146;10.804997;4733;F;Sporfelt;T487;47;;;;;;
+L0496T;Utg;L;Lambertseterbanen;Østover;L0512T;59.909333;10.807747;59.909237;10.810599;4954.059;F;Sporfelt;L496;159941;;;;;;
+L0497T;Inng;L;Lambertseterbanen;Vestover;L0487T;59.909815;10.806283;59.910747;10.805269;4853;F;Sporfelt;L497;120;;;;;;
+L0511T;Inng;L;Lambertseterbanen;Vestover;L0497T;59.909421;10.807904;59.909815;10.806283;4955;F;Sporfelt;L511;102;;;;;;
+L0512T;Utg;L;Lambertseterbanen;Østover;L0536T;59.909237;10.810599;59.909021;10.813944;5114;F;Sporfelt;L512;189;BRY1;BRY;Brynseng;59.909178;10.81179;13
+L0525T;Inng;L;Lambertseterbanen;Vestover;L0511T;59.909279;10.810516;59.909421;10.807904;5102;F;Sporfelt;L525;147;BRY2;BRY;Brynseng;59.909217;10.811725;13
+L0536T;Utg;L;Lambertseterbanen;Østover;L0564T;59.909021;10.813944;59.906962;10.818102;5303;F;Sporfelt;L536;335289;;;;;;
+L053A;L053A;L;Lambertseterbanen;Østover;;59.913511;10.742049;;;566.84;V;Sporveksel;TP053A;;;;;;;
+L053B;L053B;L;Lambertseterbanen;Vestover;;59.91361;10.741213;;;517.51;V;Sporveksel;TP053B;;;;;;;
+L054A;L054A;L;Lambertseterbanen;Vestover;;59.913547;10.74206;;;565.42;V;Sporveksel;TP054A;;;;;;;
+L054B;L054B;L;Lambertseterbanen;Østover;;59.913575;10.741203;;;518.94;V;Sporveksel;TP054B;;;;;;;
+L0555T;Inng;L;Lambertseterbanen;Vestover;L0525T;59.909148;10.813059;59.909279;10.810516;5245;F;Sporfelt;L555;143;;;;;;
+L0564T;Utg;L;Lambertseterbanen;Østover;L0598T;59.906962;10.818102;59.904181;10.820041;5638.289;F;Sporfelt;L564;348711;HØY1;HØY;Høyenhall;59.905925;10.81974;36
+L0595T;Inng;L;Lambertseterbanen;Vestover;L0555T;59.907497;10.816804;59.909148;10.813059;5539;F;Sporfelt;L595;294;HØY2;HØY;Høyenhall;59.905925;10.819818;36
+L0598T;Utg;L;Lambertseterbanen;Østover;L0624T;59.904181;10.820041;59.902015;10.818453;5987;F;Sporfelt;L598;258096;;;;;;
+L0624T;Utg;L;Lambertseterbanen;Østover;L0650T;59.902015;10.818453;59.900095;10.816015;6245.096;F;Sporfelt;L624;253904;;;;;;
+L0635T;Inng;L;Lambertseterbanen;Vestover;L0595T;59.904446;10.820208;59.907497;10.816804;5956;F;Sporfelt;L635;417;;;;;;
+L0650T;Utg;L;Lambertseterbanen;Østover;L0662T;59.900095;10.816015;59.899182;10.814779;6499;F;Sporfelt;L650;123;;;;;;
+L0653T;Inng;L;Lambertseterbanen;Vestover;L0635T;59.901147;10.817527;59.904446;10.820208;6356;F;Sporfelt;L653;400;;;;;;
+L0662T;Utg;L;Lambertseterbanen;Østover;L0686T;59.899182;10.814779;59.897641;10.81198;6622;F;Sporfelt;L662;233;MAN1;MAN;Manglerud;59.898021;10.812739;50
+L0673T;Inng;L;Lambertseterbanen;Vestover;L0653T;59.899914;10.815862;59.901147;10.817527;6522;F;Sporfelt;L673;166;;;;;;
+L0686T;Utg;L;Lambertseterbanen;Østover;L0718T;59.897641;10.81198;59.896081;10.807246;6855;F;Sporfelt;L686;321;;;;;;
+L0699T;Inng;L;Lambertseterbanen;Vestover;L0673T;59.898372;10.813539;59.899914;10.815862;6738;F;Sporfelt;L699;216;MAN2;MAN;Manglerud;59.897979;10.812754;50
+L0718T;Utg;L;Lambertseterbanen;Østover;L0728T;59.896081;10.807246;59.895846;10.805727;7176;F;Sporfelt;L718;89;;;;;;
+L0723T;Inng;L;Lambertseterbanen;Vestover;L0699T;59.896725;10.810029;59.898372;10.813539;7007;F;Sporfelt;L723;269;;;;;;
+L0728T;Utg;L;Lambertseterbanen;Østover;L0738T;59.895846;10.805727;59.895528;10.803678;7265;F;Sporfelt;L728;120432;RYE1;RYE;Ryen;59.89569;10.80472;66
+L0731T;Inng;L;Lambertseterbanen;Vestover;L0723T;59.896031;10.807169;59.896725;10.810029;7186;F;Sporfelt;L731;179;;;;;;
+L0738T;Utg;L;Lambertseterbanen;Østover;L0746T;59.895528;10.803678;59.895156;10.802264;7385.432;F;Sporfelt;L738;89568;;;;;;
+L0743T;Inng;L;Lambertseterbanen;Vestover;L0731T;59.895818;10.805786;59.896031;10.807169;7267;F;Sporfelt;L743;81;RYE2;RYE;Ryen;59.895651;10.804711;66
+L0746T;Utg;L;Lambertseterbanen;Østover;L0774T;59.895156;10.802264;59.892677;10.80133;7475;F;Sporfelt;L746;301;;;;;;
+L0747T;Inng;L;Lambertseterbanen;Vestover;L0743T;59.895487;10.803652;59.895818;10.805786;7392;F;Sporfelt;L747;125;;;;;;
+L0755T;Inng;L;Lambertseterbanen;Vestover;L0747T;59.895023;10.802083;59.895487;10.803652;7495;F;Sporfelt;L755;103;;;;;;
+L0769T;Inng;L;Lambertseterbanen;Vestover;L0755T;59.894502;10.801366;59.895023;10.802083;7566;F;Sporfelt;L769;71;;;;;;
+L0774T;Utg;L;Lambertseterbanen;Østover;L0808T;59.892677;10.80133;59.889928;10.801911;7776;F;Sporfelt;L774;309;;;;;;
+L0789T;Inng;L;Lambertseterbanen;Vestover;L0769T;59.893282;10.801065;59.894502;10.801366;7705;F;Sporfelt;L789;139;;;;;;
+L0808T;Utg;L;Lambertseterbanen;Østover;L0844T;59.889928;10.801911;59.88677;10.800674;8085;F;Sporfelt;L808;360;BRA1;BRA;Brattlikollen;59.8874;10.801034;12
+L0815T;Inng;L;Lambertseterbanen;Vestover;L0789T;59.891346;10.801888;59.893282;10.801065;7926;F;Sporfelt;L815;221;;;;;;
+L0844T;Utg;L;Lambertseterbanen;Østover;L0872T;59.88677;10.800674;59.884437;10.80205;8445;F;Sporfelt;L844;282;;;;;;
+L0863T;Inng;L;Lambertseterbanen;Vestover;L0815T;59.889105;10.801886;59.891346;10.801888;8176;F;Sporfelt;L863;250;BRA2;BRA;Brattlikollen;59.887393;10.801104;12
+L087;L087;L;Lambertseterbanen;Vestover;;59.91272;10.747469;;;885.46;V;Sporveksel;TP87;;;;;;;
+L0872T;Utg;L;Lambertseterbanen;Østover;L0906T;59.884437;10.80205;59.881721;10.804976;8727;F;Sporfelt;L872;350;;;;;;
+L088;L088;L;Lambertseterbanen;Østover;;59.912641;10.747606;;;896.49;V;Sporveksel;TP88;;;;;;;
+L0903T;Inng;L;Lambertseterbanen;Vestover;L0863T;59.885069;10.801373;59.889105;10.801886;8644;F;Sporfelt;L903;468;;;;;;
+L0906T;Utg;L;Lambertseterbanen;Østover;L0946T;59.881721;10.804976;59.878353;10.806759;9077;F;Sporfelt;L906;390;KAR1;KAR;Karlsrud;59.880742;10.805225;40
+L0939T;Inng;L;Lambertseterbanen;Vestover;L0903T;59.881998;10.804977;59.885069;10.801373;9045;F;Sporfelt;L939;401;KAR2;KAR;Karlsrud;59.880743;10.805299;40
+L0946T;Utg;L;Lambertseterbanen;Østover;L0956T;59.878353;10.806759;59.877559;10.807327;9467;F;Sporfelt;L946;94;;;;;;
+L0955T;Inng;L;Lambertseterbanen;Vestover;L0939T;59.879039;10.806344;59.881998;10.804977;9385;F;Sporfelt;L955;340;;;;;;
+L0956T;Utg;L;Lambertseterbanen;Østover;L0962T;59.877559;10.807327;59.877086;10.807666;9561;F;Sporfelt;L956;56;;;;;;
+L0962T;Utg;L;Lambertseterbanen;Østover;L0984T;59.877086;10.807666;59.875144;10.809056;9617;F;Sporfelt;L962;230;LAMA;LAM;Lambertseter;;;43
+L0967T;Inng;L;Lambertseterbanen;Vestover;L0955T;59.877595;10.807381;59.879039;10.806344;9556;F;Sporfelt;L967;171;;;;;;
+L0984T;Utg;L;Lambertseterbanen;Østover;L1012T;59.875144;10.809056;59.872779;10.810749;9847;F;Sporfelt;L984;280;LAM1;LAM;Lambertseter;59.87337;10.810326;43
+L0993T;Inng;L;Lambertseterbanen;Vestover;L0967T;59.87659;10.808101;59.877595;10.807381;9675;F;Sporfelt;L993;119;LAMB;LAM;Lambertseter;;;43
+L1012T;Utg;L;Lambertseterbanen;Østover;L1044T;59.872779;10.810749;59.869987;10.811991;10127;F;Sporfelt;L1012;320;;;;;;
+L1019T;Inng;L;Lambertseterbanen;Vestover;L0993T;59.87431;10.809732;59.87659;10.808101;9945;F;Sporfelt;L1019;270;LAM2;LAM;Lambertseter;59.873381;10.810397;43
+L1043T;Inng;L;Lambertseterbanen;Vestover;L1019T;59.872274;10.811189;59.87431;10.809732;10186;F;Sporfelt;L1043;241;;;;;;
+L1044T;Utg;L;Lambertseterbanen;Østover;L1070T;59.869987;10.811991;59.867824;10.813668;10447;F;Sporfelt;L1044;261;MUN1;MUN;Munkelia;59.868972;10.812553;53
+L104A;L104A;L;Lambertseterbanen;Vestover;;59.912284;10.750564;;;1067.72;V;Sporveksel;TP104A;;;;;;;
+L104B;L104B;L;Lambertseterbanen;Østover;;59.912291;10.749659;;;1019.04;V;Sporveksel;TP104B;;;;;;;
+L105A;L105A;L;Lambertseterbanen;Østover;;59.912245;10.750556;;;1069.46;V;Sporveksel;TP105A;;;;;;;
+L105B;L105B;L;Lambertseterbanen;Vestover;;59.91233;10.749668;;;1017.3;V;Sporveksel;TP105B;;;;;;;
+L1067T;Inng;L;Lambertseterbanen;Vestover;L1043T;59.869979;10.812068;59.872274;10.811189;10447;F;Sporfelt;L1067;261;MUN2;MUN;Munkelia;59.868984;10.81262;53
+L1070T;Utg;L;Lambertseterbanen;Østover;L1096T;59.867824;10.813668;59.867242;10.816978;10708;F;Sporfelt;L1070;205;;;;;;
+L1093T;Inng;L;Lambertseterbanen;Vestover;L1067T;59.867982;10.813507;59.869979;10.812068;10685;F;Sporfelt;L1093;238;;;;;;
+L1096T;Utg;L;Lambertseterbanen;Østover;L1098T;59.867242;10.816978;59.867308;10.818378;10913;F;Sporfelt;L1096;79;;;;;;
+L1098T;Utg;L;Lambertseterbanen;Østover;L1104T;59.867308;10.818378;59.867263;10.819678;10992;F;Sporfelt;L1098;72748;;;;;;
+L1100A;L1100A;L;Lambertseterbanen;Østover;;59.867309;10.818343;;;10989.99;V;Sporveksel;L1100A;;;;;;;
+L1100B;L1100B;L;Lambertseterbanen;Vestover;;59.867317;10.819368;;;11040.33;V;Sporveksel;L1100B;;;;;;;
+L1101A;L1101A;L;Lambertseterbanen;Vestover;;59.867283;10.817053;;;10910.05;V;Sporveksel;L1101A;;;;;;;
+L1101B;L1101B;L;Lambertseterbanen;Østover;;59.867311;10.818288;;;10986.9;V;Sporveksel;L1101B;;;;;;;
+L1103T;Inng;L;Lambertseterbanen;Vestover;L1093T;59.867282;10.817034;59.867982;10.813507;10909;F;Sporfelt;L1103;224;;;;;;
+L1104T;Utg;L;Lambertseterbanen;Østover;R0236T;59.867263;10.819678;59.932853;10.710604;11064.748;F;Sporfelt;L1104;8687.914;BKR1;BKR;Bergkrystallen;59.867135;10.820974;5
+L1109T;Inng;L;Lambertseterbanen;Vestover;L1103T;59.867347;10.818293;59.867282;10.817034;10980;F;Sporfelt;L1109;71;;;;;;
+L1117T;Inng;L;Lambertseterbanen;Vestover;L1109T;59.8673;10.819681;59.867347;10.818293;11058;F;Sporfelt;L1117;78;BKR2;BKR;Bergkrystallen;59.867172;10.820977;5
+L171A;L171A;L;Lambertseterbanen;Østover;;59.9127;10.762138;;;1735.42;V;Sporveksel;TP171A;;;;;;;
+L171B;L171B;L;Lambertseterbanen;Vestover;;59.91277;10.761358;;;1689.44;V;Sporveksel;TP171B;;;;;;;
+L265;L265;L;Lambertseterbanen;Vestover;;59.914881;10.774595;;;2563.33;V;Sporveksel;TP265;;;;;;;
+L276;L276;L;Lambertseterbanen;Østover;;59.915995;10.7765;;;2733.2;V;Sporveksel;TP276;;;;;;;
+L277;L277;L;Lambertseterbanen;Vestover;;59.916013;10.776432;;;2726.1;V;Sporveksel;G283;;TØY4;TØY;Tøyen;59.91616;10.77607;77
+L317;L317;L;Lambertseterbanen;Vestover;;59.916963;10.782557;;;3137.43;V;Sporveksel;TP317;;TØYY;TØY;Tøyen;;;77
+L350A;L350A;L;Lambertseterbanen;Østover;;59.914575;10.78527;;;3449.11;V;Sporveksel;TP350A;;;;;;;
+L350B/351A;L350B/351A;L;Lambertseterbanen;Vestover;;59.914344;10.785977;;;3495.99;V;Sporveksel;TP350B;;;;;;;
+L351B;L351B;L;Lambertseterbanen;Østover;;59.91407;10.786663;;;3545.31;V;Sporveksel;TP351B;;;;;;;
+L452A;L452A;L;Lambertseterbanen;Østover;;59.912372;10.802616;;;4487.34;V;Sporveksel;TP452A;;;;;;;
+L452B;L452B;L;Lambertseterbanen;Vestover;;59.912067;10.803633;;;4554.31;V;Sporveksel;TP452B;;;;;;;
+L453A;L453A;L;Lambertseterbanen;Vestover;;59.912415;10.802731;;;4489.71;V;Sporveksel;TP453A;;;;;;;
+L453B;L453B;L;Lambertseterbanen;Vestover;;59.912027;10.803737;;;4561.89;V;Sporveksel;TP453B;;;;;;;
+L470A;L470A;L;Lambertseterbanen;Vestover;;59.91109;10.804955;;;4691.15;V;Sporveksel;TP470A;;;;;;;
+L470B;L470B;L;Lambertseterbanen;Østover;;59.910619;10.805196;;;4737.06;V;Sporveksel;TP470B;;;;;;;
+L471A;L471A;L;Lambertseterbanen;Vestover;;59.911153;10.804913;;;4683.82;V;Sporveksel;TP471A;;;;;;;
+L471B;L471B;L;Lambertseterbanen;Vestover;;59.910746;10.80527;;;4733.18;V;Sporveksel;TP471B;;;;;;;
+L472A;L472A;L;Lambertseterbanen;Østover;;59.910854;10.805036;;;4709.37;V;Sporveksel;TP472A;;;;;;;
+L472B;L472B;E;Etterstad driftsområde;Østover;;59.910358;10.80526;;;;V;Sporveksel;;;;;;;;
+L474;L474;L;Lambertseterbanen;Østover;;59.91059;10.805216;;;4740.5;V;Sporveksel;TP474;;;;;;;
+L474 P;L474;Ø;Østensjøbanen;Østover;;59.91059;10.805216;;;;V;Sporveksel;TP474 (duplikat);;;;;;;
+L475;L475;L;Lambertseterbanen;Vestover;;59.910729;10.805281;;;4735.12;V;Sporveksel;TP475;;;;;;;
+L475 P;L475;Ø;Østensjøbanen;Vestover;;59.910729;10.805281;;;;V;Sporveksel;TP475 (duplikat);;;;;;;
+L642A;L642A;L;Lambertseterbanen;Østover;;59.900733;10.81688;;;6413.01;V;Sporveksel;LP642A;;;;;;;
+L642B;L642B;L;Lambertseterbanen;Vestover;;59.900285;10.81636;;;6472.14;V;Sporveksel;LP642B;;;;;;;
+L655A;L655A;L;Lambertseterbanen;Vestover;;59.899638;10.815488;;;6559.23;V;Sporveksel;LP655A;;;;;;;
+L655B;L655B;L;Lambertseterbanen;Østover;;59.89922;10.81483;;;6616.98;V;Sporveksel;LP655B;;;;;;;
+L713A;L713A;L;Lambertseterbanen;Vestover;;59.895961;10.806716;;;7212.55;V;Sporveksel;LP713A;;;;;;;
+L713B;L713B;L;Lambertseterbanen;Østover;;59.895845;10.805725;;;7265.14;V;Sporveksel;LP713B;;;;;;;
+L740;L740;L;Lambertseterbanen;Østover;;59.895527;10.803671;;;7385.45;V;Sporveksel;LP740;;;;;;;
+L742B;L742B;L;Lambertseterbanen;Østover;;59.895413;10.803067;;;7421.56;V;Sporveksel;LP742B;;;;;;;
+L742B/L749A;L742B/L749A;L;Lambertseterbanen;Vestover;;59.895028;10.802092;;;7494.29;V;Sporveksel;LP749A;;;;;;;
+L749B;L749B;Y;Ryen driftsområde;Østover;;59.894553;10.801502;;;;V;Sporveksel;LP749B;;;;;;;
+L951A;L951A;L;Lambertseterbanen;Østover;;59.877845;10.807122;;;9527.14;V;Sporveksel;LP951A;;;;;;;
+L951B;L951B;L;Lambertseterbanen;Vestover;;59.877258;10.807622;;;9595.9;V;Sporveksel;LP951B;;;;;;;
+L952A;L952A;L;Lambertseterbanen;Vestover;;59.877132;10.807713;;;9610.9;V;Sporveksel;LP952A;;;;;;;
+L952B;L952B;L;Lambertseterbanen;Østover;;59.876519;10.808072;;;9684.22;V;Sporveksel;LP952B;;;;;;;
+M ENDE U;C-Spor3-Ende;M;Majorstuen driftsområde;Østover;;59.93268;10.710528;;;2366.348;E;Endepunkt;;;;;;;;
+M016;M016;M;Majorstuen driftsområde;Østover;;59.931575;10.71219;;;;V;Sporveksel;;;;;;;;
+M019;M019;M;Majorstuen driftsområde;Østover;;59.931524;10.712056;;;;V;Sporveksel;;;;;;;;
+M020;M020;M;Majorstuen driftsområde;Østover;;59.931853;10.711632;;;;V;Sporveksel;;;;;;;;
+M022;M022;M;Majorstuen driftsområde;Østover;;59.931856;10.71171;;;;V;Sporveksel;;;;;;;;
+M028;M028;M;Majorstuen driftsområde;Østover;;59.932235;10.710804;;;;V;Sporveksel;;;;;;;;
+M031;M031;M;Majorstuen driftsområde;Østover;;59.93032;10.713356;;;;V;Sporveksel;;;;;;;;
+M033;M033;M;Majorstuen driftsområde;Østover;;59.930452;10.713141;;;;V;Sporveksel;;;;;;;;
+M034;M034;M;Majorstuen driftsområde;Østover;;59.931228;10.712596;;;;V;Sporveksel;;;;;;;;
+M035;M035;M;Majorstuen driftsområde;Østover;;59.930617;10.712926;;;;V;Sporveksel;;;;;;;;
+M036;M036;M;Majorstuen driftsområde;Østover;;59.931066;10.712769;;;;V;Sporveksel;;;;;;;;
+M038;M038;M;Majorstuen driftsområde;Østover;;59.930978;10.71279;;;;V;Sporveksel;;;;;;;;
+M039;M039;M;Majorstuen driftsområde;Østover;;59.930773;10.71275;;;;V;Sporveksel;;;;;;;;
+M040;M040;M;Majorstuen driftsområde;Østover;;59.932695;10.709525;;;;V;Sporveksel;;;;;;;;
+M041;M041;M;Majorstuen driftsområde;Østover;;59.930744;10.712668;;;;V;Sporveksel;;;;;;;;
+M042;M042;M;Majorstuen driftsområde;Østover;;59.932829;10.709138;;;;V;Sporveksel;;;;;;;;
+M045;M045;M;Majorstuen driftsområde;Østover;;59.930876;10.712453;;;;V;Sporveksel;;;;;;;;
+M047;M047;M;Majorstuen driftsområde;Østover;;59.930922;10.712581;;;;V;Sporveksel;;;;;;;;
+M051;M051;M;Majorstuen driftsområde;Østover;;59.93236;10.710701;;;;V;Sporveksel;;;;;;;;
+M054;M054;M;Majorstuen driftsområde;Østover;;59.932496;10.710101;;;;V;Sporveksel;;;;;;;;
+M056;M056;M;Majorstuen driftsområde;Østover;;59.932596;10.709813;;;;V;Sporveksel;;;;;;;;
+M058;M058;M;Majorstuen driftsområde;Østover;;59.932697;10.709445;;;;V;Sporveksel;;;;;;;;
+M059;M059;M;Majorstuen driftsområde;Østover;;59.932085;10.711263;;;;V;Sporveksel;;;;;;;;
+M060;M060;M;Majorstuen driftsområde;Østover;;59.932246;10.711005;;;;V;Sporveksel;;;;;;;;
+M061;M061;M;Majorstuen driftsområde;Østover;;59.932293;10.710929;;;;V;Sporveksel;;;;;;;;
+M063;M063;M;Majorstuen driftsområde;Østover;;59.932489;10.710413;;;;V;Sporveksel;;;;;;;;
+R ENDE I;Inng.ende;R;Røabanen;Østover;;59.939449;10.608112;;;9640;E;Endepunkt;;;;;;;;
+R ENDE U;Utg.ende;R;Røabanen;Vestover;;59.939486;10.608124;;;9662;E;Endepunkt;;;;;;;;
+R0234T;Utg;R;Røabanen;Vestover;R0240T;59.932453;10.71124;59.933083;10.71013;2319.92;F;Sporfelt;T234;94.08;;;;;;
+R0236T;Utg;R;Røabanen;Vestover;R0254T;59.932853;10.710604;59.933323;10.707892;2376.834;F;Sporfelt;T236;169206;;;;;;
+R0240T;Utg;R;Røabanen;Vestover;R0278T;59.933083;10.71013;59.933083;10.703462;2414;F;Sporfelt;R240;384;MAJR;MAJ;Majorstuen;;;48
+R0241T;Inng;R;Røabanen;Østover;;59.932937;10.709834;;;2406.431;F;Sporfelt;T241;;;;;;;
+R0254T;Utg;R;Røabanen;Vestover;R0298T;59.933323;10.707892;59.933849;10.700317;2546.04;F;Sporfelt;R254;447808;;;;;;
+R0257T;Inng;R;Røabanen;Østover;R0241T;59.933231;10.70736;59.932937;10.709834;2554;F;Sporfelt;T257;147569;MAJQ;MAJ;Majorstuen;;;48
+R0271T;Inng;R;Røabanen;Østover;R0257T;59.932992;10.70492;59.933231;10.70736;2693;F;Sporfelt;R271;139;;;;;;
+R0278T;Utg;R;Røabanen;Vestover;R0308T;59.933083;10.703462;59.93418;10.698712;2798;F;Sporfelt;R278;292848;;;;;;
+R0283T;Inng;R;Røabanen;Østover;R0271T;59.933174;10.702911;59.932992;10.70492;2810;F;Sporfelt;R283;117;;;;;;
+R0298T;Utg;R;Røabanen;Vestover;R0320T;59.933849;10.700317;59.934517;10.696621;2993.848;F;Sporfelt;R298;220.24;;;;;;
+R0299T;Inng;R;Røabanen;Østover;R0283T;59.933813;10.700277;59.933174;10.702911;2974;F;Sporfelt;R299;164;;;;;;
+R0308T;Utg;R;Røabanen;Vestover;R0332T;59.93418;10.698712;59.934791;10.694489;3090.848;F;Sporfelt;R308;246045;;;;;;
+R0309T;Inng;R;Røabanen;Østover;R0299T;59.934144;10.698672;59.933813;10.700277;3071;F;Sporfelt;R309;97;;;;;;
+R0320T;Utg;R;Røabanen;Vestover;R0350T;59.934517;10.696621;59.935426;10.691495;3214.088;F;Sporfelt;R320;304447;BOR2;BOR;Borgen;59.934659;10.695492;11
+R0321T;Inng;R;Røabanen;Østover;R0309T;59.934487;10.696567;59.934144;10.698672;3195;F;Sporfelt;R321;124;BOR1;BOR;Borgen;59.934624;10.695476;11
+R0332T;Utg;R;Røabanen;Vestover;R0368T;59.934791;10.694489;59.936098;10.688745;3336.893;F;Sporfelt;R332;353107;;;;;;
+R0333T;Inng;R;Røabanen;Østover;R0321T;59.934758;10.694437;59.934487;10.696567;3318;F;Sporfelt;R333;123;;;;;;
+R0350T;Utg;R;Røabanen;Vestover;R0384T;59.935426;10.691495;59.936795;10.68596;3518.535;F;Sporfelt;R350;345588;;;;;;
+R0353T;Inng;R;Røabanen;Østover;R0333T;59.935468;10.691139;59.934758;10.694437;3519;F;Sporfelt;R353;201;;;;;;
+R0368T;Utg;R;Røabanen;Vestover;R0396T;59.936098;10.688745;59.937317;10.683801;3690;F;Sporfelt;R368;308492;;;;;;
+R0373T;Inng;R;Røabanen;Østover;R0353T;59.936218;10.688067;59.935468;10.691139;3710;F;Sporfelt;R373;191;;;;;;
+R0384T;Utg;R;Røabanen;Vestover;R0414T;59.936795;10.68596;59.938032;10.681463;3864.123;F;Sporfelt;R384;289877;SME2;SME;Smestad;59.937093;10.684797;70
+R0393T;Inng;R;Røabanen;Østover;R0373T;59.937029;10.684895;59.936218;10.688067;3909;F;Sporfelt;R393;199;SME1;SME;Smestad;59.93726;10.683887;70
+R0396T;Utg;R;Røabanen;Vestover;R0432T;59.937317;10.683801;59.939196;10.679414;3998.492;F;Sporfelt;R396;329508;;;;;;
+R0405T;Inng;R;Røabanen;Østover;R0393T;59.937475;10.682806;59.937029;10.684895;4036;F;Sporfelt;R405;127;;;;;;
+R0414T;Utg;R;Røabanen;Vestover;R0448T;59.938032;10.681463;59.939562;10.676483;4154;F;Sporfelt;R414;343854;;;;;;
+R0427T;Inng;R;Røabanen;Østover;R0405T;59.938903;10.679999;59.937475;10.682806;4263;F;Sporfelt;R427;227;SMEA;SME;Smestad;;;70
+R0432T;Utg;R;Røabanen;Vestover;R0460T;59.939196;10.679414;59.94005;10.674987;4328;F;Sporfelt;R432;270854;SMEB;SME;Smestad;;;70
+R0448T;Utg;R;Røabanen;Vestover;R0470T;59.939562;10.676483;59.941025;10.674135;4497.854;F;Sporfelt;R448;220732;;;;;;
+R0449T;Inng;R;Røabanen;Østover;R0427T;59.939528;10.67641;59.938903;10.679999;4480;F;Sporfelt;R449;217;;;;;;
+R0451T;Inng;R;Røabanen;Østover;R0449T;59.939612;10.675996;59.939528;10.67641;4505.13;F;Sporfelt;R451;25.13;;;;;;
+R0459T;Inng;R;Røabanen;Østover;R0451T;59.940024;10.674923;59.939612;10.675996;4581;F;Sporfelt;R459;75.87;;;;;;
+R0460T;Utg;R;Røabanen;Vestover;R0488T;59.94005;10.674987;59.942469;10.673574;4598.854;F;Sporfelt;R460;284146;;;;;;
+R0470T;Utg;R;Røabanen;Vestover;R0502T;59.941025;10.674135;59.943638;10.672459;4718.586;F;Sporfelt;R470;309414;MAK2;MAK;Makrellbekken;59.941581;10.673933;49
+R0475T;Inng;R;Røabanen;Østover;R0459T;59.941379;10.673932;59.940024;10.674923;4744;F;Sporfelt;R475;163;MAK1;MAK;Makrellbekken;59.941873;10.673756;49
+R0487T;Inng;R;Røabanen;Østover;R0475T;59.942452;10.673505;59.941379;10.673932;4866;F;Sporfelt;R487;122;;;;;;
+R0488T;Utg;R;Røabanen;Vestover;R0514T;59.942469;10.673574;59.944483;10.67089;4883;F;Sporfelt;R488;274;;;;;;
+R0502T;Utg;R;Røabanen;Vestover;R0530T;59.943638;10.672459;59.945495;10.668686;5028;F;Sporfelt;R502;296357;;;;;;
+R0503T;Inng;R;Røabanen;Østover;R0487T;59.943611;10.672395;59.942452;10.673505;5010;F;Sporfelt;R503;144;;;;;;
+R0514T;Utg;R;Røabanen;Vestover;R0542T;59.944483;10.67089;59.946174;10.667044;5157;F;Sporfelt;R514;286329;;;;;;
+R0517T;Inng;R;Røabanen;Østover;R0503T;59.94457;10.67057;59.943611;10.672395;5158;F;Sporfelt;R517;148;;;;;;
+R0530T;Utg;R;Røabanen;Vestover;R0564T;59.945495;10.668686;59.946864;10.663541;5324.357;F;Sporfelt;R530;330242;HOL2;HOL;Holmen;59.945837;10.667927;33
+R0531T;Inng;R;Røabanen;Østover;R0517T;59.945448;10.668656;59.94457;10.67057;5303;F;Sporfelt;R531;145;HOL1;HOL;Holmen;59.945802;10.667871;33
+R0542T;Utg;R;Røabanen;Vestover;R0586T;59.946174;10.667044;59.946789;10.659789;5443.329;F;Sporfelt;R542;422219;;;;;;
+R0543T;Inng;R;Røabanen;Østover;R0531T;59.946129;10.667018;59.945448;10.668656;5422;F;Sporfelt;R543;119;;;;;;
+R0564T;Utg;R;Røabanen;Vestover;R0606T;59.946864;10.663541;59.946486;10.656062;5654.599;F;Sporfelt;R564;422619;;;;;;
+R0565T;Inng;R;Røabanen;Østover;R0543T;59.94682;10.663553;59.946129;10.667018;5632;F;Sporfelt;R565;210;;;;;;
+R0585T;Inng;R;Røabanen;Østover;R0565T;59.946755;10.659819;59.94682;10.663553;5842;F;Sporfelt;R585;210;;;;;;
+R0586T;Utg;R;Røabanen;Vestover;R0620T;59.946789;10.659789;59.9463;10.653784;5865.548;F;Sporfelt;R586;340098;;;;;;
+R0606T;Utg;R;Røabanen;Vestover;R0628T;59.946486;10.656062;59.946184;10.652353;6077.218;F;Sporfelt;R606;209782;HOV2;HOV;Hovseter;59.946398;10.654985;35
+R0607T;Inng;R;Røabanen;Østover;R0585T;59.946452;10.656092;59.946755;10.659819;6053;F;Sporfelt;R607;211;HOV1;HOV;Hovseter;59.946363;10.654997;35
+R0619T;Inng;R;Røabanen;Østover;R0607T;59.946265;10.653797;59.946452;10.656092;6183;F;Sporfelt;R619;130;;;;;;
+R0620T;Utg;R;Røabanen;Vestover;R0646T;59.9463;10.653784;59.946118;10.648935;6205.646;F;Sporfelt;R620;273817;;;;;;
+R0627T;Inng;R;Røabanen;Østover;R0619T;59.94615;10.652384;59.946265;10.653797;6263;F;Sporfelt;R627;80;;;;;;
+R0628T;Utg;R;Røabanen;Vestover;R0666T;59.946184;10.652353;59.9465;10.645627;6287;F;Sporfelt;R628;382.32;;;;;;
+R0646T;Utg;R;Røabanen;Vestover;R0678T;59.946118;10.648935;59.946891;10.64355;6479.463;F;Sporfelt;R646;313457;;;;;;
+R0647T;Inng;R;Røabanen;Østover;R0627T;59.946077;10.648878;59.94615;10.652384;6460;F;Sporfelt;R647;197;;;;;;
+R0665T;Inng;R;Røabanen;Østover;R0647T;59.946462;10.64559;59.946077;10.648878;6649;F;Sporfelt;R665;189;RØA1;RØA;Røa;59.94664;10.644615;62
+R0666T;Utg;R;Røabanen;Vestover;R0698T;59.9465;10.645627;59.948012;10.640788;6669.32;F;Sporfelt;R666;326011;RØA2;RØA;Røa;59.946677;10.644651;62
+R0677T;Inng;R;Røabanen;Østover;R0665T;59.946828;10.643647;59.946462;10.64559;6765;F;Sporfelt;R677;116;;;;;;
+R0678T;Utg;R;Røabanen;Vestover;R0718T;59.946891;10.64355;59.949292;10.638461;6792.92;F;Sporfelt;R678;395.08;;;;;;
+R0698T;Utg;R;Røabanen;Vestover;R0730T;59.948012;10.640788;59.950257;10.637237;6995.331;F;Sporfelt;R698;320999;;;;;;
+R0705T;Inng;R;Røabanen;Østover;R0677T;59.948376;10.640012;59.946828;10.643647;7036;F;Sporfelt;R705;271;;;;;;
+R0718T;Utg;R;Røabanen;Vestover;R0750T;59.949292;10.638461;59.951196;10.634207;7188;F;Sporfelt;R718;333754;EKR2;EKR;Ekraveien;59.949697;10.637841;17
+R0730T;Utg;R;Røabanen;Vestover;R0770T;59.950257;10.637237;59.950394;10.631382;7316.33;F;Sporfelt;R730;395095;;;;;;
+R0733T;Inng;R;Røabanen;Østover;R0705T;59.950422;10.636907;59.948376;10.640012;7324;F;Sporfelt;R733;288;EKR1;EKR;Ekraveien;59.95075;10.636152;17
+R0745T;Inng;R;Røabanen;Østover;R0733T;59.951039;10.635227;59.950422;10.636907;7441;F;Sporfelt;R745;117;;;;;;
+R0750T;Utg;R;Røabanen;Vestover;R0790T;59.951196;10.634207;59.949126;10.629097;7521.754;F;Sporfelt;R750;381552;;;;;;
+R0765T;Inng;R;Røabanen;Østover;R0745T;59.950625;10.63185;59.951039;10.635227;7648;F;Sporfelt;R765;207;;;;;;
+R0770T;Utg;R;Røabanen;Vestover;R0808T;59.950394;10.631382;59.948138;10.626261;7711.425;F;Sporfelt;R770;384.29;;;;;;
+R0787T;Inng;R;Røabanen;Østover;R0765T;59.949176;10.629393;59.950625;10.63185;7861;F;Sporfelt;R787;213;;;;;;
+R0790T;Utg;R;Røabanen;Vestover;R0816T;59.949126;10.629097;59.947703;10.625011;7903.306;F;Sporfelt;R790;277694;;;;;;
+R0808T;Utg;R;Røabanen;Vestover;R0830T;59.948138;10.626261;59.946903;10.622857;8095.715;F;Sporfelt;R808;235285;;;;;;
+R0809T;Inng;R;Røabanen;Østover;R0787T;59.948108;10.626298;59.949176;10.629393;8071;F;Sporfelt;R809;210;;;;;;
+R0816T;Utg;R;Røabanen;Vestover;R0852T;59.947703;10.625011;59.945285;10.620824;8181;F;Sporfelt;R816;365;EIK2;EIK;Eiksmarka;59.947355;10.624012;16
+R0817T;Inng;R;Røabanen;Østover;R0809T;59.947672;10.625049;59.948108;10.626298;8156;F;Sporfelt;R817;85;;;;;;
+R0829T;Inng;R;Røabanen;Østover;R0817T;59.94699;10.623164;59.947672;10.625049;8286;F;Sporfelt;R829;130;EIK1;EIK;Eiksmarka;59.946609;10.622406;16
+R0830T;Utg;R;Røabanen;Vestover;R0878T;59.946903;10.622857;59.943252;10.619062;8331;F;Sporfelt;R830;462;;;;;;
+R0841T;Inng;R;Røabanen;Østover;R0829T;59.946168;10.621762;59.94699;10.623164;8407;F;Sporfelt;R841;121;;;;;;
+R0852T;Utg;R;Røabanen;Vestover;R0902T;59.945285;10.620824;59.941405;10.616744;8546;F;Sporfelt;R852;492;;;;;;
+R0863T;Inng;R;Røabanen;Østover;R0841T;59.944487;10.620233;59.946168;10.621762;8613;F;Sporfelt;R863;206;;;;;;
+R0878T;Utg;R;Røabanen;Vestover;R0914T;59.943252;10.619062;59.94037;10.616154;8793;F;Sporfelt;R878;365;;;;;;
+R0883T;Inng;R;Røabanen;Østover;R0863T;59.94284;10.618624;59.944487;10.620233;8818;F;Sporfelt;R883;205;;;;;;
+R0902T;Utg;R;Røabanen;Vestover;R0928T;59.941405;10.616744;59.93949;10.614739;9038;F;Sporfelt;R902;249;LIJ2;LIJ;Lijordet;59.940844;10.616428;44
+R0903T;Inng;R;Røabanen;Østover;R0883T;59.941393;10.616812;59.94284;10.618624;9010;F;Sporfelt;R903;192;LIJ1;LIJ;Lijordet;59.940841;10.6165;44
+R0914T;Utg;R;Røabanen;Vestover;R0940T;59.94037;10.616154;59.939273;10.612536;9158;F;Sporfelt;R914;256;;;;;;
+R0915T;Inng;R;Røabanen;Østover;R0903T;59.940349;10.616217;59.941393;10.616812;9131;F;Sporfelt;R915;121;;;;;;
+R0928T;Utg;R;Røabanen;Vestover;R0940T;59.93949;10.614739;59.939273;10.612536;9287;F;Sporfelt;R928;127;;;;;;
+R0939T;Inng;R;Røabanen;Østover;R0915T;59.939228;10.612545;59.940349;10.616217;9391;F;Sporfelt;R939;260;;;;;;
+R0940T;Utg;R;Røabanen;Vestover;R0954T;59.939273;10.612536;59.939327;10.610215;9414;F;Sporfelt;R940;130;;;;;;
+R0949T;Inng;R;Røabanen;Østover;R0939T;59.939247;10.611115;59.939228;10.612545;9471;F;Sporfelt;R949;80;;;;;;
+R0953T;Inng;R;Røabanen;Østover;R0949T;59.939292;10.610189;59.939247;10.611115;9523;F;Sporfelt;R953;52;ØSÅ1;ØSÅ;Østerås;59.939374;10.609092;58
+R0954T;Utg;R;Røabanen;Vestover;;59.939327;10.610215;;;9544;F;Sporfelt;R954;;ØSÅ2;ØSÅ;Østerås;59.939407;10.609099;58
+R236;R236;H;Holmenkollbanen;Vestover;;59.932856;10.710599;;;2377.418;V;Sporveksel;TP236;;;;;;;
+R296A;R296A;R;Røabanen;Vestover;;59.933857;10.700279;;;2996.27;V;Sporveksel;RP296A;;;;;;;
+R296B/319A;R296B/319A;R;Røabanen;Østover;;59.933969;10.699521;;;3019.73;V;Sporveksel;RP296B;;;;;;;
+R319B;R319B;R;Røabanen;Vestover;;59.934184;10.698693;;;3092.14;V;Sporveksel;RP319B;;;;;;;
+R446;R446;R;Røabanen;Vestover;;59.939567;10.676449;;;4500;V;Sporveksel;RP446;;;;;;;
+R448;R448;R;Røabanen;Østover;;59.939532;10.676382;;;4481.62;V;Sporveksel;RP448;;;;;;;
+R496A;R496A;R;Røabanen;Østover;;59.942455;10.673503;;;4866.4;V;Sporveksel;RP496A;;;;;;;
+R496B/507A;R496B/507A;R;Røabanen;Vestover;;59.94307;10.673121;;;4954.64;V;Sporveksel;RP496B;;;;;;;
+R507B;R507B;R;Røabanen;Østover;;59.943615;10.67239;;;5010.47;V;Sporveksel;RP507B;;;;;;;
+R620A;R620A;R;Røabanen;Vestover;;59.9463;10.653781;;;6206.14;V;Sporveksel;RP620A;;;;;;;
+R620B/633A;R620B/633A;R;Røabanen;Østover;;59.946207;10.653077;;;6223.76;V;Sporveksel;RP620B;;;;;;;
+R633B;R633B;R;Røabanen;Vestover;;59.946184;10.652349;;;6287.24;V;Sporveksel;RP633B;;;;;;;
+R806A;R806A;R;Røabanen;Vestover;;59.948124;10.626219;;;8098.85;V;Sporveksel;RP806A;;;;;;;
+R806B/817A;R806B/817A;R;Røabanen;Østover;;59.947886;10.625664;;;8114.18;V;Sporveksel;RP806B;;;;;;;
+R817B;R817B;R;Røabanen;Vestover;;59.947708;10.625027;;;8179.95;V;Sporveksel;RP817B;;;;;;;
+R940A;R940A;R;Røabanen;Vestover;;59.939273;10.612483;;;9416.98;V;Sporveksel;RP940A;;;;;;;
+R940B/963A;R940B/963A;R;Røabanen;Østover;;59.939248;10.611091;;;9472.36;V;Sporveksel;RP940B;;;;;;;
+R963B;R963B;R;Røabanen;Vestover;;59.939326;10.610231;;;9543.1;V;Sporveksel;RP963B;;;;;;;
+S ENDE I;Inng.ende;S;Sognsvannsbanen;Østover;;59.967474;10.733835;;;8097;E;Endepunkt;;;;;;;;
+S ENDE U;Utg.ende;S;Sognsvannsbanen;Vestover;;59.967479;10.733906;;;8099;E;Endepunkt;;;;;;;;
+S0514T;Utg;S;Sognsvannsbanen;Vestover;S0540T;59.94968;10.737788;59.950232;10.73889;5025;F;Sporfelt;S514;87;;;;;;
+S0517T;Inng;S;Sognsvannsbanen;Østover;;59.949785;10.737565;;;5026;F;Sporfelt;S517;;;;;;;
+S0540T;Utg;S;Sognsvannsbanen;Vestover;S0552T;59.950232;10.73889;59.951139;10.743519;5112;F;Sporfelt;S540;285;;;;;;
+S0545T;Inng;S;Sognsvannsbanen;Østover;S0517T;59.950595;10.739468;59.949785;10.737565;5165;F;Sporfelt;S545;139;;;;;;
+S0552T;Utg;S;Sognsvannsbanen;Vestover;S0566T;59.951139;10.743519;59.95129;10.746402;5397;F;Sporfelt;S552;162;BER2;BER;Berg;59.951246;10.745368;5
+S0565T;Inng;S;Sognsvannsbanen;Østover;S0545T;59.9512;10.743866;59.950595;10.739468;5423;F;Sporfelt;S565;258;BER1;BER;Berg;59.951276;10.745181;5
+S0566T;Utg;S;Sognsvannsbanen;Vestover;S0602T;59.95129;10.746402;59.951326;10.7481;5559;F;Sporfelt;S566;95;;;;;;
+S0602T;Utg;S;Sognsvannsbanen;Vestover;S0618T;59.951326;10.7481;59.952949;10.752705;5654;F;Sporfelt;S602;361;;;;;;
+S0605T;Inng;S;Sognsvannsbanen;Østover;S0565T;59.951355;10.747537;59.9512;10.743866;5629;F;Sporfelt;S605;206;;;;;;
+S0615T;Inng;S;Sognsvannsbanen;Østover;S0605T;59.953375;10.752479;59.951355;10.747537;6062;F;Sporfelt;S615;433;TÅS1;TÅS;Tåsen;59.953887;10.752207;76
+S0618T;Utg;S;Sognsvannsbanen;Vestover;S0624T;59.952949;10.752705;59.954371;10.752037;6015;F;Sporfelt;S618;163;TÅS2;TÅS;Tåsen;59.953859;10.752309;76
+S0624T;Utg;S;Sognsvannsbanen;Vestover;S0648T;59.954371;10.752037;59.954978;10.751714;6178;F;Sporfelt;S624;70;;;;;;
+S0625T;Inng;S;Sognsvannsbanen;Østover;S0615T;59.954373;10.751949;59.953375;10.752479;6177;F;Sporfelt;S625;115;;;;;;
+S0641T;Inng;S;Sognsvannsbanen;Østover;S0625T;59.954954;10.751639;59.954373;10.751949;6244;F;Sporfelt;S641;67;;;;;;
+S0648T;Utg;S;Sognsvannsbanen;Vestover;S0698T;59.954978;10.751714;59.9574;10.74921;6248;F;Sporfelt;S648;306;ØSH2;ØSH;Østhorn;59.956936;10.749823;59
+S0657T;Inng;S;Sognsvannsbanen;Østover;S0641T;59.956289;10.750566;59.954954;10.751639;6405;F;Sporfelt;S657;161;ØSH1;ØSH;Østhorn;59.956733;10.749991;59
+S0685T;Inng;S;Sognsvannsbanen;Østover;S0657T;59.957525;10.748939;59.956289;10.750566;6570;F;Sporfelt;S685;165;;;;;;
+S0698T;Utg;S;Sognsvannsbanen;Vestover;S0722T;59.9574;10.74921;59.959205;10.74323;6554;F;Sporfelt;S698;404;;;;;;
+S0713T;Inng;S;Sognsvannsbanen;Østover;S0685T;59.958516;10.744758;59.957525;10.748939;6836;F;Sporfelt;S713;266;;;;;;
+S0722T;Utg;S;Sognsvannsbanen;Vestover;S0754T;59.959205;10.74323;59.96069;10.740083;6958;F;Sporfelt;S722;246;HLS2;HLS;Holstein;59.960456;10.740949;34
+S0737T;Inng;S;Sognsvannsbanen;Østover;S0713T;59.960153;10.741679;59.958516;10.744758;7090;F;Sporfelt;S737;254;HLS1;HLS;Holstein;59.960448;10.740827;34
+S0754T;Utg;S;Sognsvannsbanen;Vestover;S0772T;59.96069;10.740083;59.962564;10.735498;7204;F;Sporfelt;S754;340;;;;;;
+S0767T;Inng;S;Sognsvannsbanen;Østover;S0737T;59.961344;10.737519;59.960153;10.741679;7358;F;Sporfelt;S767;268;;;;;;
+S0772T;Utg;S;Sognsvannsbanen;Vestover;S0788T;59.962564;10.735498;59.964362;10.734775;7544;F;Sporfelt;S772;205;KRI2;KRI;Kringsjå;59.963669;10.734967;42
+S0788T;Utg;S;Sognsvannsbanen;Vestover;S0802T;59.964362;10.734775;59.965794;10.734377;7749;F;Sporfelt;S788;161;;;;;;
+S0791T;Inng;S;Sognsvannsbanen;Østover;S0767T;59.963169;10.735049;59.961344;10.737519;7613;F;Sporfelt;S791;255;KRI1;KRI;Kringsjå;59.963666;10.734896;42
+S0795T;Inng;S;Sognsvannsbanen;Østover;S0791T;59.965791;10.734306;59.963169;10.735049;7908;F;Sporfelt;S795;295;;;;;;
+S0801T;Inng;S;Sognsvannsbanen;Østover;S0795T;59.966315;10.734159;59.965791;10.734306;7967;F;Sporfelt;S801;59;;;;;;
+S0802T;Utg;S;Sognsvannsbanen;Vestover;S0808T;59.965794;10.734377;59.966682;10.734128;7910;F;Sporfelt;S802;100;;;;;;
+S0808T;Utg;S;Sognsvannsbanen;Vestover;;59.966682;10.734128;;;8010;F;Sporfelt;S808;;SOG2;SOG;Sognsvann;59.967145;10.733999;71
+S0811T;Inng;S;Sognsvannsbanen;Østover;S0801T;59.966671;10.73406;59.966315;10.734159;8007;F;Sporfelt;S811;40;SOG1;SOG;Sognsvann;59.967142;10.733928;71
+S614;S614;S;Sognsvannsbanen;Østover;;59.954395;10.751936;;;6179.622;V;Sporveksel;SP614;;;;;;;
+S623;S623;S;Sognsvannsbanen;Vestover;;59.95496;10.751724;;;6245.926;V;Sporveksel;SP623;;;;;;;
+S792/803;S792/803;S;Sognsvannsbanen;Østover;;59.966316;10.734159;;;7967.092;V;Sporveksel;SP792;;;;;;;
+S795;S795;S;Sognsvannsbanen;Vestover;;59.965817;10.734371;;;7912.612;V;Sporveksel;SP795;;;;;;;
+S798;S798;S;Sognsvannsbanen;Vestover;;59.96668;10.734129;;;8009.68;V;Sporveksel;;;;;;;;
+V0013T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.913336;10.741031;;;126;F;Sporfelt;T13;;STT3;STT;Stortinget;59.913134;10.742454;72
+V0017T;Indre;V;Vendesløyfe v/ Stortinget;Vestover;;59.913481;10.740286;;;186;F;Sporfelt;T17;;;;;;;
+V0017T Ø;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.913474;10.740162;;;177;F;Sporfelt;;;;;;;;
+V0017TV;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.913474;10.740162;;;177;F;Sporfelt;;;;;;;;
+V0031T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.914448;10.739123;;;314;F;Sporfelt;T31;;STTY;STT;Stortinget;;;72
+V0045T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.914928;10.741139;;;454;F;Sporfelt;T45;;;;;;;
+V0047T;Indre;V;Vendesløyfe v/ Stortinget;Vestover;;59.914853;10.741276;;;465;F;Sporfelt;T47;;STTX;STT;Stortinget;;;72
+V0053T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.914581;10.7422;;;525;F;Sporfelt;T53;;;;;;;
+V0059T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.914268;10.743072;;;585;F;Sporfelt;T59;;;;;;;
+V0066T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.912879;10.746541;;;-188;F;Sporfelt;T66;;;;;;;
+V0071T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.913615;10.744889;;;710;F;Sporfelt;T71;;STT4;STT;Stortinget;59.913916;10.74405;72
+V0077T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.913311;10.745732;;;768;F;Sporfelt;T77;;;;;;;
+V0085T;Ytre;V;Vendesløyfe v/ Stortinget;Østover;;59.912896;10.746897;;;848;F;Sporfelt;T85;;;;;;;
+Ø ENDE I;Inng.ende;Ø;Østensjøbanen;Vestover;;59.847488;10.831343;;;14618;E;Endepunkt;;;;;;;;
+Ø ENDE U;Utg.ende;Ø;Østensjøbanen;Østover;;59.847465;10.831286;;;14622;E;Endepunkt;;;;;;;;
+Ø0482T;Utg;Ø;Østensjøbanen;Østover;Ø0498T;59.91016;10.805595;59.909426;10.807901;4793;F;Sporfelt;O482;160;;;;;;
+Ø0498T;Utg;Ø;Østensjøbanen;Østover;Ø0514T;59.909426;10.807901;59.909336;10.810698;4953;F;Sporfelt;O498;157;;;;;;
+Ø0499T;Inng;Ø;Østensjøbanen;Vestover;;59.909859;10.806413;;;4853;F;Sporfelt;O499;;;;;;;
+Ø0513T;Inng;Ø;Østensjøbanen;Vestover;Ø0499T;59.909481;10.808572;59.909859;10.806413;4983;F;Sporfelt;O513;130;;;;;;
+Ø0514T;Utg;Ø;Østensjøbanen;Østover;Ø0528T;59.909336;10.810698;59.909094;10.814123;5110;F;Sporfelt;O514;194;BRY3;BRY;Brynseng;59.909286;10.811676;13
+Ø0523T;Inng;Ø;Østensjøbanen;Vestover;Ø0513T;59.909375;10.81066;59.909481;10.808572;5100;F;Sporfelt;O523;117;BRY4;BRY;Brynseng;59.909304;10.812029;13
+Ø0528T;Utg;Ø;Østensjøbanen;Østover;Ø0560T;59.909094;10.814123;59.90723;10.818185;5304;F;Sporfelt;O528;320;;;;;;
+Ø0560T;Utg;Ø;Østensjøbanen;Østover;Ø0592T;59.90723;10.818185;59.908705;10.822516;5624;F;Sporfelt;O560;305;BRYX;BRY;Brynseng;;;13
+Ø0563T;Inng;Ø;Østensjøbanen;Vestover;Ø0523T;59.909258;10.812936;59.909375;10.81066;5228;F;Sporfelt;O563;128;;;;;;
+Ø0592T;Utg;Ø;Østensjøbanen;Østover;Ø0618T;59.908705;10.822516;59.909889;10.828104;5929;F;Sporfelt;O592;342;;;;;;
+Ø0603T;Inng;Ø;Østensjøbanen;Vestover;Ø0563T;59.907273;10.818174;59.909258;10.812936;5615;F;Sporfelt;O603;387;BRYY;BRY;Brynseng;;;13
+Ø0618T;Utg;Ø;Østensjøbanen;Østover;Ø0644T;59.909889;10.828104;59.910135;10.830827;6271;F;Sporfelt;O618;155;HEL1;HEL;Hellerud;59.910034;10.829705;31
+Ø0629T;Inng;Ø;Østensjøbanen;Vestover;Ø0603T;59.909157;10.824039;59.907273;10.818174;6017;F;Sporfelt;O629;402;;;;;;
+Ø0643T;Inng;Ø;Østensjøbanen;Vestover;Ø0629T;59.909983;10.828735;59.909157;10.824039;6298;F;Sporfelt;O643;281;HEL2;HEL;Hellerud;59.910099;10.830019;31
+Ø0644T;Utg;Ø;Østensjøbanen;Østover;Ø0648T;59.910135;10.830827;59.910221;10.832118;6426;F;Sporfelt;O644;73;;;;;;
+Ø0648T;Utg;Ø;Østensjøbanen;Østover;Ø0672T;59.910221;10.832118;59.909228;10.835198;6499;F;Sporfelt;O648;216;;;;;;
+Ø0649T;Inng;Ø;Østensjøbanen;Vestover;Ø0643T;59.91017;10.830809;59.909983;10.828735;6416;F;Sporfelt;O649;118;;;;;;
+Ø0661T;Inng;Ø;Østensjøbanen;Vestover;Ø0649T;59.910257;10.8321;59.91017;10.830809;6489;F;Sporfelt;O661;73;;;;;;
+Ø0672T;Utg;Ø;Østensjøbanen;Østover;Ø0700T;59.909228;10.835198;59.906654;10.835993;6715;F;Sporfelt;O672;291;GOD1;GOD;Godlia;59.907269;10.835846;24
+Ø0687T;Inng;Ø;Østensjøbanen;Vestover;Ø0661T;59.909876;10.834269;59.910257;10.8321;6619.768;F;Sporfelt;O687;130768;;;;;;
+Ø0697T;Inng;Ø;Østensjøbanen;Vestover;Ø0687T;59.907844;10.835782;59.909876;10.834269;6869.971;F;Sporfelt;O697;250203;GOD2;GOD;Godlia;59.907184;10.83594;24
+Ø0700T;Utg;Ø;Østensjøbanen;Østover;Ø0710T;59.906654;10.835993;59.905933;10.836166;7006;F;Sporfelt;O700;81;;;;;;
+Ø0709T;Inng;Ø;Østensjøbanen;Vestover;Ø0697T;59.90665;10.836068;59.907844;10.835782;7003.971;F;Sporfelt;O709;134;;;;;;
+Ø0710T;Utg;Ø;Østensjøbanen;Østover;Ø0716T;59.905933;10.836166;59.905407;10.836292;7087;F;Sporfelt;O710;59;;;;;;
+Ø0715T;Inng;Ø;Østensjøbanen;Vestover;Ø0709T;59.905972;10.83623;59.90665;10.836068;7079.971;F;Sporfelt;O715;76;;;;;;
+Ø0716T;Utg;Ø;Østensjøbanen;Østover;Ø0736T;59.905407;10.836292;59.903132;10.836788;7146;F;Sporfelt;O716;255;;;;;;
+Ø0736T;Utg;Ø;Østensjøbanen;Østover;Ø0764T;59.903132;10.836788;59.9009;10.836925;7401;F;Sporfelt;O736;249;;;;;;
+Ø0745T;Inng;Ø;Østensjøbanen;Vestover;Ø0715T;59.904885;10.83649;59.905972;10.83623;7201.971;F;Sporfelt;O745;122;;;;;;
+Ø0764T;Utg;Ø;Østensjøbanen;Østover;Ø0790T;59.9009;10.836925;59.898484;10.836528;7650;F;Sporfelt;O764;270;SÅS1;SÅS;Skøyenåsen;59.899102;10.836626;68
+Ø0777T;Inng;Ø;Østensjøbanen;Vestover;Ø0745T;59.902607;10.836924;59.904885;10.83649;7457.213;F;Sporfelt;O777;255242;;;;;;
+Ø0790T;Utg;Ø;Østensjøbanen;Østover;Ø0826T;59.898484;10.836528;59.895408;10.837443;7920;F;Sporfelt;O790;348;;;;;;
+Ø0809T;Inng;Ø;Østensjøbanen;Vestover;Ø0777T;59.899786;10.836814;59.902607;10.836924;7771.792;F;Sporfelt;O809;314579;SÅS2;SÅS;Skøyenåsen;59.899061;10.836691;68
+Ø0826T;Utg;Ø;Østensjøbanen;Østover;Ø0864T;59.895408;10.837443;59.892513;10.840808;8268;F;Sporfelt;O826;382;OPP1;OPP;Oppsal;59.893051;10.839683;57
+Ø0849T;Inng;Ø;Østensjøbanen;Vestover;Ø0809T;59.896775;10.836884;59.899786;10.836814;8108.611;F;Sporfelt;O849;336819;;;;;;
+Ø0864T;Utg;Ø;Østensjøbanen;Østover;Ø0898T;59.892513;10.840808;59.89152;10.846265;8650;F;Sporfelt;O864;334;;;;;;
+Ø0875T;Inng;Ø;Østensjøbanen;Vestover;Ø0849T;59.893491;10.839015;59.896775;10.836884;8495.77;F;Sporfelt;O875;387159;OPP2;OPP;Oppsal;59.893006;10.839865;57
+Ø0897T;Inng;Ø;Østensjøbanen;Vestover;Ø0875T;59.892159;10.842659;59.893491;10.839015;8754.654;F;Sporfelt;O897;258884;;;;;;
+Ø0898T;Utg;Ø;Østensjøbanen;Østover;Ø0912T;59.89152;10.846265;59.890763;10.84761;8984;F;Sporfelt;O898;113;;;;;;
+Ø0911T;Inng;Ø;Østensjøbanen;Vestover;Ø0897T;59.891294;10.846767;59.892159;10.842659;9015.542;F;Sporfelt;O911;260888;;;;;;
+Ø0912T;Utg;Ø;Østensjøbanen;Østover;Ø0944T;59.890763;10.84761;59.887907;10.850699;9097;F;Sporfelt;O912;371;ULS1;ULS;Ulsrud;59.889609;10.849361;82
+Ø0943T;Inng;Ø;Østensjøbanen;Vestover;Ø0911T;59.890549;10.848084;59.891294;10.846767;9126.542;F;Sporfelt;O943;111;ULS2;ULS;Ulsrud;59.889555;10.849519;82
+Ø0944T;Utg;Ø;Østensjøbanen;Østover;Ø0978T;59.887907;10.850699;59.885334;10.848645;9468;F;Sporfelt;O944;310;;;;;;
+Ø0978T;Utg;Ø;Østensjøbanen;Østover;Ø1006T;59.885334;10.848645;59.884038;10.844254;9778;F;Sporfelt;O978;292;BØL1;BØL;Bøler;59.884283;10.845502;10
+Ø0979T;Inng;Ø;Østensjøbanen;Vestover;Ø0943T;59.887893;10.850768;59.890549;10.848084;9466.785;F;Sporfelt;O979;340243;;;;;;
+Ø1003T;Inng;Ø;Østensjøbanen;Vestover;Ø0979T;59.885088;10.848407;59.887893;10.850768;9808.097;F;Sporfelt;O1003;341312;BØL2;BØL;Bøler;59.884263;10.845599;10
+Ø1006T;Utg;Ø;Østensjøbanen;Østover;Ø1034T;59.884038;10.844254;59.882152;10.841461;10070;F;Sporfelt;O1006;280;;;;;;
+Ø1034T;Utg;Ø;Østensjøbanen;Østover;Ø1048T;59.882152;10.841461;59.881009;10.841245;10350;F;Sporfelt;O1034;128;;;;;;
+Ø1037T;Inng;Ø;Østensjøbanen;Vestover;Ø1003T;59.884006;10.844284;59.885088;10.848407;10072.248;F;Sporfelt;O1037;264151;;;;;;
+Ø1047T;Inng;Ø;Østensjøbanen;Vestover;Ø1037T;59.881667;10.841408;59.884006;10.844284;10401.887;F;Sporfelt;O1047;329639;;;;;;
+Ø1048T;Utg;Ø;Østensjøbanen;Østover;Ø1050T;59.881009;10.841245;59.880363;10.841258;10478;F;Sporfelt;O1048;72;;;;;;
+Ø1050T;Utg;Ø;Østensjøbanen;Østover;Ø1092T;59.880363;10.841258;59.875674;10.841925;10550;F;Sporfelt;O1050;530;BOG1;BOG;Bogerud;59.876261;10.842091;9
+Ø1057T;Inng;Ø;Østensjøbanen;Vestover;Ø1047T;59.881004;10.841317;59.881667;10.841408;10475.568;F;Sporfelt;O1057;73681;;;;;;
+Ø1073T;Inng;Ø;Østensjøbanen;Vestover;Ø1057T;59.880108;10.841362;59.881004;10.841317;10576.131;F;Sporfelt;O1073;100563;;;;;;
+Ø1092T;Utg;Ø;Østensjøbanen;Østover;Ø1134T;59.875674;10.841925;59.873335;10.841884;11080;F;Sporfelt;;261;;;;;;
+Ø1095T;Inng;Ø;Østensjøbanen;Vestover;Ø1073T;59.878606;10.841879;59.880108;10.841362;10746.414;F;Sporfelt;O1095;170283;;;;;;
+Ø1123T;Inng;Ø;Østensjøbanen;Vestover;Ø1095T;59.876842;10.842328;59.878606;10.841879;10945.99;F;Sporfelt;O1123;199576;BOG2;BOG;Bogerud;59.876229;10.842155;9
+Ø1134T;Utg;Ø;Østensjøbanen;Østover;Ø1142T;59.873335;10.841884;59.872636;10.841847;11341;F;Sporfelt;O1134;78;;;;;;
+Ø1142T;Utg;Ø;Østensjøbanen;Østover;Ø1148T;59.872636;10.841847;59.872098;10.841793;11419;F;Sporfelt;O1142;60;;;;;;
+Ø1143T;Inng;Ø;Østensjøbanen;Vestover;Ø1123T;59.874569;10.841894;59.876842;10.842328;11201.342;F;Sporfelt;O1143;255352;;;;;;
+Ø1144A;Ø1144A;Ø;Østensjøbanen;Østover;;59.872599;10.841843;;;;V;Sporveksel;O1144A;;;;;;;
+Ø1144B/1151A;Ø1144B/1151A;Ø;Østensjøbanen;Vestover;;59.872085;10.841863;;;;V;Sporveksel;O1144B;;;;;;;
+Ø1147T;Inng;Ø;Østensjøbanen;Vestover;Ø1143T;59.872532;10.841908;59.874569;10.841894;11427.652;F;Sporfelt;O1147;226.31;;;;;;
+Ø1148T;Utg;Ø;Østensjøbanen;Østover;Ø1154T;59.872098;10.841793;59.871076;10.841689;11479;F;Sporfelt;O1148;114;;;;;;
+Ø1151B;Ø1151B;Ø;Østensjøbanen;Østover;;59.871576;10.84174;;;;V;Sporveksel;O1151B;;;;;;;
+Ø1154T;Utg;Ø;Østensjøbanen;Østover;Ø1194T;59.871076;10.841689;59.868741;10.84084;11593;F;Sporfelt;O1154;265;;;;;;
+Ø1157T;Inng;Ø;Østensjøbanen;Vestover;Ø1147T;59.872084;10.841863;59.872532;10.841908;11477.831;F;Sporfelt;O1157;50179;;;;;;
+Ø1194T;Utg;Ø;Østensjøbanen;Østover;Ø1216T;59.868741;10.84084;59.865956;10.839914;11858;F;Sporfelt;O1194;315;SKU1;SKU;Skullerud;59.866767;10.840107;69
+Ø1205T;Inng;Ø;Østensjøbanen;Vestover;Ø1157T;59.871071;10.84176;59.872084;10.841863;11590.687;F;Sporfelt;O1205;112856;;;;;;
+Ø1216T;Utg;Ø;Østensjøbanen;Østover;Ø1262T;59.865956;10.839914;59.861961;10.84015;12173;F;Sporfelt;O1216;447;;;;;;
+Ø1249T;Inng;Ø;Østensjøbanen;Vestover;Ø1205T;59.867412;10.840338;59.871071;10.84176;12007.024;F;Sporfelt;O1249;416337;SKU2;SKU;Skullerud;59.866735;10.840171;69
+Ø1262T;Utg;Ø;Østensjøbanen;Østover;Ø1312T;59.861961;10.84015;59.857914;10.838351;12620;F;Sporfelt;O1262;480;SKUX;SKU;Skullerud;;;69
+Ø1293T;Inng;Ø;Østensjøbanen;Vestover;Ø1249T;59.863821;10.839815;59.867412;10.840338;12409;F;Sporfelt;O1293;401976;;;;;;
+Ø1312T;Utg;Ø;Østensjøbanen;Østover;Ø1358T;59.857914;10.838351;59.855631;10.831131;13100;F;Sporfelt;O1312;480;;;;;;
+Ø1339T;Inng;Ø;Østensjøbanen;Vestover;Ø1293T;59.8592;10.839973;59.863821;10.839815;12929.173;F;Sporfelt;O1339;520173;;;;;;
+Ø1358T;Utg;Ø;Østensjøbanen;Østover;Ø1406T;59.855631;10.831131;59.852208;10.827323;13580;F;Sporfelt;O1358;469;;;;;;
+Ø1385T;Inng;Ø;Østensjøbanen;Vestover;Ø1339T;59.856433;10.834139;59.8592;10.839973;13391;F;Sporfelt;O1385;461827;SKUY;SKU;Skullerud;;;69
+Ø1406T;Utg;Ø;Østensjøbanen;Østover;Ø1424T;59.852208;10.827323;59.850684;10.828408;14049;F;Sporfelt;O1406;181;;;;;;
+Ø1424T;Utg;Ø;Østensjøbanen;Østover;Ø1434T;59.850684;10.828408;59.849865;10.829139;14230;F;Sporfelt;O1424;100;;;;;;
+Ø1429T;Inng;Ø;Østensjøbanen;Vestover;Ø1385T;59.853941;10.827858;59.856433;10.834139;13849;F;Sporfelt;O1429;458;;;;;;
+Ø1431A;Ø1431A;Ø;Østensjøbanen;Vestover;;59.850213;10.828906;;;;V;Sporveksel;O1435W;;;;;;;
+Ø1431B;Ø1431B;Ø;Østensjøbanen;Østover;;59.849867;10.829137;;;;V;Sporveksel;O1435E;;;;;;;
+Ø1432A;Ø1432A;Ø;Østensjøbanen;Østover;;59.850199;10.828841;;;;V;Sporveksel;O1424W;;;;;;;
+Ø1432B;Ø1432B;Ø;Østensjøbanen;Vestover;;59.849881;10.829203;;;;V;Sporveksel;O1424E;;;;;;;
+Ø1434T;Utg;Ø;Østensjøbanen;Østover;Ø1446T;59.849865;10.829139;59.848719;10.830162;14330;F;Sporfelt;O1434;140;MOR1;MOR;Mortensrud;59.849316;10.829629;52
+Ø1435T;Inng;Ø;Østensjøbanen;Vestover;Ø1429T;59.850229;10.828892;59.853941;10.827858;14283;F;Sporfelt;O1435;434;;;;;;
+Ø1446T;Utg;Ø;Østensjøbanen;Østover;Ø1450T;59.848719;10.830162;59.848358;10.830484;14470;F;Sporfelt;O1446;44;;;;;;
+Ø1447T;Inng;Ø;Østensjøbanen;Vestover;Ø1435T;59.849877;10.829206;59.850229;10.828892;14326;F;Sporfelt;O1445;43;MOR2;MOR;Mortensrud;59.849263;10.829754;52
+Ø1448A;Ø1448A;Ø;Østensjøbanen;Østover;Ø1448B;59.848702;10.830177;59.848385;10.830538;;V;Sporveksel;O1446W;;;;;;;
+Ø1448B;Ø1448B;Ø;Østensjøbanen;Vestover;Ø1465T;59.848385;10.830538;59.848379;10.830544;;V;Sporveksel;O1451E;;;;;;;
+Ø1449A;Ø1449A;Ø;Østensjøbanen;Vestover;Ø1449B;59.848718;10.830241;59.848371;10.830472;;V;Sporveksel;O1451W;;;;;;;
+Ø1449B;Ø1449B;Ø;Østensjøbanen;Østover;Ø1450T;59.848371;10.830472;59.848358;10.830484;;V;Sporveksel;O1446E;;;;;;;
+Ø1450T;Utg;Ø;Østensjøbanen;Østover;;59.848358;10.830484;;;14514;F;Sporfelt;O1450;;MORA;MOR;Mortensrud;;;52
+Ø1451T;Inng;Ø;Østensjøbanen;Vestover;Ø1447T;59.848731;10.830229;59.849877;10.829206;14466;F;Sporfelt;O1451;140;;;;;;
+Ø1465T;Inng;Ø;Østensjøbanen;Vestover;Ø1451T;59.848379;10.830544;59.848731;10.830229;14509;F;Sporfelt;O1465;43;MORB;MOR;Mortensrud;;;52
+Ø642;Ø642;Ø;Østensjøbanen;Østover;;59.910143;10.830913;;;;V;Sporveksel;OP642;;;;;;;
+Ø642 P;Ø642;F;Furusetbanen;Østover;;59.910142;10.830914;;;6430.727;V;Sporveksel;;;;;;;;
+Ø645;Ø645;Ø;Østensjøbanen;Vestover;;59.910176;10.830883;;;;V;Sporveksel;;;;;;;;
+Ø645 P;Ø645;F;Furusetbanen;Vestover;;59.910178;10.830899;;;6421.013;V;Sporveksel;OP645;;;;;;;
+Ø705A;Ø705A;Ø;Østensjøbanen;Vestover;;59.906492;10.836106;;;;V;Sporveksel;OP705A;;;;;;;
+Ø705B;Ø705B;Ø;Østensjøbanen;Østover;;59.905971;10.836157;;;;V;Sporveksel;OP705B;;;;;;;
+Ø706A;Ø706A;Ø;Østensjøbanen;Østover;;59.905895;10.836175;;;;V;Sporveksel;OP706A;;;;;;;
+Ø706B;Ø706B;Ø;Østensjøbanen;Vestover;;59.905383;10.836371;;;;V;Sporveksel;OP706B;;;;;;;

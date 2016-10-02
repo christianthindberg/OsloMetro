@@ -1,0 +1,42 @@
+{
+  "name": "OsloMetro",
+  "version": "0.0.2",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "body-parser": "~1.13.2",
+    "bufferutil": "https://registry.npmjs.org/bufferutil/-/bufferutil-1.2.1.tgz",
+    "commander": "^2.8.1",
+    "cookie-parser": "~1.3.5",
+    "csv": "^0.4.6",
+    "debug": "~2.2.0",
+    "engine.io": "^1.6.8",
+    "engine.io-parser": "^1.2.4",
+    "express": "~4.13.1",
+    "flat": "^2.0.1",
+    "http": "0.0.0",
+    "https": "^1.0.0",
+    "jade": "~1.11.0",
+    "log4js": "^0.6.27",
+    "morgan": "~1.6.1",
+    "node-gyp-install": "^2.2.0",
+    "path": "^0.12.7",
+    "redis": "^2.4.2",
+    "redis-scanstreams": "^1.0.3",
+    "serve-favicon": "~2.3.0",
+    "socket.io": "^1.4.5",
+    "socketio": "^1.0.0",
+    "stream-to-array": "^2.3.0",
+    "url": "^0.11.0",
+    "util": "^0.10.3",
+    "ws": "^1.0.1"
+  },
+  "engines": {
+    "node": ">=4.1.0"
+  },
+  "files": {
+    "lib": "lib/jars"
+  }
+}

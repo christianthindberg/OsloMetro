@@ -1,0 +1,272 @@
+//
+//   Created by christianthindberg on 02/03/16.
+//    initial copy from http://bl.ocks.org/nicola/69730fc4180246b0d56d
+
+extends layout
+
+head
+
+body
+    block content
+        div#bardivlines
+            svg#barchartlines
+        div#bardivstations
+            svg#barchartstations
+        div#ownmodulediv
+            svg#ownmodules
+        div#ownmoduleheader Passasjerer per tog
+        div.lineRectangle#line1(style={background: 'slateblue', left: "12.5em"}) 1
+        div.lineRectangle#line2(style={background: 'skyblue', left: "15em"}) 2
+        div.lineRectangle#line3(style={background: 'orange', left: "17.5em"}) 3
+        div.lineRectangle#line4(style={background: 'navy', left: "20em"}) 4
+        div.lineRectangle#line5(style={background: 'chocolate', left: "22.5em"}) 5
+        div.lineRectangle#line6(style={background: 'mediumseagreen', left: "25em"}) 6
+        form#options
+            label.settingslabel Valg
+            label.settingslabel Passasjerer
+                input#paxchbox.checker(type='checkbox' name='Pax' checked=true value="Pax")
+            label.settingslabel Banekart
+                input#metrochbox.checker(type='checkbox' name='Banekart' checked=true value="Banekart")
+            label.settingslabel Tog
+                input#trainchbox.checker(type='checkbox' name='Tog' checked=true value="Tog")
+            label.settingslabel linjer
+                input#lineschbox.checker(type='checkbox' name='Linjestatistikk' checked=false value="Linjestatistikk")
+            label.settingslabel Stasjoner
+                input#stationschbox.checker(type='checkbox' name='Stasjonstatistikk' checked=false value="Stasjonstatistikk")
+            label.settingslabel Vogner
+                input#ownmoduleschbox.checker(type='checkbox' name='OwnModules' checked=false value="OwnModules")
+            label.settingslabel Trafikk
+                input#trafficchbox.checker(type='checkbox' name='Trafikk' checked=false value="Trafikk")
+            label.settingslabel Varmekart
+                input#heatmapchbox.checker(type='checkbox' name='Varmekart' checked=false value="Varmekart")
+            label.settingslabel Sporfelt
+                input#sporfeltchbox.checker(type='checkbox' name='Sporfelt' checked=false value="Sporfelt")
+            //label(style={display:"block", float:"left", clear:"both"}) Geografisk kart
+            //  input.checker(type='checkbox' name='Kart' checked value="Kart" disabled)
+            //label(style={display:"block", float:"left", clear: "both"}) Sykkelkart
+            //  input.checker(type='checkbox' name='Sykkelkart' unchecked value="Sykkelkart")
+        div#clockTime
+        div#lastDataReceived Sist mottatt data: --
+        div#lastPaxReceived Siste av/påstigning: --
+        div#sumPax Passasjerer hittil i dag: --
+        div#nowTrains Passasjerer ombord nå: --
+        div#nowAPC Tog i trafikk: --
+        div#circleinfo
+        div#map
+        script.
+
+            /*
+            svg {
+                font: 10px sans-serif;
+            }
+
+                .axis path, .axis line {
+                    fill: none;
+                    stroke: #666;
+                    stroke-width: 0.3;
+            }
+            */
+
+            //<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.js"></script>
+            //<script type="text/javascript">
+
+            d3.csv('londonstations.csv', function(stations) {
+            d3.csv('londonlines.csv', function(connections) {
+            d3.csv('londonroutes.csv', function(routes) {
+
+            var margin = {top: 20, right: 20, bottom: 30, left: 40},
+            w = Math.max(760, window.innerWidth) - margin.left - margin.right,
+            h = Math.max(500, window.innerHeight) - margin.top - margin.bottom,
+            stationsById = {};
+
+            /*
+            Organising data
+            */
+
+            // Organising stations
+            stations.forEach(function(s) {
+                stationsById[s.id] = s;
+                s.conns = [];
+                s.display_name = (s.display_name == 'NULL') ? null : s.display_name;
+                s.rail = parseInt(s.rail,10);
+                s.totalLines = parseInt(s.total_lines,10);
+                s.latitude = parseFloat(s.latitude);
+                s.longitude = parseFloat(s.longitude);
+            });
+
+            // Linking lines
+            connections.forEach(function(c) {
+                c.station1 = stationsById[c.station1];
+                c.station2 = stationsById[c.station2];
+                c.station1.conns.push(c);
+                c.station2.conns.push(c);
+                c.time = parseInt(c.time,10);
+            });
+
+            // Organizing lines
+            var routesById = {};
+            routes.forEach(function(r) {
+                routesById[r.line] = r;
+            });
+
+            /*
+            Setting up D3
+            */
+
+            // Find min and max long and lat
+            var minLat = d3.min(stations, function(d) {return d.latitude});
+            var minLon = d3.min(stations, function(d) {return d.longitude});
+            var maxLat = d3.max(stations, function(d) {return d.latitude});
+            var maxLon = d3.max(stations, function(d) {return d.longitude});
+
+            // Set up the scales
+            var x = d3.scale.linear()
+                .domain([minLon, maxLon])
+                .range([0, w]);
+
+                var y = d3.scale.linear()
+                .domain([minLat, maxLat])
+                .range([h, 0]);
+
+                // Set up the axis
+                var xAxis = d3.svg.axis()
+                .scale(x)
+                .orient("bottom")
+                .tickSize(-h);
+
+            var yAxis = d3.svg.axis()
+                .scale(y)
+                .orient("left")
+                .ticks(5)
+                .tickSize(-w);
+
+            // Set up what will happen when zooming
+            var zoom = d3.behavior.zoom()
+                .x(x)
+                .y(y)
+                .scaleExtent([1, 10])
+                .on("zoom", zoomed);
+
+            /*
+            Drawing from now on
+            */
+
+            // Setting up the canvas
+            var vis = d3.select("#map").append("svg")
+                .attr("width", w + margin.left + margin.right)
+                .attr("height", h + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+            // Make sure it is zoomable
+            d3.select("#map svg")
+                .call(zoom);
+
+            // Drawing lines between stations
+            var route = vis.selectAll("line.route")
+                .data(connections)
+                .enter().append("svg:line")
+                    .attr("class", "route")
+                    .attr("stroke", function(d) { return '#'+routesById[d.line].colour; })
+                    .attr("stroke-linecap", 'round')
+                    .attr("x1", function(d) { return x(d.station1.longitude); })
+                    .attr("y1", function(d) { return y(d.station1.latitude); })
+                    .attr("x2", function(d) { return x(d.station2.longitude); })
+                    .attr("y2", function(d) { return y(d.station2.latitude); })
+
+            // Striped stations (see official map)
+            var stripe = vis.selectAll("line.stripe")
+                .data(connections.filter(function(d) { return routesById[d.line].stripe != "NULL"; }))
+                .enter().append("svg:line")
+                    .attr("class", "stripe")
+                    .attr("stroke", function(d) { return '#'+routesById[d.line].stripe; })
+                    .attr("stroke-linecap", 'round')
+                    .attr("x1", function(d) { return x(d.station1.longitude); })
+                    .attr("y1", function(d) { return y(d.station1.latitude); })
+                    .attr("x2", function(d) { return x(d.station2.longitude); })
+                    .attr("y2", function(d) { return y(d.station2.latitude); })
+
+            // Points with more stations
+            var connect = vis.selectAll("circle.connect")
+                .data(stations.filter(function(d) { return d.totalLines - d.rail > 1; }))
+                .enter().append("svg:circle")
+                    .attr("class", "connect")
+                    .attr("cx", function(d) { return x(d.longitude); })
+                    .attr("cy", function(d) { return y(d.latitude); })
+                    .style("fill", 'white')
+                    .style("stroke", 'black')
+
+            // Drawing all the stations
+            var station = vis.selectAll("circle.station")
+                .data(stations)
+                .enter().append("svg:circle")
+                    .attr("class", "station")
+                    .attr("id", function(d) { return 'station'+d.id })
+                    .attr("cx", function(d) { return x(d.longitude); })
+                    .attr("cy", function(d) { return y(d.latitude); })
+                    .attr("data-cx", function(d) { return d.longitude; })
+                    .attr("data-cy", function(d) { return d.latitude; })
+                    .attr("title", function(d) { return d.name })
+                    .style("stroke", 'gray')
+                    .style("fill", '#ffffff')
+                    .style("opacity", 0.3)
+                    .on('mouseover', function(d,i) {
+                        d3.selectAll('#station'+d.id)
+                            .transition()
+                                .duration(25)
+                                .attr("r", 3 / zoom.scale())
+                                .style("stroke", 'black')
+                                .style("stroke-width", 0.5 / zoom.scale())
+                                .style('opacity', 1);
+                })
+            .on('mouseout', function(d,i) {
+                d3.selectAll('#station'+d.id)
+                    .transition()
+                        .attr("r", 2.5 / zoom.scale())
+                        .duration(25)
+                        .style("stroke-width", 0.5 / zoom.scale())
+                        .style("stroke", 'gray')
+                        .style('opacity', 0.3);
+            })
+
+            // .on('click', selectStation);
+
+            // Adding axis
+            vis.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + h + ")")
+                .call(xAxis);
+
+            vis.append("g")
+                .attr("class", "y axis")
+                .call(yAxis);
+
+            zoomed();
+
+            function zoomed() {
+                // Reset axis
+                vis.select(".x.axis").call(xAxis);
+                vis.select(".y.axis").call(yAxis);
+
+                // Rescale circles
+                vis.selectAll("circle")
+                    .attr("transform", "translate(" + zoom.translate() + ")scale(" + zoom.scale() + ")")
+                    .style("stroke-width", 0.5 / zoom.scale())
+                    .attr("r", 2.5 / zoom.scale());
+
+                // Rescale lines
+                vis.selectAll("line.route, line.stripe")
+                    .attr("transform", "translate(" + zoom.translate() + ")scale(" + zoom.scale() + ")")
+
+                vis.selectAll("line.route")
+                    .attr("stroke-width", 5 / (zoom.scale()))
+
+                vis.selectAll("line.stripe")
+                    .attr("stroke-width", 4 / (zoom.scale()))
+
+            }
+
+
+            }); // load routes
+            }); // load lines
+            }); // load stations
