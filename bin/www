@@ -18,8 +18,8 @@ var redis = require("redis");
 var toArray = require('stream-to-array');
 var flatten = require("flat");
 var unflatten = require('flat').unflatten;
-var rKeys = require('./rediskeys.js'),
-    rk = rKeys.rk, isMaster = rKeys.isMaster, setMaster = rKeys.setMaster;
+var opStore = require('./opstore.js'),
+    keyMgr = opStore.keyMgr, isMaster = opStore.isMaster, setMaster = opStore.setMaster;
 
 
 // replace the methods for any clients
@@ -36,7 +36,7 @@ var io = require('socket.io')(server);
 // "middleware for socketio. If this function return "next()" connection is established. if it returns next(new Error...) connection is refused
 var socketAuth = function socketAuth(socket, next) {
     //console.log("socket: " + socket + " next: " + next);
-    //redisStore.set(rk(rKeys.users), socket.id, function (err, reply) {
+    //redisStore.set(keyMgr(opStore.users), socket.id, function (err, reply) {
     //    //console.log("User authorising. Storing socket.id: " + err + " " + reply);
     //});
     return next();
@@ -48,7 +48,7 @@ io.use(socketAuth);
 var redisSubscriberClient; // used to subscribe to Redis to receive events from CTS and APC
 var redisStore; // store CTS data into Redis as hash and sorted set
 var pub;  // only used for testing
-var redisHeatmapClient; // not implemented
+//var redisHeatmapClient; // not implemented
 
 // Keep last data received from Redis so they can be sent to new connecting clients
 var passengerTable = [];
@@ -309,20 +309,20 @@ var redisFreeOldData = setInterval(function () {
         if (!isMaster()) {
             return;
         }
-        redisStore.zcount(rk(rKeys.cts_timestamp), "-inf", "+inf", function (err, count) {
+        redisStore.zcount(keyMgr(opStore.cts_timestamp), "-inf", "+inf", function (err, count) {
         if (err) {
             console.log("Redis count error: " + err);
         }
         else if (count > maxCTS) {
             // get all events from the oldes (starting at index 0) and up to count-maxCTS
-            redisStore.zrange(rk(rKeys.cts_timestamp), 0, count - maxCTS, function (err, ctsEventsToDelete) { // get all events to delete
+            redisStore.zrange(keyMgr(opStore.cts_timestamp), 0, count - maxCTS, function (err, ctsEventsToDelete) { // get all events to delete
                 var i = 0;
                 var multi = redisStore.multi();
 
                 //console.log ("ctsEventsToDelete: " + ctsEventsToDelete);
-                multi.hdel(rk(rKeys.cts), ctsEventsToDelete);
-                multi.zrem(rk(rKeys.cts_timestamp), ctsEventsToDelete);
-                multi.smembers(rk(rKeys.cts_logical_nr_keys));
+                multi.hdel(keyMgr(opStore.cts), ctsEventsToDelete);
+                multi.zrem(keyMgr(opStore.cts_timestamp), ctsEventsToDelete);
+                multi.smembers(keyMgr(opStore.cts_logical_nr_keys));
                 multi.exec(function (err, replies) {
                     var trainKeys = [];
                     if (err) {
@@ -441,7 +441,7 @@ io.on('connection', function (socket) {
                 else
                     n1 = parseInt(cmdArray[1]);
 
-                redisStore.hget(rk(rKeys.cts), n1, function (err, object) { // todo implement eventID rather than just "1"
+                redisStore.hget(keyMgr(opStore.cts), n1, function (err, object) { // todo implement eventID rather than just "1"
                     var flatmsgObject = JSON.parse(object);
                     var msgObject = unflatten(flatmsgObject);
                     socket.emit('chat message', "Redis says: " + err + " " + JSON.stringify(msgObject, undefined, 2));
@@ -533,7 +533,7 @@ io.on('connection', function (socket) {
                 socket.to(toSocketID).emit("realtime", "start");
                 break;
             case "trains":
-                redisStore.smembers(rk(rKeys.cts_logical_nr_keys), function (err, cts_logical_nr_Keys) { // get all logical train keys
+                redisStore.smembers(keyMgr(opStore.cts_logical_nr_keys), function (err, cts_logical_nr_Keys) { // get all logical train keys
                     if (err) {
                         console.log("smembers error: " + err);
                     }
@@ -544,8 +544,8 @@ io.on('connection', function (socket) {
                 break;
             case "range":
                 multi = redisStore.multi();
-                multi.zrange(rk(rKeys.cts_timestamp), 0, 0, "withscores");
-                multi.zrange(rk(rKeys.cts_timestamp), -1, -1, "withscores");
+                multi.zrange(keyMgr(opStore.cts_timestamp), 0, 0, "withscores");
+                multi.zrange(keyMgr(opStore.cts_timestamp), -1, -1, "withscores");
                 multi.exec(function (err, result) {
                     if (err) {
                         console.log("Unable to retrieve range. Error: " + err);
@@ -567,7 +567,7 @@ io.on('connection', function (socket) {
                 }
                 break;
             case "count":
-                redisStore.zcount(rk(rKeys.cts_timestamp), "-inf", "+inf", function (err, count) {
+                redisStore.zcount(keyMgr(opStore.cts_timestamp), "-inf", "+inf", function (err, count) {
                     if (err) {
                         socket.emit("chat message", "Received Redis error: " + err);
                         return;
@@ -816,7 +816,7 @@ var playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
 
     // get eventIDs per train within given range
     for (i = 0; i < trainsArray.length; i++) {
-        multi.zrangebyscore(rk(rKeys.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000);
+        multi.zrangebyscore(keyMgr(opStore.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000);
     }
     multi.exec(function (err, replies) {
         // replies is an array with one record per zrangebyscore call
@@ -848,7 +848,7 @@ var playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
         }
         eventIDs.sort(function(a, b){return a-b}); //.filter(function(e) { return e === 0 || e; })); //.map(function (e) { return parseInt(e); }));
 
-        redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) { // get lists for all trains
+        redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, ctsEvents) { // get lists for all trains
             var flatmsgObject = null, msgObject = null;
             var eventCTSList = [];
             var j = 0, k = 0;
@@ -876,7 +876,7 @@ var playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
 var playAllTrains = function (toSocketID, startTime, stopTime) {
     var flatmsgObject = null, msgObject = null;
     var eventIDs = null;
-    redisStore.zrangebyscore(rk(rKeys.cts_timestamp), startTime, stopTime, function (err, reply) {
+    redisStore.zrangebyscore(keyMgr(opStore.cts_timestamp), startTime, stopTime, function (err, reply) {
         if (err) {
             console.log("playAllTrains - Redis count error: " + err);
             return;
@@ -887,7 +887,7 @@ var playAllTrains = function (toSocketID, startTime, stopTime) {
             console.log("playAllTrains - unable to retrieve cts events");
             return;
         }
-        redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) {
+        redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, ctsEvents) {
             var tmpSocket = null;
             var trainObj = {};
             var prop = null;
@@ -1026,7 +1026,7 @@ var aggSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
 
     // get eventIDs per train within given range
     for (i = 0; i < trainsArray.length; i++) {
-        multi.zrangebyscore(rk(rKeys.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000/trainsArray.length);
+        multi.zrangebyscore(keyMgr(opStore.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000/trainsArray.length);
     }
     multi.exec(function (err, replies) {
         // replies is an array with one record per zrangebyscore call
@@ -1050,8 +1050,8 @@ var aggSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
         //tmpSocket.historyList = new Array(replies.length);
         for (index = 0; index < replies.length; index++) {
             eventIDs = replies[index];
-            //retrieveandplay(toSocketID, rk(rKeys.cts), eventIDs, playbackFn);
-            redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) {
+            //retrieveandplay(toSocketID, keyMgr(opStore.cts), eventIDs, playbackFn);
+            redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, ctsEvents) {
                 var flatmsgObject = null, msgObject = null;
                 var eventCTSList = [];
                 var j = 0;
@@ -1086,14 +1086,14 @@ var aggAllTrains = function (toSocketID, startTime, stopTime, sendbackFn) {
 
         console.log("scan: " + arr);
     });
-    toArray(redisStore.zscan(rk(rKeys.cts_timestamp),{pattern: "*", count: 100}), function(err, arr) {
+    toArray(redisStore.zscan(keyMgr(opStore.cts_timestamp),{pattern: "*", count: 100}), function(err, arr) {
         if (err)
             throw err;
 
         console.log("zscan: " + arr);
     });
 
-    redisStore.zrangebyscore(rk(rKeys.cts_timestamp), startTime, stopTime, "limit", 0, 1000, function (err, eventIDs) {
+    redisStore.zrangebyscore(keyMgr(opStore.cts_timestamp), startTime, stopTime, "limit", 0, 1000, function (err, eventIDs) {
         if (err) {
             console.log("playAllTrains - Redis count error: " + err);
             return;
@@ -1103,7 +1103,7 @@ var aggAllTrains = function (toSocketID, startTime, stopTime, sendbackFn) {
             console.log("playAllTrains - unable to retrieve cts events");
             return;
         }
-        redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, ctsEvents) {
+        redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, ctsEvents) {
             var msgObject = null, flatmsgObject = null;
             var tmpSocket = null;
             var trainObj = {};
@@ -1219,12 +1219,12 @@ function checkToBerthLatLng (msgObject) {
  var i = 0;
  var multi = redisStore.multi();
  for (i = 0; i < trainsArr.length; i++) {
- multi.zrangebyscore(rk(rKeys.cts_logical_nr, trainsArr[i]), startTime, stopTime);
+ multi.zrangebyscore(keyMgr(opStore.cts_logical_nr, trainsArr[i]), startTime, stopTime);
  }
  multi.exec(function (err, reply) {
  var eventIDs = reply;
  // todo: sort
- redisStore.hmget(rk(rKeys.cts), eventIDs, function (err, objArr) {
+ redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, objArr) {
  if (err) {
  console.error("Redis - unable to retrieve train-keys: " + err);
  }
@@ -1511,11 +1511,11 @@ var parseAndSendCTS = function (room, channel, msgObject) {
             }
             else {
                 eventID = eID;
-                multi.hset(rk(rKeys.cts), eventID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+                multi.hset(keyMgr(opStore.cts), eventID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
                 // parameters are KEY, SCORE, MEMBER (or value)
-                multi.zadd(rk(rKeys.cts_timestamp), timestamp, eventID); //JSON.stringify(msgObject), redis.print); // new Date(msgObject.values.time_stamp).getTime()  new Date(msgObject.values.time_stamp).getTime()
-                multi.zadd(rk(rKeys.cts_logical_nr, trainNo), timestamp, eventID);
-                multi.sadd(rk(rKeys.cts_logical_nr_keys), rk(rKeys.cts_logical_nr, trainNo)); // keep a set containg all logical train numbers
+                multi.zadd(keyMgr(opStore.cts_timestamp), timestamp, eventID); //JSON.stringify(msgObject), redis.print); // new Date(msgObject.values.time_stamp).getTime()  new Date(msgObject.values.time_stamp).getTime()
+                multi.zadd(keyMgr(opStore.cts_logical_nr, trainNo), timestamp, eventID);
+                multi.sadd(keyMgr(opStore.cts_logical_nr_keys), keyMgr(opStore.cts_logical_nr, trainNo)); // keep a set containg all logical train numbers
                 multi.exec(function (err, data) {
                     if (err)
                         console.log("err: " + err + " data: " + data);
@@ -1532,7 +1532,7 @@ var parseAndSendCTS = function (room, channel, msgObject) {
         if (CTS_toBerthObject && CTS_toBerthObject.Name)
             ghostBerth = CTS_toBerthObject.Name;
         else if (CTS_fromBerthObject && CTS_fromBerthObject.Name)
-            ghostBerth = CTS_fromBerthObject.Name
+            ghostBerth = CTS_fromBerthObject.Name;
         else if (CTS_toBerth)
             ghostBerth = CTS_toBerth;
         else if (CTS_fromBerth)
@@ -1750,7 +1750,7 @@ var parseAndSendCTShistory = function (room, channel, msgObject) {
     var CTS_fromBerth = null;
     var CTS_toBerth = 0;
     var CTS_toBerthObject = null;
-    var timestamp = null;
+    //var timestamp = null;
 
     // todo: fix all emits/room
     if (!room || !channel || !msgObject || !msgObject.values) {
@@ -1764,7 +1764,7 @@ var parseAndSendCTShistory = function (room, channel, msgObject) {
     CTS_fromBerth = msgObject.values.from_berth;
     CTS_toBerthObject = msgObject.values.to_infra_berth;
     CTS_toBerth = msgObject.values.to_berth;
-    timestamp = new Date(msgObject.values.time_stamp).getTime();
+    //timestamp = new Date(msgObject.values.time_stamp).getTime();
 
     // for testing only
     // the code below demonstrates that the cts-signal arrive out of time
@@ -1803,11 +1803,11 @@ var parseAndSendCTShistory = function (room, channel, msgObject) {
             }
             else {
                 eventID = eID;
-                multi.hset(rk(rKeys.cts), eventID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+                multi.hset(keyMgr(opStore.cts), eventID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
                 // parameters are KEY, SCORE, MEMBER (or value)
-                multi.zadd(rk(rKeys.cts_timestamp), timestamp, eventID); //JSON.stringify(msgObject), redis.print); // new Date(msgObject.values.time_stamp).getTime()  new Date(msgObject.values.time_stamp).getTime()
-                multi.zadd(rk(rKeys.cts_logical_nr, trainNo), timestamp, eventID);
-                multi.sadd(rk(rKeys.cts_logical_nr_keys), rk(rKeys.cts_logical_nr, trainNo)); // keep a set containg all logical train numbers
+                multi.zadd(keyMgr(opStore.cts_timestamp), timestamp, eventID); //JSON.stringify(msgObject), redis.print); // new Date(msgObject.values.time_stamp).getTime()  new Date(msgObject.values.time_stamp).getTime()
+                multi.zadd(keyMgr(opStore.cts_logical_nr, trainNo), timestamp, eventID);
+                multi.sadd(keyMgr(opStore.cts_logical_nr_keys), keyMgr(opStore.cts_logical_nr, trainNo)); // keep a set containg all logical train numbers
                 multi.exec(function (err, data) {
                     if (err)
                         console.log("err: " + err + " data: " + data);
@@ -1825,7 +1825,7 @@ var parseAndSendCTShistory = function (room, channel, msgObject) {
         if (CTS_toBerthObject && CTS_toBerthObject.Name)
             ghostBerth = CTS_toBerthObject.Name;
         else if (CTS_fromBerthObject && CTS_fromBerthObject.Name)
-            ghostBerth = CTS_fromBerthObject.Name
+            ghostBerth = CTS_fromBerthObject.Name;
         else if (CTS_toBerth)
             ghostBerth = CTS_toBerth;
         else if (CTS_fromBerth)
@@ -2104,7 +2104,7 @@ var parsePassengerData = function (room, channel, msgObject) {
         if (passengerObject.CurrentStationID === 0 || passengerObject.CurrentStationID) {
             // find info about the station corresponding to PIDAS_ID
             for (station in stationObject) {      // Note: one and the same PIDAS may refer to several platforms, we just use the first match we find, regardless of direction etc
-                if (!stationObject[station].CurrentStationID && stationObject[station].CurrentStationID !== 0) {
+                if (!stationObject[station].hasOwnProperty(CurrentStationID) || stationObject[station].CurrentStationID === 0) {
                     console.error("parsePassengerData - invalid data. station: " + station);
                     continue;
                 }
@@ -2186,7 +2186,7 @@ process.on('uncaughtException', function (e) {
     redisStore.end();
     pub.end();
     process.exit(99);
-})
+});
 
 /**
  * Listen on provided port, on all network interfaces.
