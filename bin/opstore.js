@@ -1,21 +1,141 @@
 /**
  * Created by christianthindberg on 13/09/16.
  */
+"use strict";
 
-var keyStore = {};
-// redis key
-function keyMgr() {
-    return Array.prototype.slice.call(arguments).join(":");
-}
-var bMaster = false;
+const redis = require("redis");
+require("redis-scanstreams")(redis);
+const os = require("os");
+const toArray = require("stream-to-array");
+const flatten = require("flat");
+const unflatten = require("flat").unflatten;
 
-function isMaster() {
+let io = null;
+
+// max number of events to store
+let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
+// some vars to keep track of Redis
+
+// used for storing data
+const redisStore = os.platform() === "darwin" ? redis.createClient() : redis.createClient(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+
+// used to receive subscription notifications
+const redisSubscriberClient = os.platform() === "darwin" ? redis.createClient() : redis.createClient(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+
+// used for testing
+const pub = os.platform() === "darwin" ? redis.createClient() : redis.createClient(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+
+let Store = {
+    version: 1.0
+};
+
+Store.saveCTSEvent = function fNsaveCTSEvent (msgObject) {
+    if (isMaster()) {
+        redisStore.incr('CTS_EVENT_ID', function (err, eID) {
+            var multi = redisStore.multi();
+            if (err) {
+                console.log("redis error: " + err);
+            }
+            else {
+                multi.hset(keyMgr(opStore.cts), eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+                // parameters are KEY, SCORE, MEMBER (or value)
+                multi.zadd(keyMgr(opStore.cts_timestamp), timestamp, eID); //JSON.stringify(msgObject), redis.print); // new Date(msgObject.values.time_stamp).getTime()  new Date(msgObject.values.time_stamp).getTime()
+                multi.zadd(keyMgr(opStore.cts_logical_nr, trainNo), timestamp, eID);
+                multi.sadd(keyMgr(opStore.cts_logical_nr_keys), keyMgr(opStore.cts_logical_nr, trainNo)); // keep a set containg all logical train numbers
+                multi.exec(function (err, data) {
+                    if (err)
+                        console.log("err: " + err + " data: " + data);
+                });
+            }
+        }); // store to Redis
+    }
+}; // saveCTSEvent()
+
+Store.redisFreeOldData = setInterval(function () {
+    if (!isMaster()) {
+        return;
+    }
+    redisStore.zcount(keyMgr(opStore.cts_timestamp), "-inf", "+inf", function (err, count) {
+        if (err) {
+            console.log("Redis count error: " + err);
+        }
+        else if (count > maxCTS) {
+            // get all events from the oldes (starting at index 0) and up to count-maxCTS
+            redisStore.zrange(keyMgr(opStore.cts_timestamp), 0, count - maxCTS, function (err, ctsEventsToDelete) { // get all events to delete
+                var i = 0;
+                var multi = redisStore.multi();
+
+                //console.log ("ctsEventsToDelete: " + ctsEventsToDelete);
+                multi.hdel(keyMgr(opStore.cts), ctsEventsToDelete);
+                multi.zrem(keyMgr(opStore.cts_timestamp), ctsEventsToDelete);
+                multi.smembers(keyMgr(opStore.cts_logical_nr_keys));
+                multi.exec(function (err, replies) {
+                    var trainKeys = [];
+                    if (err) {
+                        console.error("Unable to delete: " + err + " Reply: " + reply);
+                        return;
+                    }
+                    trainKeys = replies[2];
+                    for (i = 0; i < trainKeys.length; i++) {
+                        multi.zrem(trainKeys[i], ctsEventsToDelete); // ... and remove the events we want to
+                    }
+                    multi.exec(function (err, replies) {
+                        if (err) {
+                            console.error("Unable to delete: " + err + " Reply: " + reply);
+                            return;
+                        }
+                        //console.log (replies.toString());
+                    });
+                });
+            }); // zrange
+        } // count > maxCTS
+    }); // zcount
+}, 1000 * 3); // check every 3rd second
+
+Store.testSubscribe = function () {
+    // just for testing and verifying connection opStore connection
+    // if you'd like to select database 3, instead of 0 (default), call
+    // client.select(3, function() { /* ... */ });
+    redisSubscriberClient.subscribe("kinesisStationsChannel");
+    redisSubscriberClient.subscribe("InfrastructureStationsChannel");
+    redisSubscriberClient.on("error", function (err) {
+        console.log("Error " + err);
+    });
+}; // testSubscribe()
+
+Store.flushAll = function () {
+    redisStore.flushall(function (err, succeeded) {
+        socket.emit("chat message", "Redis says: " + err + " " + succeeded); // will be true if successfull
+    });
+}; //flushAll()
+
+let bMaster = false;
+function isMaster () {
     return bMaster;
 }
-function setMaster (bState) {
+Store.setMaster = function (bState) {
     bMaster = bState;
-}
+};
+Store.subscribe = function (topic) {
+    return redisSubscriberClient.subscribe(topic);
+};
+Store.on = function (event, callbackfn) {
+    return redisSubscriberClient.on (event, callbackfn);
+};
+Store.unsubscribe = function () {
+    redisSubscriberClient.unsubscribe();
+    pub.unsubscribe();
+};
+Store.end = function () {
+    redisStore.end();
+    redisSubscriberClient.end();
+    pub.end();
+};
+Store.getStoreInfo = function () {
+    return redisStore.server_info;
+}; // getStoreInfo()
 
+let keyStore = {};
 keyStore.base = "om"; // short for "OsloMetro"
 keyStore.users = keyMgr(keyStore.base,'users'); //list
 keyStore.status = keyMgr(keyStore.base,'status'); //String, :userName
@@ -26,10 +146,16 @@ keyStore.cts_logical_nr_keys = keyMgr(keyStore.base, "cts","logical_nr","key"); 
 
 keyStore.cts_trains_carset_nr = keyMgr(keyStore.base,'cts',"carset_nr"); //not sure how to implement this yet:-)
 
+function keyMgr() {
+    return Array.prototype.slice.call(arguments).join(":");
+}
 keyStore.keyMgr = keyMgr;
-keyStore.isMaster = isMaster;
-keyStore.setMaster = setMaster;
-module.exports = keyStore;
+Store.keyStore = keyStore;
+
+module.exports = function createOpStore (pio) {
+    io = pio;
+    return Store;
+};
 
 
 /* To use in main file

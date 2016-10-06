@@ -13,9 +13,9 @@ express or implied. See the License for the specific language governing
 permissions and limitations under the License.
 ***/
 
-'use strict';
+"use strict";
 
-var log4js = require('log4js');
+let log4js = require('log4js');
 /*
 var AWS = require('aws-sdk');
 var awsConfig = require('./config');
@@ -38,7 +38,7 @@ function logger() {
 
   if (process.platform === "win32") {
     //logDirSub = logDir + "\\";
-    logDirSub = "D:\\home\\LogFiles\\Application\\"
+    logDirSub = "D:\\home\\LogFiles\\Application\\";
   } else {
     logDirSub = logDir + "/";
   }
