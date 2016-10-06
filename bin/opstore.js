@@ -10,8 +10,6 @@ const toArray = require("stream-to-array");
 const flatten = require("flat");
 const unflatten = require("flat").unflatten;
 
-let io = null;
-
 // max number of events to store
 let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
 // some vars to keep track of Redis
@@ -25,11 +23,12 @@ const redisSubscriberClient = os.platform() === "darwin" ? redis.createClient() 
 // used for testing
 const pub = os.platform() === "darwin" ? redis.createClient() : redis.createClient(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 
+
 let Store = {
-    version: 1.0
+    version:1.0
 };
 
-Store.saveCTSEvent = function fNsaveCTSEvent (msgObject) {
+Store.saveCTSEvent = function fNsaveCTSEvent (msgObject, callback) {
     if (isMaster()) {
         redisStore.incr('CTS_EVENT_ID', function (err, eID) {
             var multi = redisStore.multi();
@@ -45,6 +44,7 @@ Store.saveCTSEvent = function fNsaveCTSEvent (msgObject) {
                 multi.exec(function (err, data) {
                     if (err)
                         console.log("err: " + err + " data: " + data);
+                    callback(err, data);
                 });
             }
         }); // store to Redis
@@ -92,7 +92,7 @@ Store.redisFreeOldData = setInterval(function () {
     }); // zcount
 }, 1000 * 3); // check every 3rd second
 
-Store.testSubscribe = function () {
+Store.testSubscribe = function (callback) {
     // just for testing and verifying connection opStore connection
     // if you'd like to select database 3, instead of 0 (default), call
     // client.select(3, function() { /* ... */ });
@@ -100,28 +100,46 @@ Store.testSubscribe = function () {
     redisSubscriberClient.subscribe("InfrastructureStationsChannel");
     redisSubscriberClient.on("error", function (err) {
         console.log("Error " + err);
+        if (callback && typeof callback === "function") {
+            callback(err);
+        }
     });
 }; // testSubscribe()
 
-Store.flushAll = function () {
+Store.flushAll = function (callback) {
     redisStore.flushall(function (err, succeeded) {
-        socket.emit("chat message", "Redis says: " + err + " " + succeeded); // will be true if successfull
+        if (callback && typeof callback === "function") {
+            callback(err, succeeded);
+        }
+        //socket.emit("chat message", "Redis says: " + err + " " + succeeded); // will be true if successfull
     });
 }; //flushAll()
+/*
+Store.on("flushall", function(msg) {
+    console.log("success: " + msg);
+});
+
+Store.on("err_flushall", function(msg) {
+   console.log("error: " + msg);
+});
+*/
+//Store.on = eventEmitter.on;
 
 let bMaster = false;
-function isMaster () {
+Store.isMaster = function () {
     return bMaster;
-}
+};
 Store.setMaster = function (bState) {
     bMaster = bState;
 };
 Store.subscribe = function (topic) {
     return redisSubscriberClient.subscribe(topic);
 };
+
 Store.on = function (event, callbackfn) {
     return redisSubscriberClient.on (event, callbackfn);
 };
+
 Store.unsubscribe = function () {
     redisSubscriberClient.unsubscribe();
     pub.unsubscribe();
@@ -152,10 +170,7 @@ function keyMgr() {
 keyStore.keyMgr = keyMgr;
 Store.keyStore = keyStore;
 
-module.exports = function createOpStore (pio) {
-    io = pio;
-    return Store;
-};
+module.exports = Store;
 
 
 /* To use in main file

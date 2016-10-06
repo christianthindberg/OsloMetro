@@ -159,6 +159,7 @@ APC.parsePassengerData = function (room, channel, msgObject) {
 
     for (i = 0; i < records.length; i += 1) {
         let items = records[i].toString().split(";");
+        let passengerObject = null;
         if (items && items.length === 1 && items[0] === "" && i === records.length - 1) {
             break; // seems all passenger files contains an empty record at the end - just ignore it
         }
@@ -167,7 +168,7 @@ APC.parsePassengerData = function (room, channel, msgObject) {
             return;
         }
 
-        let passengerObject = {
+        passengerObject = {
             DateAndTimeUnix: parseInt(items[0], 10) * 1000, // time in milliseconds
             TogNumber: parseInt(items[1], 10),
             OwnModuleNo: parseInt(items[2], 10),
@@ -195,7 +196,9 @@ APC.parsePassengerData = function (room, channel, msgObject) {
         // find info about the station corresponding to PIDAS_ID
         let stationObject = infrastructure.getStationByID(passengerObject.CurrentStationID);
         if (!stationObject) {
-            console.error("apcrealtime - Station not found!");
+            if (passengerObject.CurrentStationID !== 6) { // station 6 is non-existing, APC bug...
+                console.error("apcrealtime - Station not found!");
+            }
         }
         else {
             setLastPaxUpdateTime(passengerObject.DateAndTimeUnix);

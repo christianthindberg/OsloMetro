@@ -14,6 +14,7 @@ const log = logger().getLogger('wwww');
 const infrastructure = require("./infrastructure");
 const helpers = require("./helpers");
 const ctshistory = require("./ctshistory");
+const opstore = require('./opstore.js');  // opstore: short for Operational Store, in this case Redis
 
 //Get port from environment and store in Express.
 const port = normalizePort(process.env.PORT || '3000');
@@ -26,7 +27,6 @@ const io = require('socket.io')(server);
 const cmd = require ("./commands")(io);
 const ctsrealtime = require("./ctsrealtime")(io);
 const apcrealtime = require("./apcrealtime")(io);
-const opstore = require('./opstore.js')(io);  // opstore: short for Operational Store, in this case Redis
 
 let numberOfUsers = 0;
 
@@ -48,8 +48,14 @@ infrastructure.readMetroInfrastructure();
 const emitTime = setInterval(function () {
     io.to("realtime").emit("timetick", Date.now());
 }, 1000 * 1);  // Send server time to all connected clients every second
-
-
+/*
+opstore.on("err_flushall", function(msg) {
+    console.log("error: " + msg);
+});
+opstore.on("flushall", function(msg) {
+    console.log("success on opstore: " + msg);
+});
+*/
 //
 // CLIENT COMMUNICATIONS
 //
@@ -113,7 +119,7 @@ io.on('connection', function (socket) {
                 opstore.testSubscribe();
                 break;
             case "flushall":
-                cmd.flushall(cmdArray, socket);
+                cmd.flushAll(cmdArray, socket);
                 break;
             case "master":
                cmd.master(cmdArray,socket);

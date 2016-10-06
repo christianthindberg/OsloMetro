@@ -45,13 +45,15 @@ Command.flushAll = function (cmdArray, socket) {
     if (cmdArray.length !== 2 || cmdArray[1] !== "Poker") {
         return;
     }
-    opstore.flushall(function (err, succeeded) {
+    opstore.flushAll();
+    /*
         if (err) {
             socket.emit("chat message", "Flush failed: " + err);
             return;
         }
         socket.emit("chat message", "Flush succeeded: " + succeeded);
     });
+    */
 }; // flushAll ()
 
 Command.master = function (cmdArray, socket) {

@@ -5,7 +5,7 @@
 
 const infrastructure = require("./infrastructure");
 const helpers = require("./helpers");
-let opstore = require("./opstore"); // chekc!!
+const opstore = require("./opstore");
 
 let ctsLiveObject = {}; // train berth, ... live data from cts
 let ctstrainChangeSuspectObject = {}; // trains we believe have changed their logical number
@@ -310,7 +310,14 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     }
 
     // Store all CTS-data received, whether they are valid or not
-    opstore.saveCTSEvent (msgObject);
+    opstore.saveCTSEvent (msgObject, function (err, success) {
+        if (err) {
+            console.log("saveCTSEvent - error: " + err);
+        }
+        else {
+            console.log("saveCTSEvent - success: " + success);
+        }
+    });
 
     //identifyLineNumberFromTrainNumber(msgObject);
 
@@ -820,6 +827,5 @@ CTSRealTime.parseAndSendCTShistory = function fNparseAndSendCTShistory (room, ch
 
 module.exports = function createRealTimeCTS (pio) {
     io = pio;
-    opstore = require ("./opstore")(io);
     return CTSRealTime;
 };
