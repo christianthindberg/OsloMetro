@@ -1328,7 +1328,7 @@ body
         yLines = d3.scale.linear()
                 .range([innerHeightLines, 0]); // note: innerheight, 0 reverses the axis
         xLines = d3.scale.ordinal()
-                .domain([1,2,3,4,5,6,8])  // The metro lines
+                .domain([1,2,3,4,5,8])  // The metro lines TODO: what if there is a new line, say line 6?
                 .rangeRoundBands([0, innerWidthLines], .2);
 
         xAxisLines = d3.svg.axis()

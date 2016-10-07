@@ -1,10 +1,12 @@
 /**
  * Created by christianthindberg on 03/10/2016.
+ *
+ * A few small helper functions
  */
 
 "use strict";
 
-// small helpers
+
 function MyIsNaN(p) {
     //var test = typeof p;
     //if (typeof p === "number")

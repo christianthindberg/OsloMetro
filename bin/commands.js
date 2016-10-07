@@ -1,5 +1,9 @@
 /**
  * Created by christianthindberg on 03/10/2016.
+ *
+ * Command Line Interface for Oslo Metro
+ * Mostly getting information from ctsrealtime and opstore
+ * Also information regarding sockets
  */
 
 "use strict";
@@ -7,6 +11,7 @@
 const helpers = require ("./helpers");
 const ctsrealtime = require ("./ctsrealtime");
 const opstore = require ("./opstore");
+const assert = require ("assert");
 
 let io = null;
 let cmdDictionary = {
@@ -38,10 +43,18 @@ let Command = {
 }; // Command
 
 Command.help = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+
     socket.emit("help", cmdDictionary);
 };
 
 Command.flushAll = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+
     if (cmdArray.length !== 2 || cmdArray[1] !== "Poker") {
         return;
     }
@@ -57,6 +70,10 @@ Command.flushAll = function (cmdArray, socket) {
 }; // flushAll ()
 
 Command.master = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+
     if (cmdArray.length !== 2 || cmdArray[1] !== "Poker") {
         // only return state
         socket.emit("chat message", "OsloMetro - master state is: " + opstore.isMaster());
@@ -67,40 +84,114 @@ Command.master = function (cmdArray, socket) {
 }; // master ()
 
 Command.getCTSEvent = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+
     if (cmdArray.length === 1 || !helpers.MyIsNumber(parseInt(cmdArray[1]))) {
-        socket.emit("chat message", "Error: Missing legal eventID");
+        socket.emit("chat message", "Error: Missing legal eventID" + cmdArray[1]);
         return;
     }
 
-    opstore.hget(keyMgr(opstore.cts), cmdArray[1], function (err, object) {
-        let flatmsgObject = JSON.parse(object);
-        let msgObject = unflatten(flatmsgObject);
-        socket.emit("chat message", "Redis says: " + err + " " + JSON.stringify(msgObject, undefined, 2));
+    opstore.getCTSEventByID (parseInt(cmdArray[1]), function (err, result) {
+        if (err) {
+            socket.emit("chat message", "Get CTS event failed: " + err);
+        }
+        else {
+            socket.emit("chat message", "CTS Event " + cmdArray[1] + ": " + JSON.stringify(result, undefined, 2));
+        }
     });
 }; // getCTSEvent()
 
 Command.getCTSLastEventID = function (cmdArray, socket) {
-    opstore.get('CTS_EVENT_ID', function (err, eID) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+    opstore.getLastCTSEventID (function (err, eID) {
         if (err) {
-            console.log("redis error trying to get key CTS_EVENT_ID: " + err);
-            return;
+           socket.emit("chat message", "Could not retrieve last Event ID. Error: " + err);
         }
-        socket.emit("chat message", "CTS_EVENT_ID: " + eID + " eventID: " + eventID);
+        else {
+            socket.emit("chat message", "Last Event ID: " + eID);
+        }
     });
 }; // get CTSLastEventID ()
 
 Command.getTrains = function (cmdArray, socket) {
-    opstore.smembers(keyMgr(opstore.cts_logical_nr_keys), function (err, cts_logical_nr_Keys) { // get all logical train keys
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+    opstore.getTrainNumbersLogical(function (err, trainNumbers) { // get all logical train keys
         if (err) {
+            socket.emit('chat message', "Unable to retrive train numbers. Error: " + err);
             console.log("smembers error: " + err);
         }
         else {
-            socket.emit('trains', cts_logical_nr_Keys);
+            socket.emit('trains', trainNumbers);
         }
     });
 }; // getTrains()
 
+Command.getFirstAndLastCTSEvent = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+    opstore.getFirstAndLastEvent (function (err, result) {
+        if (err) {
+            console.log("Unable to retrieve range. Error: " + err);
+            socket.emit('chat message', "Unable to retrieve first and last event. Error: " + err);
+            return;
+        }
+        let ev1 = result[0][1];
+        let ev2 = result[1][1];
+        let ev1ID = ev1[0];
+        let ev1Time = ev1[1];
+        let ev2ID = ev2[0];
+        let ev2Time = ev2[1];
+        socket.emit('range', { "startID": ev1ID, "startTime": ev1Time, "stopID": ev2ID, "stopTime": ev2Time });
+    });
+}; // getFirstAndLastCTSEvent ()
+
+Command.setMaxCTSEvents = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+    let currentMax = opstore.getMaxCTSEvents();
+    let newMax;
+
+    if (cmdArray.length === 1) { // just return current maxCTS
+        socket.emit('chat message', "OsloMetro - max number of records to track in Redis is: " + currentMax);
+        return;
+    }
+    newMax = parseInt(cmdArray[1]);
+    if (!helpers.MyIsNumber(newMax)) {
+        socket.emit("chat message", "max CTS Events must be number: " + newMax);
+        return;
+    }
+    newMax = opstore.setMaxCTSEvents(newMax);
+    socket.emit('chat message', "OsloMetro - max number of records to track in Redis changed. Old max " + currentMax +
+        " New max: " + newMax);
+}; // setMaxCTSEvents ()
+
+Command.countCTSEvents = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+    opstore.countCTSEvents(function (err, result) {
+        if (err) {
+            socket.emit("chat message", "Uanble to get count of events. Error: " + err);
+            return;
+        }
+        socket.emit("chat message", "Number of cts-events stored: " + result);
+    });
+
+}; // countCTSEvents()
+
 Command.getOkBerths = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true);
+    assert.ok(typeof socket, "object");
+
+
     let toSocketID, tmpSocket;
     if (!socket.joined) {
         socket.emit("help", {"berth": cmdDictionary.berth});
@@ -116,38 +207,10 @@ Command.getOkBerths = function (cmdArray, socket) {
     //io.emit('okberths', ctsOKObject);
 }; // getOkBerths ()
 
-Command.getFirstAndLastCTSEvent = function (cmdArray, socket) {
-    const multi = redisStore.multi();
-    multi.zrange(keyMgr(opstore.cts_timestamp), 0, 0, "withscores");
-    multi.zrange(keyMgr(opstore.cts_timestamp), -1, -1, "withscores");
-    multi.exec(function (err, result) {
-        if (err) {
-            console.log("Unable to retrieve range. Error: " + err);
-            return;
-        }
-        socket.emit('range', { "startID": result[0][0], "startTime": result[0][1], "stopID": result[1][0], "stopTime": result[1][1] });
-    });
-}; // getFirstAndLastCTSEvent ()
-
-Command.setMaxCTSEvents = function (cmdArray, socket, maxCTS) {
-    if (cmdArray.length !== 2 || !helpers.MyIsNumber(parseInt(cmdArray[1]))) { // just return current maxCTS
-        socket.emit('chat message', "OsloMetro - max number of records to track in Redis is: " + maxCTS);
-    }
-    socket.emit('chat message', "OsloMetro - max number of records to track in Redis changed. Old max " + maxCTS + " New max: " + cmdArray[1]);
-    return parseInt(cmdArray[1]);
-}; // setMaxCTSEvents ()
-
-Command.countCTSEvents = function (cmdArray, socket) {
-    opstore.zcount(keyMgr(opstore.cts_timestamp), "-inf", "+inf", function (err, count) {
-        if (err) {
-            socket.emit("chat message", "Received Redis error: " + err);
-            return;
-        }
-        socket.emit("chat message", "Number of cts-events stored: " + count);
-    });
-}; // countCTSEvents()
-
 Command.setBlinkAlarms = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
+    assert.ok(typeof socket, "object");
+
     if (!socket.joined) {
         socket.emit("help", {"blink": cmdDictionary.blink});
         return;
@@ -163,6 +226,9 @@ Command.setBlinkAlarms = function (cmdArray, socket) {
 }; // setBlinkAlarms ()
 
 Command.setDestination = function (cmdArray, sockets) {
+    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
+    assert.ok(typeof socket, "object");
+
     if (!socket.joined) {
         socket.emit("help", {"destination": cmdDictionary.destination});
         return;
@@ -178,6 +244,9 @@ Command.setDestination = function (cmdArray, sockets) {
 }; // setDestination ()
 
 Command.generateTestGhosts = function (cmdArray, sockets) {
+    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
+    assert.ok(typeof socket, "object");
+
     // create 3 ghost msgObjects by changing train address to "----" and send to clients
     // used for testing
     if (!socket.joined) {
@@ -201,6 +270,9 @@ Command.generateTestGhosts = function (cmdArray, sockets) {
 }; // generateTestGhosts ()
 
 Command.getSockets = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
+    assert.ok(typeof socket, "object");
+
     let tmpSocket = [];
     for (var sock in io.sockets.connected) {
         var bJoined = io.sockets.connected[sock].joined ? true : false;
@@ -211,6 +283,9 @@ Command.getSockets = function (cmdArray, socket) {
 }; // getSockets()
 
 Command.join = function (cmdArray, socket) {
+    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
+    assert.ok(typeof socket, "object");
+
     let socketid = null;
     if (cmdArray.length !== 2 || !io.sockets.connected[cmdArray[1]]) {
         socket.emit("help", {"join": cmdDictionary.join});

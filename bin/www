@@ -67,7 +67,7 @@ io.on('connection', function (socket) {
     socket.emit("id", socket.id);
     socket.emit("ip", socket.request.connection.remoteAddress);
     socket.join("realtime");
-    socket.room = "realtime";
+    socket.room = "realtime"; // NB: do not confuse with socket.rooms which is property of socket.io
     socket.mode = "realtime";
 
     ++numberOfUsers;
@@ -158,7 +158,7 @@ io.on('connection', function (socket) {
                 socket.emit('chat message', "Redis says: " + JSON.stringify(opstore.getStoreInfo(), undefined, 2));
                 break;
             case "max":
-                cmd.setMaxCTSEvents (cmdArray, socket, maxCTS);
+                cmd.setMaxCTSEvents (cmdArray, socket);
                 break;
             case "count":
                 cmd.countCTSEvents (cmdArray, socket);

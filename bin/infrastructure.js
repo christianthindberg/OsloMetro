@@ -1,12 +1,13 @@
 /**
  * Created by christianthindberg on 03/10/2016.
+ *
+ * Read Infrastructure Definition
+ * Sort tracks, stations, berths etc
+ * API for retrieving Metro infrastructure data
  */
 
 "use strict";
 
-// Read Infrastructure Definition
-// Sort tracks, stations, berths etc
-// API for retrieving Metro infrastructure data
 
 const fs = require("fs");
 const path = require("path");

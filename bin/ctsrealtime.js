@@ -1,6 +1,11 @@
 /**
  * Created by christianthindberg on 04/10/2016.
+ *
+ * Parse incoming CTS Events
+ * Store events and emit to clients
+ * Provide information on events to clients (via www) and to users (through the commands module)
  */
+
 "use strict";
 
 const infrastructure = require("./infrastructure");
@@ -310,12 +315,10 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     }
 
     // Store all CTS-data received, whether they are valid or not
+    // todo: introduce additional events for trainchangenumber, ghost, special codes...
     opstore.saveCTSEvent (msgObject, function (err, success) {
         if (err) {
             console.log("saveCTSEvent - error: " + err);
-        }
-        else {
-            console.log("saveCTSEvent - success: " + success);
         }
     });
 
@@ -491,7 +494,6 @@ function getLastUniqueLine (msgObject) {
     }
     // Nothing in history?
     if (!ctsLiveObject.hasOwnProperty(trainNo) || !Array.isArray(ctsLiveObject[trainNo])) { // will happen on server startup as we receive the very first messages
-        console.error("ctsLiveObject{[" + trainNo + "] does not contain array: " + JSON.stringify(ctsLiveObject[trainNo], undefined, 2));
         return 0;
     }
     // look into history, find last unique line we have been on
