@@ -29,7 +29,7 @@ body
       label.settingslabel Tog
         input#trainchbox.checker(type='checkbox' name='Tog' checked=true value="Tog")
       label.settingslabel linjer
-        input#lineschbox.checker(type='checkbox' name='Linjestatistikk' checked=false value="Linjestatistikk")
+        input#lineschbox.checker(type='checkbox' name='Linjestatistikk' checked=true value="Linjestatistikk")
       label.settingslabel Stasjoner
         input#stationschbox.checker(type='checkbox' name='Stasjonstatistikk' checked=false value="Stasjonstatistikk")
       label.settingslabel Vogner
@@ -1263,6 +1263,8 @@ body
         // d contains the stationTable record associated with this station
 
         var latLng = {};
+        var result = [];
+
         if (isInfoWindowVisible) {
           return;
         }
@@ -1271,9 +1273,12 @@ body
         latLng["lat"] = d.platformlat;
         latLng["lng"] = d.platformlng;
 
-        var result = passengerTable.filter(function (obj) {
-          return obj.key == d.CurrentStationID;
-        });
+        if (Array.isArray(passengerTable) && passengerTable.length > 0) {
+          result = passengerTable.filter(function (obj) {
+            return obj.key == d.CurrentStationID;
+          });
+        }
+
         if (result.length == 0) { // No passengers associated with this station
           var contentString = '<div id="content">' +
                   '<div id="siteNotice">' +

@@ -35,6 +35,7 @@ const redisStore = os.platform() === "darwin" ? new redis() : new redis(6379, "o
 const redisSubscriberClient = os.platform() === "darwin" ? new redis() : new redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 // used for testing
 const pub = os.platform() === "darwin" ? new redis() : new redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+console.log ("Redis coonect: " + JSON.stringify(redisStore));
 
 let Store = {
     version:1.0
@@ -211,9 +212,10 @@ Store.subscribe = function (topic) {
     return redisSubscriberClient.subscribe(topic);
 };
 
-Store.on = function (event, callbackfn) {
-    console.log("Store.on. event: " + event);
-    return redisSubscriberClient.on (event, callbackfn);
+Store.on = function (topic, callbackfn) {
+    console.log("Store.on. topic: " + topic);
+    redisSubscriberClient.on (topic, callbackfn);
+    //return redisSubscriberClient.on (event, callbackfn);
 };
 
 Store.unsubscribe = function () {
@@ -233,13 +235,14 @@ Store.getStoreCommands = function () {
     return redisStore.getBuiltinCommands().toString();
 }; // getStoreCommands
 
+/*
 redisSubscriberClient.on("error", function (err) {
     console.log("redisSubscriberClient.on(error). Error: " + err);
 });
 redisStore.on("error", function (err) {
     console.log("redisStore.on(error). Error: " + err);
 });
-
+*/
 // Key Management
 //
 let k = {};  // short for "Key Store"

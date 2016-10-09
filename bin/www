@@ -116,12 +116,8 @@ io.on('connection', function (socket) {
                 cmd.help(cmdArray, socket);
                 break;
             case "sub":
-                if (cmdArray.length > 1) {
-                    opstore.subscribe(cmdArray[1]);
-                }
-                else {
-                    opstore.subscribe("test");
-                }
+                let topic = cmdArray.length > 1 ? cmdArray[1] : "test";
+                opstore.subscribe(topic);
                 break;
             case "flushall":
                 cmd.flushAll(cmdArray, socket);
@@ -274,13 +270,13 @@ opstore.on("error", function (err) {
 });
 */
 // Start Redis communication
-opstore.on("subscribe", function (channel, count) {
-    io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + count);
-    console.log("succesful subscribe to Redis: " + channel + " " + count);
+opstore.on("subscribe", function (channel, message ) {
+    io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + message);
+    log.info("succesful subscribe to Redis: " + channel + " " + count);
 });
 
 // Handle data from Redis
-opstore.on("message", function fNonOpstoreMessage (channel, msg) {
+opstore.on("message", function storeEventHandler (channel, msg) {
     const msgObject = JSON.parse(msg);
 
     if (channel === "cts") {
@@ -310,7 +306,6 @@ opstore.on("message", function fNonOpstoreMessage (channel, msg) {
         io.emit("data", msg);
     }
 });
-
 
 // todo: REDIS clean up is not working properly, i.e. if web app terminate and restart, the number of redis connections may increase?
 process.on('exit', function () {
