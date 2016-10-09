@@ -3,7 +3,10 @@
  */
 "use strict";
 
-
+const opstore = require ("./opstore");
+const assert = require ("assert");
+const logger = require('./logger');
+const log = logger().getLogger('ctshistory');
 
 function handleHistoryPlayback (socket, cmdArray) {
     let tmpSocket = null;
@@ -11,6 +14,9 @@ function handleHistoryPlayback (socket, cmdArray) {
     let trainsArray = [];
     let startTime = 0;
     let stopTime = 0;
+
+    assert(typeof socket === "object");
+    assert(Array.isArray(cmdArray));
 
     if (!socket.joined) {
         // We receive this message from a cmd-client. If the cmd-client is not joined to a map-client, we can not proceed
@@ -21,6 +27,7 @@ function handleHistoryPlayback (socket, cmdArray) {
     tmpSocket = io.sockets.connected[toSocketID];
     if (!toSocketID || !tmpSocket) {
         socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        log.warn("handleHistoryPlayback. internal error - communications ID not found (socket.room) " + toSocketID);
         return;
     }
 
@@ -60,6 +67,11 @@ const playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
     const multi = redisStore.multi();
     let i;
 
+    assert (typeof toSocketID === "string");
+    assert (startTime === "number");
+    assert (stopTime === "number");
+    assert (Array.isArray(trainsArray));
+
     // get eventIDs per train within given range
     for (i = 0; i < trainsArray.length; i++) {
         multi.zrangebyscore(keyMgr(opStore.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000);
@@ -72,13 +84,13 @@ const playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
         const tmpSocket = io.sockets.connected[toSocketID];
 
         if (!tmpSocket) {
-            console.log("playSomeTrains - internal error, communications ID not found");
+            log.warn("playSomeTrains - internal error, communications ID not found");
             socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
             return;
         }
 
         if (err) {
-            console.log("Error retrieving history data: " + err);
+            log.warn("playSomeTrains. Error retrieving history data: " + err);
             return;
         }
 
@@ -100,20 +112,20 @@ const playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
             let j = 0, k = 0;
             let currentCTS = null;
             if (err) {
-                console.err("playSomeTrains - unable to retrieve hash per train: " + err);
+                log.warn("playSomeTrains - unable to retrieve hash per train: " + err);
                 return;
             }
             for (j=0; j < ctsEvents.length; j++) {
                 currentCTS = ctsEvents[j];
                 if (!currentCTS) {
-                    console.error("playSomeTrains - unexpected null value in event data at index: " + j);
+                    log.warn("playSomeTrains. Unexpected null value in event data at index: " + j);
                     continue;
                 }
                 flatmsgObject = JSON.parse(currentCTS);
                 msgObject = unflatten(flatmsgObject);
                 tmpSocket.historyList.push(msgObject);
             }
-            console.log("playSome tmpSocket.historyList.length: " + tmpSocket.historyList.length);
+            log.info("playSomeTrains. tmpSocket.historyList.length: " + tmpSocket.historyList.length);
             playBackEvent (toSocketID, "cts"); // play back event list for all trains
         });
     }); // exec zrangebyscore get all eventIDs within range
@@ -122,15 +134,20 @@ const playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
 const playAllTrains = function (toSocketID, startTime, stopTime) {
     let flatmsgObject = null, msgObject = null;
     let eventIDs = null;
+
+    assert(typeof  toSocketID === "string");
+    assert(typeof startTime === "number");
+    assert(typeof stopTime === "number");
+
     redisStore.zrangebyscore(keyMgr(opStore.cts_timestamp), startTime, stopTime, function (err, reply) {
         if (err) {
-            console.log("playAllTrains - Redis count error: " + err);
+            log.warn("playAllTrains - Redis count error: " + err);
             return;
         }
         eventIDs = reply;
         //console.log ("playAllTrains - eventIDs: " + eventIDs.toString());
         if (!eventIDs) {
-            console.log("playAllTrains - unable to retrieve cts events");
+            log.warn("playAllTrains - unable to retrieve cts events");
             return;
         }
         redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, ctsEvents) {
@@ -139,17 +156,17 @@ const playAllTrains = function (toSocketID, startTime, stopTime) {
             let prop = null;
             let i = 0;
             if (err) {
-                console.log("playAllTrains - Redis could not retrieve historical data: " + err);
+                log.warn("playAllTrains - Redis could not retrieve historical data: " + err);
                 return;
             }
             if (!Array.isArray(ctsEvents)) {
-                console.log("playAllTrains - Redis request did not return valid response. Expected array: " + ctsEvents);
+                log.warn("playAllTrains - Redis request did not return valid response. Expected array: " + ctsEvents);
                 return;
             }
 
             tmpSocket = io.sockets.connected[toSocketID];
             if (!tmpSocket) {
-                console.error("playAllTrains - Internal communications error. Connection lost: " + toSocketID);
+                log.error("playAllTrains - Internal communications error. Connection lost: " + toSocketID);
                 return;
             }
             tmpSocket.historyList = [];
@@ -158,7 +175,7 @@ const playAllTrains = function (toSocketID, startTime, stopTime) {
                 msgObject = unflatten(flatmsgObject);
                 tmpSocket.historyList.push(msgObject);
             }
-            console.log("playAll tmpSocket.historyList.length: " + tmpSocket.historyList.length);
+            log.info("playAllTrains. tmpSocket.historyList.length: " + tmpSocket.historyList.length);
             playBackEvent(toSocketID, "cts");
         }); // redis hmget-callback
     }); // redis zrange-callback
@@ -170,9 +187,14 @@ function playBackEvent (toSocketID, channel) {
     var currTimeStamp = 0;
     var nextTimeStamp = 0;
     var historyList = null;
-    var tmpSocket = io.sockets.connected[toSocketID];
+    var tmpSocket = null;
+
+    assert (typeof toSocketID === "string");
+    assert (typeof channel === "string");
+
+    tmpSocket = io.sockets.connected[toSocketID];
     if (!tmpSocket) {
-        console.error("playBack - Internal communications error, invalid toSocketID " + toSocketID);
+        log.warn("playBackEvent. Internal communications error, invalid toSocketID " + toSocketID);
         return;
     }
     if (tmpSocket.bCancelledByUser) { // We received "cancel" from user
@@ -184,17 +206,17 @@ function playBackEvent (toSocketID, channel) {
     }
 
     if (!tmpSocket.historyList || !Array.isArray(tmpSocket.historyList)) { // tmpSocket.historyList
-        console.error("playBack - Internal error, historyList not found.");
+        log.error("playBackEvent. Internal error, historyList not found.");
         return;
     }
 
     if (tmpSocket.historyList.length === 0) {
-        console.error("playback -- out of range");
+        log.warn("playBackEvent -- out of range");
         return;
     }
 
     if (!tmpSocket.historyList[0]) {
-        console.error("playback -- empty element in historyList");
+        log.error("playback -- empty element in historyList");
         return;
     }
     // todo: make general by replacing parseAndSend with a function parameter and providing functions for currTime and nextTime below
@@ -205,18 +227,18 @@ function playBackEvent (toSocketID, channel) {
         tmpSocket.mode = "ready";  // ready for another history playback or to switch to realtime
         tmpSocket.historyList.shift(); // free the last element
         if (tmpSocket.historyList.length !== 0) {
-            console.log ("history not free")
+            log.error ("playBackEvent. history not free"); // internal error
         }
-        io.to(toSocketID).emit("history stop", "Finished at: " + Date.now());
+        io.to(toSocketID).emit("playBackEvent. history stop", "Finished at: " + Date.now());
         return;
     }
 
     if (!tmpSocket.historyList[0].values) {
-        console.err("playBackEvent - missing values (0)");
+        console.err("playBackEvent. Missing values (0)");
         return;
     }
     if (!tmpSocket.historyList[1].values) {
-        console.err("playBackEvent - missing values (1)");
+        console.err("playBackEvent. Missing values (1)");
         return;
     }
     currTimeStamp = new Date(tmpSocket.historyList[0].values.time_stamp).getTime();
@@ -229,6 +251,10 @@ function playBackEvent (toSocketID, channel) {
 } // playBackEvent()
 
 function handlePlaybackCancel (socket, cmdArray) {
+
+    assert (typeof socket === "string");
+    assert (Array.isArray(cmdArray));
+
     if (!socket.joined) {
         socket.emit("cancel", {"cancel": cmdDictionary.cancel});
         return;
@@ -237,6 +263,7 @@ function handlePlaybackCancel (socket, cmdArray) {
     let tmpSocket = io.sockets.connected[toSocketID];
     if (!toSocketID || !tmpSocket) {
         socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        log.warn("handlePlaybackCancel. Internal error - communications ID not found (socket.room) " + toSocketID);
         return;
     }
 
@@ -255,6 +282,9 @@ function handleAggregateSend (socket, cmdArray) {
     let trainsArray = [];
     let startTime = 0, stopTime = 0;
 
+    assert (typeof socket === "string");
+    assert (Array.isArray(cmdArray));
+
     if (!socket.joined) {
         // We receive this message from a cmd-client. If the cmd-client is not joined to a map-client, we can not proceed
         socket.emit("help", {"history": "Clients are not joined. " + cmdDictionary.history});
@@ -264,6 +294,7 @@ function handleAggregateSend (socket, cmdArray) {
     tmpSocket = io.sockets.connected[toSocketID];
     if (!toSocketID || !tmpSocket) {
         socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        log.warn("handleAggregateSend. Internal error - communications ID not found (socket.room) " + toSocketID);
         return;
     }
 
@@ -292,6 +323,11 @@ const aggSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
     let multi = redisStore.multi();
     let i;
 
+    assert (typeof toSocketID === "string");
+    assert (typeof startTime === "number");
+    assert (typeof stopTime === "number");
+    assert(Array.isArray(trainsArray));
+
     // get eventIDs per train within given range
     for (i = 0; i < trainsArray.length; i++) {
         multi.zrangebyscore(keyMgr(opStore.cts_logical_nr, trainsArray[i]), startTime, stopTime, "limit", 0, 1000/trainsArray.length);
@@ -304,13 +340,13 @@ const aggSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
         let tmpSocket = io.sockets.connected[toSocketID];
 
         if (!tmpSocket) {
-            console.log("playSomeTrains - internal error, communications ID not found");
+            log.warn("aggSomeTrains - internal error, communications ID not found " + toSocketID);
             socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
             return;
         }
 
         if (err) {
-            console.log("Error retrieving history data: " + err);
+            log.warn("aggSomeTrains. Error retrieving history data: " + err);
             return;
         }
 
@@ -324,29 +360,34 @@ const aggSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
                 let eventCTSList = [];
                 let j = 0;
                 if (err) {
-                    console.error("playSomeTrains - unable to retrieve hash per train: " + err);
+                    log.error("aggSomeTrains. Unable to retrieve hash per train: " + err);
                     return;
                 }
                 for (j = 0; j < ctsEvents.length; j++) {
                     if (!ctsEvents[j]) {
-                        console.error("playSomeTrains - unexpected null value in event data at index: " + i + " " + ctsEvents[i]);
+                        log.error("aggSomeTrains. Unexpected null value in event data at index: " + i + " " + ctsEvents[i]);
                         continue;
                     }
                     flatmsgObject = JSON.parse(ctsEvents[j]);
                     msgObject = unflatten(flatmsgObject);
                     eventCTSList.push(msgObject);
                 }
-                console.log("aggSome eventCTSList.length: " + eventCTSList.length);
+                log.info("aggSomeTrains. eventCTSList.length: " + eventCTSList.length);
                 aggregateAndSendEvents(toSocketID, "cts", eventCTSList); // play back event list for one trai
             }); //exec get and send event-hashes per train
         } // iterate all trains
     }); // exec zrangebyscore get all eventIDs within range
 }; // aggSomeTrains()
 
-const aggAllTrains = function (toSocketID, startTime, stopTime, sendbackFn) {
+const aggAllTrains = function (toSocketID, startTime, stopTime) {
     let flatmsgObject = null, msgObject = null;
     let eventChunkTimeRange = 1000;
     let i;
+
+    assert(typeof toSocketID === "string");
+    assert(typeof startTime === "number");
+    assert(typeof stopTime === "number");
+    assert(typeof callback === "function");
 
     /* testing...
     toArray(redisStore.scan({pattern: "*", count: 100}), function(err, arr) {
@@ -365,12 +406,12 @@ const aggAllTrains = function (toSocketID, startTime, stopTime, sendbackFn) {
 
     redisStore.zrangebyscore(keyMgr(opStore.cts_timestamp), startTime, stopTime, "limit", 0, 1000, function (err, eventIDs) {
         if (err) {
-            console.log("playAllTrains - Redis count error: " + err);
+            log.warn("aggAllTrains - Redis count error: " + err);
             return;
         }
         //console.log ("playAllTrains - eventIDs: " + eventIDs.toString());
         if (!eventIDs) {
-            console.log("playAllTrains - unable to retrieve cts events");
+            console.log("aggAllTrains - no cts events found!");
             return;
         }
         redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, ctsEvents) {
@@ -380,17 +421,17 @@ const aggAllTrains = function (toSocketID, startTime, stopTime, sendbackFn) {
             let prop = null;
             let i = 0;
             if (err) {
-                console.log("playAllTrains - Redis could not retrieve historical data: " + err);
+                log.warn("aggAllTrains - Redis could not retrieve historical data: " + err);
                 return;
             }
             if (!Array.isArray(ctsEvents)) {
-                console.log("playAllTrains - Redis request did not return valid response. Expected array: " + ctsEvents);
+                log.warn("aggAllTrains - Redis request did not return valid response. Expected array: " + ctsEvents);
                 return;
             }
 
             tmpSocket = io.sockets.connected[toSocketID];
             if (!tmpSocket) {
-                console.error("playAllTrains - Internal communications error. Connection lost: " + toSocketID);
+                log.error("aggAllTrains - Internal communications error. Connection lost: " + toSocketID);
                 return;
             }
 
@@ -404,28 +445,30 @@ const aggAllTrains = function (toSocketID, startTime, stopTime, sendbackFn) {
             }
             for (prop in trainObj) {
                 aggregateAndSendEvents(toSocketID, "cts", trainObj[prop]);
-                console.log("aggAll length trainObj[" + prop + "] : " + trainObj[prop].length + " test: " + Array.isArray(trainObj[prop]));
+                log.info("aggAllTrains. length trainObj[" + prop + "] : " + trainObj[prop].length + " test: " + Array.isArray(trainObj[prop]));
             }
         }); // redis hmget-callback
     }); // redis zrange-callback
 }; //aggAllTrains()
 
 function aggregateAndSendEvents (toSocketID, channel, eventArray) {
-    let tmpSocket = io.sockets.connected[toSocketID];
+    let tmpSocket = null;
     let eventObj = {}, currentEvent = null, eventList = [];
     let Name = null;
 
+    assert(typeof toSocketID === "string");
+    assert(typeof channel === "string");
+    assert(Array.isArray(eventArray));
+
+    tmpSocket = io.sockets.connected[toSocketID];
+
     if (!tmpSocket) {
-        console.error("aggregateEvents - Internal communications error, invalid toSocketID " + toSocketID);
-        return;
-    }
-    if (!eventArray || !Array.isArray(eventArray)) {
-        console.error("aggregateEvents - Internal error, historyList not found.");
+        log.error("aggregateAndSendEvents - Internal communications error, invalid toSocketID " + toSocketID);
         return;
     }
 
     if (eventArray.length === 0) {
-        console.error("aggregateEvents -- out of range");
+        log.error("aggregateAndSendEvents -- eventArray out of range");
         return;
     }
     // reduce history list to array of only unique berths, sorted in the order they are encountered and with a "Count" value equal to the number of times the berth occur in historyList

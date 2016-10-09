@@ -7,6 +7,9 @@
 
 "use strict";
 const infrastructure = require("./infrastructure");
+const assert = require("assert");
+const logger = require('./logger');
+const log = logger().getLogger('apcrealtime');
 
 let io = null;
 
@@ -18,7 +21,7 @@ let APCObject = {}; // Automated Passenger Counting, i.e. physical id for each 3
 
 let APC = {};
 
-APC.getAPCObject = function fNGetAPCObject () {
+APC.getAPCObject = function () {
     return APCObject;
 };
 // Passengers
@@ -61,6 +64,7 @@ APC.hasSumPerStation = function () {
 APC.getSumPerOwnModuleTable = function () {
     return sumPerOwnModuleTable;
 }; // getSumPerOwnModuleTable()
+
 APC.hasSumPerOwnModule = function () {
     if (!sumPerOwnModuleTable || ! Array.isArray(sumPerOwnModuleTable)) {
         return false;
@@ -73,13 +77,18 @@ APC.parseSumPerLine = function (room, channel, msgObject) {
     let lineObj = null;
     let i = 0;
 
-    if (!room || !channel || !msgObject || !msgObject.values) {
-        console.error("parseSumPerLine - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+    assert(typeof room === "string");
+    assert(typeof channel === "string");
+    assert(typeof msgObject === "object");
+
+    if (!msgObject.values || !Array.isArray(msgObject.values)) {
+        log.warn("parseSumPerLine - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
         return;
     }
     if (msgObject.values.length > 0) {
         sumPerLineTable = [];
     }
+
     for (i = 0; i < msgObject.values.length; i+=1) {
         lineObj = JSON.parse(msgObject.values[i]);
         sumPerLineTable.push({
@@ -94,8 +103,13 @@ APC.parseSumPerLine = function (room, channel, msgObject) {
 APC.parseSumPerStation = function (room, channel, msgObject) {
     let stationObj = null;
     let i = 0;
-    if (!room || !channel || !msgObject || !msgObject.values) {
-        console.error("parseSumPerStation - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+
+    assert(typeof room === "string");
+    assert(typeof channel === "string");
+    assert(typeof msgObject === "object");
+
+    if (!msgObject.values || !Array.isArray(msgObject.values)) {
+        log.warn("parseSumPerStation - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
         return;
     }
     if (msgObject.values.length > 0) {
@@ -116,10 +130,15 @@ APC.parseSumPerOwnModule = function (room, channel, msgObject) {
     let OwnModuleObj = null;
     let i = 0;
 
-    if (!room || !channel || !msgObject || !msgObject.values) {
-        console.error("parseSumPerOwnModule - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+    assert(typeof room === "string");
+    assert(typeof channel === "string");
+    assert(typeof msgObject === "object");
+
+    if (!msgObject.values || !Array.isArray(msgObject.values)) {
+        log.warn("parseSumPerOwnModule - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
         return;
     }
+
     if (msgObject.values.length > 0) {
         sumPerOwnModuleTable = [];
     }
@@ -143,14 +162,19 @@ APC.parsePassengerData = function (room, channel, msgObject) {
     let i = 0;
     let station = null;
 
-    if (!room || !channel || !msgObject || !msgObject.values) {
-        console.error("parsePassengerData - invalid msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+    assert(typeof room === "string");
+    assert(typeof channel === "string");
+    assert(typeof msgObject === "object");
+
+    if (!msgObject.values) {
+        log.info("parsePassengerData - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
         return;
     }
+
     records = msgObject.values.toString().split("\n");
 
     if (records === null || records === undefined || records.length === 0) { // we did NOT receive data
-        console.error("parsePassengerData - msgObject did not contain data: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+        log.warn("parsePassengerData - msgObject did not contain data: " + JSON.stringify(msgObject));
         return;
     }
 
@@ -164,7 +188,7 @@ APC.parsePassengerData = function (room, channel, msgObject) {
             break; // seems all passenger files contains an empty record at the end - just ignore it
         }
         if (!items || items.length < 15) { // at present there will be 70 items in a record, but this may change in the future. We assume that the first 15 will stay unchanged
-            console.error("parsePassengerData - msgObject contained invalid data. Record " + records[i] + " msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+            log.error("parsePassengerData - msgObject contained invalid data. Record " + records[i] + " msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
             return;
         }
 
@@ -197,7 +221,7 @@ APC.parsePassengerData = function (room, channel, msgObject) {
         let stationObject = infrastructure.getStationByID(passengerObject.CurrentStationID);
         if (!stationObject) {
             if (passengerObject.CurrentStationID !== 6) { // station 6 is non-existing, APC bug...
-                console.error("apcrealtime - Station not found!");
+                log.error("apcrealtime - Station not found!");
             }
         }
         else {
@@ -257,7 +281,7 @@ APC.getLastPaxUpdateTimeUnix = function () {
     return lastPaxUpdateTimeUnix;
 }; // getLastPaxUpdateTimeUnix()
 
-module.exports = function fNinitAPC (pio) {
+module.exports = function (pio) {
     io = pio;
     return APC;
 };

@@ -38,6 +38,7 @@
     <option loopfunc="false" />
     <option maxerr="50" />
     <option mocha="false" />
+    <option module="true" />
     <option mootools="false" />
     <option moz="false" />
     <option multistr="false" />
@@ -47,7 +48,7 @@
     <option node="true" />
     <option noempty="true" />
     <option nomen="false" />
-    <option nonbsp="false" />
+    <option nonbsp="true" />
     <option nonew="true" />
     <option nonstandard="false" />
     <option notypeof="false" />
@@ -74,6 +75,7 @@
     <option undef="true" />
     <option unused="false" />
     <option validthis="false" />
+    <option varstmt="false" />
     <option white="true" />
     <option withstmt="false" />
     <option worker="false" />

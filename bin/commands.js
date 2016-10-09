@@ -12,6 +12,8 @@ const helpers = require ("./helpers");
 const ctsrealtime = require ("./ctsrealtime");
 const opstore = require ("./opstore");
 const assert = require ("assert");
+const logger = require('./logger');
+const log = logger().getLogger('commands');
 
 let io = null;
 let cmdDictionary = {
@@ -43,35 +45,31 @@ let Command = {
 }; // Command
 
 Command.help = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
-
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
     socket.emit("help", cmdDictionary);
 };
 
 Command.flushAll = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
-
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
     if (cmdArray.length !== 2 || cmdArray[1] !== "Poker") {
         return;
     }
-    opstore.flushAll();
-    /*
+    opstore.flushAll(function (err, reply) {
         if (err) {
             socket.emit("chat message", "Flush failed: " + err);
             return;
         }
-        socket.emit("chat message", "Flush succeeded: " + succeeded);
+    socket.emit("chat message", "Flush succeeded: " + reply);
     });
-    */
 }; // flushAll ()
 
 Command.master = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
 
     if (cmdArray.length !== 2 || cmdArray[1] !== "Poker") {
@@ -84,8 +82,8 @@ Command.master = function (cmdArray, socket) {
 }; // master ()
 
 Command.getCTSEvent = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
 
     if (cmdArray.length === 1 || !helpers.MyIsNumber(parseInt(cmdArray[1]))) {
@@ -104,8 +102,8 @@ Command.getCTSEvent = function (cmdArray, socket) {
 }; // getCTSEvent()
 
 Command.getCTSLastEventID = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
     opstore.getLastCTSEventID (function (err, eID) {
         if (err) {
@@ -118,13 +116,13 @@ Command.getCTSLastEventID = function (cmdArray, socket) {
 }; // get CTSLastEventID ()
 
 Command.getTrains = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
     opstore.getTrainNumbersLogical(function (err, trainNumbers) { // get all logical train keys
         if (err) {
             socket.emit('chat message', "Unable to retrive train numbers. Error: " + err);
-            console.log("smembers error: " + err);
+            log.warn("getTrains. smembers error: " + err);
         }
         else {
             socket.emit('trains', trainNumbers);
@@ -133,12 +131,12 @@ Command.getTrains = function (cmdArray, socket) {
 }; // getTrains()
 
 Command.getFirstAndLastCTSEvent = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
     opstore.getFirstAndLastEvent (function (err, result) {
         if (err) {
-            console.log("Unable to retrieve range. Error: " + err);
+            log.warn("getFirstAndLastCTSEvent. Unable to retrieve range. Error: " + err);
             socket.emit('chat message', "Unable to retrieve first and last event. Error: " + err);
             return;
         }
@@ -153,8 +151,8 @@ Command.getFirstAndLastCTSEvent = function (cmdArray, socket) {
 }; // getFirstAndLastCTSEvent ()
 
 Command.setMaxCTSEvents = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
     let currentMax = opstore.getMaxCTSEvents();
     let newMax;
@@ -174,8 +172,8 @@ Command.setMaxCTSEvents = function (cmdArray, socket) {
 }; // setMaxCTSEvents ()
 
 Command.countCTSEvents = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
     opstore.countCTSEvents(function (err, result) {
         if (err) {
@@ -188,8 +186,8 @@ Command.countCTSEvents = function (cmdArray, socket) {
 }; // countCTSEvents()
 
 Command.getOkBerths = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray));
+    assert.ok(typeof socket === "object");
 
 
     let toSocketID, tmpSocket;
@@ -201,6 +199,7 @@ Command.getOkBerths = function (cmdArray, socket) {
     tmpSocket = io.sockets.connected[toSocketID];
     if (!toSocketID|| !tmpSocket) {
         socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        log.warn("getOkBerths. internal error - communications ID not found (socket.room) " + toSocketID);
         return;
     }
     socket.to(toSocketID).emit("okberths", ctsrealtime.getBerthsReceivedObject());
@@ -208,8 +207,8 @@ Command.getOkBerths = function (cmdArray, socket) {
 }; // getOkBerths ()
 
 Command.setBlinkAlarms = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray), "Command.BlinkAlarms invalid parameter cmdArray: " + cmdArray);
+    assert.ok(typeof socket === "object");
 
     if (!socket.joined) {
         socket.emit("help", {"blink": cmdDictionary.blink});
@@ -219,6 +218,7 @@ Command.setBlinkAlarms = function (cmdArray, socket) {
     let tmpSocket = io.sockets.connected[toSocketID];
     if (!toSocketID|| !tmpSocket) {
         socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        log.warn("setBlinkAlarms. internal error - communications ID not found (socket.room) " + toSocketID);
         return;
     }
     socket.to(toSocketID).emit("blinkalarms", null);
@@ -226,8 +226,8 @@ Command.setBlinkAlarms = function (cmdArray, socket) {
 }; // setBlinkAlarms ()
 
 Command.setDestination = function (cmdArray, sockets) {
-    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray), "Command.setDestination invalid parameter cmdArray: " + cmdArray);
+    assert.ok(typeof socket === "object");
 
     if (!socket.joined) {
         socket.emit("help", {"destination": cmdDictionary.destination});
@@ -237,6 +237,7 @@ Command.setDestination = function (cmdArray, sockets) {
     let tmpSocket = io.sockets.connected[toSocketID];
     if (!toSocketID|| !tmpSocket) {
         socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        log.warn("setDestination. internal error - communications ID not found (socket.room) " + toSocketID);
         return;
     }
     socket.to(toSocketID).emit("destination", null);
@@ -244,8 +245,8 @@ Command.setDestination = function (cmdArray, sockets) {
 }; // setDestination ()
 
 Command.generateTestGhosts = function (cmdArray, sockets) {
-    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray), "Command.generateTestGhosts invalid parameter cmdArray: " + cmdArray);
+    assert.ok(typeof socket === "object");
 
     // create 3 ghost msgObjects by changing train address to "----" and send to clients
     // used for testing
@@ -256,7 +257,8 @@ Command.generateTestGhosts = function (cmdArray, sockets) {
     let toSocketID = socket.room;
     let tmpSocket = io.sockets.connected[toSocketID];
     if (!tmpSocket) {
-        console.error("Internal communication error. Socket not found: " + toSocketID);
+        socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        log.error("generateTestGhosts. Internal communication error. Socket not found: " + toSocketID);
         return;
     }
     for (var train in ctsLiveObject) {
@@ -270,8 +272,8 @@ Command.generateTestGhosts = function (cmdArray, sockets) {
 }; // generateTestGhosts ()
 
 Command.getSockets = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray), "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
+    assert.ok(typeof socket === "object");
 
     let tmpSocket = [];
     for (var sock in io.sockets.connected) {
@@ -283,8 +285,8 @@ Command.getSockets = function (cmdArray, socket) {
 }; // getSockets()
 
 Command.join = function (cmdArray, socket) {
-    assert.ok(Array.isArray(cmdArray), true, "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
-    assert.ok(typeof socket, "object");
+    assert.ok(Array.isArray(cmdArray), "Command -set MaxCTSEvents invalid paramter cmdArray: " + cmdArray);
+    assert.ok(typeof socket === "object");
 
     let socketid = null;
     if (cmdArray.length !== 2 || !io.sockets.connected[cmdArray[1]]) {

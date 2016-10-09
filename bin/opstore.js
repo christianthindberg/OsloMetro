@@ -21,6 +21,9 @@ const os = require("os");
 const flatten = require("flat");
 const unflatten = require("flat").unflatten;
 const assert = require("assert");
+const logger = require("./logger");
+const log = logger().getLogger("opstore");
+//const logMemory = logger().getLogger("memory-usage");
 
 // max number of events to store
 let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
@@ -38,7 +41,7 @@ let Store = {
 };
 
 Store.setMaxCTSEvents = function (max) {
-    assert.ok(typeof max === "number", true, "Stor -setMaxCTSEvents - max paramater is not number: " + max);
+    assert.ok(typeof max === "number", "Store.setMaxCTSEvents - max paramater is not number: " + max);
     maxCTS = max;
     return maxCTS;
 };
@@ -47,12 +50,12 @@ Store.getMaxCTSEvents = function () {
 };
 
 Store.getLastCTSEventID = function (callback) {
-    assert.ok(typeof callback, "function");
+    assert.ok(typeof callback === "function");
     redisStore.get("CTS_EVENT_ID", callback);
 }; // getLastCTSEventID()
 
 Store.countCTSEvents = function (callback) {
-    assert.ok(typeof callback, "function");
+    assert.ok(typeof callback === "function");
 
     redisStore.zcount(km(k.ctsTimestamp), "-inf", "+inf", function (err, count) {
        callback (err, count);
@@ -60,8 +63,8 @@ Store.countCTSEvents = function (callback) {
 }; // countCTSEvents()
 
 Store.getCTSEventByID = function (eventID, callback) {
-    assert.ok(typeof callback, "function");
-    assert.ok(typeof  eventID, "number");
+    assert.ok(typeof callback === "function");
+    assert.ok(typeof  eventID === "number");
 
     redisStore.hget(km(k.ctsEvents), eventID, function (err, result) {
         const flatmsgObject = JSON.parse(result);
@@ -72,12 +75,12 @@ Store.getCTSEventByID = function (eventID, callback) {
 
 
 Store.getTrainNumbersLogical = function (callback) {
-    assert.ok(typeof callback, "function");
+    assert.ok(typeof callback === "function");
     redisStore.smembers(km(k.trainlogKeys), callback);
 }; // getTrainNumbersLogical()
 
 Store.getFirstAndLastEvent = function (callback) {
-    assert.ok(typeof callback, "function");
+    assert.ok(typeof callback === "function");
 
     const multi = redisStore.multi();
 
@@ -89,9 +92,9 @@ Store.getFirstAndLastEvent = function (callback) {
 }; // getFirstAndLastEvent()
 
 Store.saveCTSEvent = function (msgObject, callback) {
-    assert.ok(msgObject.hasOwnProperty("values"), true, "Store - saveCTSEvent - no property msgObject.values");
-    assert.ok(new Date(msgObject.values.time_stamp) instanceof Date, true, "Store - saveCTSEvent - not timestring msgObject.values.time_stamp");
-    assert.ok(typeof callback === "function", true, "Store - save CTSEvent - callback is not function");
+    assert.ok(msgObject.hasOwnProperty("values"), "Store.saveCTSEvent - no property msgObject.values: " + JSON.stringify(msgObject, undefined,2));
+    assert.ok(new Date(msgObject.values.time_stamp) instanceof Date, "Store.saveCTSEvent - not timestring msgObject.values.time_stamp");
+    assert.ok(typeof callback === "function", "Store.save CTSEvent - callback is not function");
 
     if (Store.isMaster()) {
 
@@ -102,10 +105,12 @@ Store.saveCTSEvent = function (msgObject, callback) {
         // todo: zadd per line
         // todo: zadd per ghost
 
+        //logMemory.info ("test memory %d", process.memoryUsage().rss);
+
         redisStore.incr('CTS_EVENT_ID', function (err, eID) {
             var multi = redisStore.multi();
             if (err) {
-                console.log("redis error: " + err);
+                console.log("Store.saveCTSEvent. redis error: " + err);
             }
             else {
                 multi.hset(km(k.ctsEvents), eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
@@ -129,7 +134,7 @@ Store.redisFreeOldData = setInterval(function () {
     }
     redisStore.zcount(km(k.ctsTimestamp), "-inf", "+inf", function (err, count) {
         if (err) {
-            console.log("Redis count error: " + err);
+            console.log("Store.redisFreeOldData. Redis count error: " + err);
         }
         else if (count > maxCTS) {
             // get all events from the oldes (starting at index 0) and up to count-maxCTS
@@ -144,7 +149,7 @@ Store.redisFreeOldData = setInterval(function () {
                 multi.exec(function (err, replies) {
                     var trainKeys = [];
                     if (err) {
-                        console.error("Unable to delete: " + err + " Reply: " + reply);
+                        console.error("Store.redisFreeOldData. Unable to delete: " + err + " Reply: " + reply);
                         return;
                     }
                     trainKeys = replies[2];
@@ -165,20 +170,18 @@ Store.redisFreeOldData = setInterval(function () {
     }); // zcount
 }, 1000 * 3); // check every 3rd second
 
-Store.testSubscribe = function (callback) {
-    assert.ok(typeof callback, "function", "Store - testSubscribe invalid callback");
+Store.testSubscribe = function () {
+    //assert.ok(typeof callback === "function", "Store.testSubscribe invalid callback");
     // just for testing and verifying connection opStore connection
     // if you'd like to select database 3, instead of 0 (default), call
     // client.select(3, function() { /* ... */ });
     redisSubscriberClient.subscribe("testsubscription");
-    redisSubscriberClient.on("error", function (err) {
-        console.log("Error " + err);
-        callback(err, null);
-    });
+    //opstore.subscribe("cts");
+    //return redisSubscriberClient.subscribe(topic);
 }; // testSubscribe()
 
 Store.flushAll = function (callback) {
-    assert.ok(typeof callback, "function", "Store - flushAll invalid callback");
+    assert.ok(typeof callback === "function", "Store.flushAll invalid callback: " + callback);
     redisStore.flushall(function (err, succeeded) {
         callback(err, succeeded);
         //socket.emit("chat message", "Redis says: " + err + " " + succeeded); // will be true if successfull
@@ -200,15 +203,16 @@ Store.isMaster = function () {
     return bMaster;
 };
 Store.setMaster = function (bState) {
-    assert.ok(typeof bState, "boolean");
+    assert.ok(typeof bState === "boolean");
     bMaster = bState;
 };
 Store.subscribe = function (topic) {
-    assert.ok(typeof topic, "string");
+    assert.ok(typeof topic === "string");
     return redisSubscriberClient.subscribe(topic);
 };
 
 Store.on = function (event, callbackfn) {
+    console.log("Store.on. event: " + event);
     return redisSubscriberClient.on (event, callbackfn);
 };
 
@@ -222,9 +226,19 @@ Store.end = function () {
     pub.end();
 };
 Store.getStoreInfo = function () {
-    return redisStore.server_info;
+    return redisStore.serverInfo;
 }; // getStoreInfo()
 
+Store.getStoreCommands = function () {
+    return redisStore.getBuiltinCommands().toString();
+}; // getStoreCommands
+
+redisSubscriberClient.on("error", function (err) {
+    console.log("redisSubscriberClient.on(error). Error: " + err);
+});
+redisStore.on("error", function (err) {
+    console.log("redisStore.on(error). Error: " + err);
+});
 
 // Key Management
 //
@@ -248,6 +262,15 @@ function km() {  // km - short for "Key Manager"
 
 Store.k = k;
 Store.km = km;
+
+redisSubscriberClient.on("error", function (err) {
+    log.error("redisSubscriberClient.on -  Error " + err);
+    //callback(err, null);
+});
+redisStore.on("error", function (err) {
+    log.error("redisStore.on -  Error " + err);
+    //callback(err, null);
+});
 
 module.exports = Store;
 

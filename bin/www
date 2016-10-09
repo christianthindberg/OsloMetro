@@ -116,7 +116,12 @@ io.on('connection', function (socket) {
                 cmd.help(cmdArray, socket);
                 break;
             case "sub":
-                opstore.testSubscribe();
+                if (cmdArray.length > 1) {
+                    opstore.subscribe(cmdArray[1]);
+                }
+                else {
+                    opstore.subscribe("test");
+                }
                 break;
             case "flushall":
                 cmd.flushAll(cmdArray, socket);
@@ -155,7 +160,10 @@ io.on('connection', function (socket) {
                 cmd.getFirstAndLastCTSEvent (cmdArray, socket);
                 break;
             case "info":
-                socket.emit('chat message', "Redis says: " + JSON.stringify(opstore.getStoreInfo(), undefined, 2));
+                socket.emit('chat message', "Info: " + JSON.stringify(opstore.getStoreInfo(), undefined, 2));
+                break;
+            case "redis":
+                socket.emit('chat message', "Redis commands: " + JSON.stringify(opstore.getStoreCommands(), undefined, 2));
                 break;
             case "max":
                 cmd.setMaxCTSEvents (cmdArray, socket);
@@ -260,10 +268,11 @@ opstore.subscribe("OwnModuleAggregate");
 opstore.subscribe("Log");
 opstore.subscribe("Error");
 opstore.subscribe("cts");
+/*
 opstore.on("error", function (err) {
     console.log("Error " + err);
 });
-
+*/
 // Start Redis communication
 opstore.on("subscribe", function (channel, count) {
     io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + count);
@@ -273,7 +282,11 @@ opstore.on("subscribe", function (channel, count) {
 // Handle data from Redis
 opstore.on("message", function fNonOpstoreMessage (channel, msg) {
     const msgObject = JSON.parse(msg);
-    if (channel === "pax") {
+
+    if (channel === "cts") {
+        ctsrealtime.parseAndSendCTS("realtime", channel, msgObject);
+    }
+    else if (channel === "pax") {
         apcrealtime.parsePassengerData("realtime", channel, msgObject);
     }
     else if (channel === "LineAggregate") {
@@ -285,11 +298,11 @@ opstore.on("message", function fNonOpstoreMessage (channel, msg) {
     else if (channel === "OwnModuleAggregate") { // todo: add room to all of these: realtime
         apcrealtime.parseSumPerOwnModule("realtime", channel, msgObject);
     }
-    else if (channel === "cts") {
-        ctsrealtime.parseAndSendCTS("realtime", channel, msgObject);
-    }
     else if (channel === "Log" || channel === "Error") {
         io.emit("Log", channel + ": " + msg)
+    }
+    else {
+        console.log ("Channel: " + channel + " Message: " + msg);
     }
 
     // emit all data we get as a separate topic, except for log-data

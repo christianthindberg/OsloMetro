@@ -15,7 +15,8 @@ permissions and limitations under the License.
 
 "use strict";
 
-let log4js = require('log4js');
+const log4js = require("log4js");
+const os = require("os");
 /*
 var AWS = require('aws-sdk');
 var awsConfig = require('./config');
@@ -32,35 +33,58 @@ s3bucket.createBucket(function() {
   });
 });
 */
+
+
 function logger() {
-  var logDir = process.env.NODE_LOG_DIR !== undefined ? process.env.NODE_LOG_DIR : __dirname;
-  var logDirSub;
+  const logDir = process.env.NODE_LOG_DIR !== undefined ? process.env.NODE_LOG_DIR : __dirname;
+  const logDirSub = logDir + "/";
 
-  if (process.platform === "win32") {
-    //logDirSub = logDir + "\\";
-    logDirSub = "D:\\home\\LogFiles\\Application\\";
-  } else {
-    logDirSub = logDir + "/";
-  }
+  /*
+   {
+   type: "console",
+   category: "console"
+   },
+   */
+  let config = {};
 
-  var config = {
+  config = {
     "appenders": [
       {
-        "type": "file",
-        "filename": logDirSub + "application.log",
-        "pattern": "-yyyy-MM-dd",
-        "layout": {
-          "type": "pattern",
+        "type":       "file",
+        "filename":   logDirSub + "oslometro.log", //logDirSub + "application.log",
+        "maxLogSize": 102400,
+        "backups":    3,
+        "pattern":    "-yyyy-MM-dd",
+        "layout":     {
+          "type":    "pattern",
           "pattern": "%d (PID: %x{pid}) %p %c - %m",
-          "tokens": {
-            "pid" : function() { return process.pid; }
-          }
-        }
-      }
+          "tokens":  {
+            "pid": function () {
+              return process.pid;
+            }
+          } // tokens
+        } // layout
+      } // appender
     ]
   };
 
   log4js.configure(config, {});
+
+  if (os.platform() === "darwin") { // running locally on Mac
+    log4js.loadAppender("console");
+    log4js.addAppender(log4js.appenders.console());
+  }
+
+/*
+ {
+ type: "file",
+ filename: logDirSub + "om-memuse.log",
+ category: "memory-usage",
+ layout: {
+ type: "messagePassThrough"
+ }
+ } // appender2
+ */
 
   return {
     getLogger: function(category) {
