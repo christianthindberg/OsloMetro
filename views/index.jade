@@ -706,8 +706,8 @@ body
             .attr('pointer-events', 'all')
             .on("mouseover", function (d) { this.parentNode.parentNode.appendChild(this.parentNode);})
             .style("stroke-width", 4)
-            .style("stroke-dasharray", function (d) { return d.values.yellow ? ("4,4") : null; }) // "null" removes the property
-            .style("stroke", function (d) { if (d.values.yellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
+            .style("stroke-dasharray", function (d) { return d.values.isYellow ? ("4,4") : null; }) // "null" removes the property
+            .style("stroke", function (d) { if (d.values.isYellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
             .style("fill", "white") //'#ffffff')
             .style("opacity", 1.0);
 
@@ -728,9 +728,9 @@ body
         marker.select("rect") // select the first (and only) rect child for each svg. Remember the side-effect: select also updates the datum of the child
           .transition()
           .duration(2000)
-            .style("stroke-dasharray", function (d) { return d.values.yellow ? ("4,4") : null; }) // We set this property here is becaues of the Special codes (EXIT, NOTD, INTERP etc. As soon as the train start moving we remove the dasharray stroke
-            .style("stroke", function (d) { if (d.values.yellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
-            .style("fill", function (d) { return d.values.yellow ? "white" : trainRectColor(d); });
+            .style("stroke-dasharray", function (d) { return d.values.isYellow ? ("4,4") : null; }) // We set this property here is becaues of the Special codes (EXIT, NOTD, INTERP etc. As soon as the train start moving we remove the dasharray stroke
+            .style("stroke", function (d) { if (d.values.isYellow) { return "black"; } else { return d.values.Line == 0 ? LineColor[LineColor.length-1] : LineColor[d.values.Line-1]; }})
+            .style("fill", function (d) { return d.values.isYellow ? "white" : trainRectColor(d); });
         marker.select("text")
           .text(function (d) { return bTextDestination ? getDestination(d) : d.values.address; })
           .transition()

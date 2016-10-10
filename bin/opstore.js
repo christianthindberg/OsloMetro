@@ -35,7 +35,7 @@ const redisStore = os.platform() === "darwin" ? new redis() : new redis(6379, "o
 const redisSubscriberClient = os.platform() === "darwin" ? new redis() : new redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 // used for testing
 const pub = os.platform() === "darwin" ? new redis() : new redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
-console.log ("Redis coonect: " + JSON.stringify(redisStore));
+console.log ("Redis connect: " + JSON.stringify(redisStore));
 
 let Store = {
     version:1.0
@@ -96,9 +96,9 @@ Store.saveCTSEvent = function (msgObject, callback) {
     assert.ok(msgObject.hasOwnProperty("values"), "Store.saveCTSEvent - no property msgObject.values: " + JSON.stringify(msgObject, undefined,2));
     assert.ok(new Date(msgObject.values.time_stamp) instanceof Date, "Store.saveCTSEvent - not timestring msgObject.values.time_stamp");
     assert.ok(typeof callback === "function", "Store.save CTSEvent - callback is not function");
+    assert.ok(msgObject.values.hasOwnProperty("to_infra_berth"));
 
     if (Store.isMaster()) {
-
         const timestamp = new Date(msgObject.values.time_stamp).getTime();
         const trainNo = msgObject.values.address;
         // todo: zadd per berth and per berth/train
@@ -118,7 +118,37 @@ Store.saveCTSEvent = function (msgObject, callback) {
                 // parameters are KEY, SCORE, MEMBER (or value)
                 multi.zadd(km(k.ctsTimestamp), timestamp, eID); // sorted list of all events timestamp/eventID
                 multi.zadd(km(k.trainLog, trainNo), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
+                multi.zadd(km(k.line, msgObject.values.Line), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
+                multi.zadd(km(k.destination, msgObject.values.destination), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
+
+                if (msgObject.values.isGhost) {
+                    redisStore.publish("cts_ghost_train", eID);
+                    multi.zadd(km(k.ghost), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
+                }
+                else if (msgObject.values.isSpecialCode) {
+                    redisStore.publish("cts_special_code", eID);
+                }
+                else if (msgObject.values.isTrainNoChange) {
+                    redisStore.publish("cts_trainno_change", eID);
+                }
+                else if (msgObject.values.isValidToBerth) {
+                    multi.zadd(km(k.berth, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical berth
+                    multi.zadd(km(k.trainberth, trainNo, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train AND berth
+                    multi.sadd(km(k.berthKeys), msgObject.values.to_infra_berth.Name); // keep a set containg all berths
+                    if (msgObject.values.isTrainJump) {
+                        multi.zadd(km(k.trainjumps), timestamp, eID);
+                    }
+                    redisStore.publish("cts_event", eID);
+                }
+                else { // not valid toBerth..
+                    redisStore.publish("cts_event_invalid", eID);
+                }
+
+
                 multi.sadd(km(k.trainlogKeys), trainNo); // keep a set containg all logical train numbers
+                multi.sadd(km(k.destinationKeys), msgObject.values.destination); // keep a set containg all destinations
+
+
                 multi.exec(function (err, data) {
                     if (err)
                         console.log("err: " + err + " data: " + data);
@@ -210,7 +240,13 @@ Store.setMaster = function (bState) {
 Store.subscribe = function (topic) {
     assert.ok(typeof topic === "string");
     return redisSubscriberClient.subscribe(topic);
-};
+}; // subscribe()
+
+Store.publish = function (topic, data) {
+    assert(typeof topic === "string");
+    assert(data);
+    redisStore.publish (topic, data);
+}; // publish()
 
 Store.on = function (topic, callbackfn) {
     console.log("Store.on. topic: " + topic);
@@ -251,12 +287,19 @@ k.users = km(k.base,'users'); //list
 k.status = km(k.base,'status'); //String, :userName
 k.ctsEvents = km(k.base, "cts");  // hash of all valid cts events
 k.ctsTimestamp = km(k.base, "cts", "timestamp"); // sorted list of cts-events
+k.berth = km(k.base, "cts", "berth");
+k.trainberth = km(k.base, "cts", "trainlognr", "berth");
+k.line = km(k.base, "cts", "line");
+k.destination = km(k.base, "cts", "destination");
 
-k.trainLog = km(k.base, "cts","log_nr"); // sorted lists, one for each logical train number containing score timestamp, member ctsEventID
-k.trainlogKeys = km(k.base, "cts","log_nr","key"); // set of strings, each a logical train number
+k.trainLog = km(k.base, "cts","trainlognr"); // sorted lists, one for each logical train number containing score timestamp, member ctsEventID
+k.trainlogKeys = km(k.base, "cts","key","trainlognr"); // set of strings, each a logical train number
+k.trainjumps = km(k.base, "cts", "trainjump");
 
-k.trainPhys = km(k.base, "cts","phys_nr"); // sorted lists, one for each physical 3-car-set number containing score timestamp, member ctsEventID
-k.trainKeysPhys = km(k.base, "cts","phys_nr","key"); // set of strings, each a physical 3-car-set number
+k.trainPhys = km(k.base, "cts","trainphysnr"); // sorted lists, one for each physical 3-car-set number containing score timestamp, member ctsEventID
+k.trainKeysPhys = km(k.base, "cts","key", "trainphysnr"); // set of strings, each a physical 3-car-set number
+k.destinationKeys = km(k.base, "cts", "key", "destination");
+k.berthKeys = km(k.base, "cts", "key", "berth");
 
 
 function km() {  // km - short for "Key Manager"

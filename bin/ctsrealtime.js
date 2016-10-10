@@ -4,7 +4,45 @@
  * Parse incoming CTS Events
  * Store events and emit to clients
  * Provide information on events to clients (via www) and to users (through the commands module)
+ *
+ * functions:
+ *  CTSRealTime.getLiveObject
+ *  CTSRealTime.getBerthsReceivedObject
+ *  CTSRealTime.getAllTails
+ *  CTSRealTime.getGhosts
+ *      function updateCTSLiveObject
+ *
+ *  const trainsInTraffic - generate event "trainsintraffic" with number of trains we have heard from during last hour
+ *  const removeTrains - generate event "removetrain" if no signal received from train in 60 mins
+ *  
+ *  --> ctshistory: CTSRealTime.parseAndSendCTShistory = function (room, channel, msgObject)
+
+        redisStore.publish("cts_ghost_train", eID);
+        redisStore.publish("cts_special_code", eID);
+        redisStore.publish("cts_trainno_change", eID);
+        redisStore.publish("cts_event", eID);
+        redisStore.publish("cts_event_invalid", eID);
+ *  -------------
+ *  CTSRealTime.parseAndSendCTS
+ *      function checkTrainNoChange
+ *      function isValidFromBerth
+ *      function isValidToBerth
+ *      function saveNormalCTSEvent
+ *      function IsGhostTrain
+ *      function updateTrainNoChangeSuspects(trainNo, timestampString)
+ *      function getBerthName (msgObject)
+ *      function isSpecialCTSCode (code)
+ *      function IsYellowTrain (trainNo)
+ *      function getLastUniqueLine (msgObject)
+ *      function guessLine (msgObject)
+ *      function guessLineNoFromTrainNo (trainNo)
+ *      function trainChangeNumber (room, oldTrainNo)
+ *      function logDisorder (on, timestamp)
+ *
+ *
+ *
  */
+
 
 
 "use strict";
@@ -245,26 +283,25 @@ const removeTrains = setInterval(function fNremoveTrains () {
  *
  * Anomalies are recorded, i.e. stored in opstore
  *
- * The following data is added to an event
+ * The following data may be added to an event during parsing:
  * msgObject.values.isGhost             - true if ctsevent is a false signal
  * msgObject.values.isValidFromBerth    - true if the berth sent from cts is matched with berth in infrastructure masterdata
  * msgObject.values.isValidToBerth      - true if the berth sent form cts is matched with berth in infrastructure masterdata
  * msgObject.values.isYellow            - true if we find that cts is from a maintenance train
  * msgObject.values.isFirstTime         - true if this is the first time we encounter this logical train no (we may have seen it previosly, but then number was switched to something else)
  * msgObject.values.isSpecialCode       - true if msgObject.values.to_berth | from_berth === INTERP, EXIT, NOTD, ...
+ * msgObject.values.isTrainJump         - true if current berth !== previousBerth.nextBerth
+ * msgObject.values.isTrainNoChange     - true if train changed its logical number. In this case the property "newTrainNo" is also added to msgObject
  * msgObject.values.lastUniqueLine      - the number of the line the train was on last time it was on a unique part of the tracks
  * msgObject.values.Line                - the number of the Line we decide the train is currently servicing
  *
  * The following events are generated:
- * Ghost-train
- * Special code
- * TrainNo change
- * Train jump
- * First time
- * Normal CTS event
- *
- * Remove train
- * Number of trains in operation last 60 mins
+ * cts_ghost_train
+ * cts_special_code
+ * cts_train_jump
+ * cts_trainnumber_first_time
+ * cts_trainnumber_changed
+ * cts
  *
  */
 CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
@@ -277,7 +314,7 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
 
     assert (typeof room === "string");
     assert (typeof channel === "string");
-    assert(typeof msgObject === "object");
+    assert(typeof msgObject === "object", "Invalid msgObject: " + JSON.stringify(msgObject));
 
     // todo: fix all emits/room
     if (!msgObject.values) {
@@ -294,10 +331,9 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     CTS_toBerth = msgObject.values.to_berth;
     timestamp = new Date(msgObject.values.time_stamp).getTime();
 
-    // todo: save opstore
     // Update statistics on destinations and trainNumbers received from CTS
-    helpers.incProperty(destinationObject, msgObject.values.destination);
-    helpers.incProperty(trainNumbers, trainNo);
+    //helpers.incProperty(destinationObject, msgObject.values.destination);
+    //helpers.incProperty(trainNumbers, trainNo);
 
     logDisorder(false, timestamp); // set to true for a simple check of events arriving in increasing time. Logs out-of-order to console
 
@@ -305,15 +341,19 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     // Whenever a change of a train number is suspected, we keep the trains on a "suspect list" for a short while
     updateTrainNoChangeSuspects(trainNo, msgObject.values.time_stamp);
 
-    // save opstore
+    msgObject.values.isValidFromBerth = isValidFromBerth (msgObject);
+    msgObject.values.isValidToBerth = isValidToBerth(msgObject);
+
     if (IsGhostTrain(trainNo)) {
-        io.to(room).emit("cts_ghost_train", msgObject); // Notify all clients
         msgObject.values.isGhost = true;
-        parseAndStoreGhostObject(msgObject);
+        io.to(room).emit("cts_ghost_train", msgObject); // Notify all clients
+        saveCTSEvent(msgObject);
         return;
     }
 
-    msgObject.values.yellow = IsYellowTrain(trainNo);
+    if (IsYellowTrain(trainNo)) {
+        msgObject.values.isYellow = true;
+    }
 
     // Special CTS code?
     if (isSpecialCTSCode(CTS_toBerth) || isSpecialCTSCode(CTS_fromBerth)) {
@@ -326,10 +366,8 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
         return;
     }
 
-    msgObject.values.isValidFromBerth = isValidFromBerth (msgObject);
-    msgObject.values.isValidToBerth = isValidToBerth(msgObject);
-    if (!msgObject.values.isValidToBerth){
-        // saveInvalidCTSEvent(msgObject);
+    if (!msgObject.values.isValidToBerth) {
+        saveCTSEvent(msgObject);
         return;
     }
 
@@ -344,9 +382,6 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     msgObject.values.Line = guessLine (msgObject);
 
     updateCTSLiveObject(room, msgObject);
-
-    // keep track of the berths that we have received data from, for debug
-    helpers.incProperty(ctsOKObject, CTS_toBerthObject.Name);
 
     saveCTSEvent(msgObject);
     io.to(room).emit(channel, [msgObject]); // pass on current train/berth as an array of 1 element
@@ -374,19 +409,21 @@ function checkTrainNoChange (room, msgObject) {
             const oldTrainNo = infrastructure.getLastTrainOnBerth(fromBerthName);
             if (ctstrainChangeSuspectObject.hasOwnProperty(oldTrainNo)) {
                 // maybe we have received the same CTS-message several times? Or maybe the old train no is still valid?
-                log.info("parseAndSendCTS. Suspected train number change was already registered. Train No: " + oldTrainNo + " New TrainNo: " + trainNo + ". Timestamp: " + msgObject.values.time_stamp);
+                log.info("checkTrainNoChange. Suspected train number change was already registered. Train No: " + oldTrainNo + " New TrainNo: " + trainNo + ". Timestamp: " + msgObject.values.time_stamp);
             }
             else {
-                log.info("parseAndSendCTS. Adding train to suspects. Old Train No: " + oldTrainNo + " New Train No: " + trainNo + ". Timestamp: " + msgObject.values.time_stamp);
+                log.info("checkTrainNoChange. Adding train to suspects. Old Train No: " + oldTrainNo + " New Train No: " + trainNo + ". Timestamp: " + msgObject.values.time_stamp);
                 ctstrainChangeSuspectObject[oldTrainNo] = { "oldTrainNo": oldTrainNo, "newTrainNo": trainNo, "countCTSMsg": 0, "msgObject": msgObject};
                 setTimeout(trainChangeNumber, 30*1000, room, oldTrainNo);
             }
         }
         else { // CTS and masterdata do not match Save:opstore....
-            log.warn("Berth mismatch. Expected from: " + fromBerthName + " Infrastructure-to: " +  infrastructure.getNextBerth(fromBerthName) + " CTS-to: " + toBerthName);
+            log.warn("checkTrainNoChange. Berth mismatch. Expected from: " + fromBerthName + " Infrastructure-to: " +  infrastructure.getNextBerth(fromBerthName) + " CTS-to: " + toBerthName);
+            msgObject.isTrainJump = true;
             msgObject.values.jump_ctsFrom = fromBerthName;
             msgObject.values.jump_ctsTo = toBerthName;
             msgObject.values.jump_infraTo = infrastructure.getNextBerth(fromBerthName);
+            saveCTSEvent(msgObject);
             io.to(room).emit("cts_train_jump", msgObject);
         }
     } // new train on berth
@@ -400,11 +437,11 @@ function isValidFromBerth (msgObject) {
         return false;
     }
     if (!msgObject.values.from_infra_berth.Name) {
-        log.warn("parseAndSendCTS. Got non-existing from_infra_berth.Name: " + msgObject.values.from_berth);
+        log.warn("isValidFromBerth. Got non-existing from_infra_berth.Name: " + msgObject.values.from_berth);
         return false;
     }
     if (!infrastructure.isElement(msgObject.values.from_infra_berth.Name)) {
-        log.warn("parseAndSendCTS. invalid from_infra_berth.Name: " + msgObject.values.from_infra_berth.Name);
+        log.warn("isValidFromBerth. invalid from_infra_berth.Name: " + msgObject.values.from_infra_berth.Name);
         return false;
     }
     return true;
@@ -421,7 +458,7 @@ function isValidToBerth (msgObject) {
     }
 
     if (!infrastructure.isElement(msgObject.values.to_infra_berth.Name)) { // Invalid berth?
-        log.warn("parseAndSendCTS. Got non-existing to_infra_berth.Name: " + msgObject.values.to_berth);
+        log.warn("isValidToBerth. Got non-existing to_infra_berth.Name: " + msgObject.values.to_berth);
         //todo: helpers.incProperty invalid berth...
         //saveUnknownBerthCTSEvent(msgObject);
         return false; // not going anywhere we know of, ...
@@ -429,7 +466,7 @@ function isValidToBerth (msgObject) {
     return true;
 } // isValidToBerth()
 
-function updateCTSLiveObject(room, msgObject) {
+function updateCTSLiveObject (room, msgObject) {
     const trainNo = msgObject.values.address;
 
     if (!ctsLiveObject.hasOwnProperty([trainNo])) { // first time we receive data for this trainNo, or it was previously deleted due to train number change
@@ -447,7 +484,7 @@ function updateCTSLiveObject(room, msgObject) {
     }
 } // updateCTSLiveObject()
 
-function saveCTSEvent(msgObject) {
+function saveCTSEvent (msgObject) {
     assert (typeof msgObject === "object");
 
     opstore.saveCTSEvent (msgObject, function (err, success) {
@@ -455,18 +492,19 @@ function saveCTSEvent(msgObject) {
             log.error("saveCTSEvent. saveCTSEvent error: " + err);
         }
     });
-} // saveCTSEvent()
+} // saveNormalCTSEvent()
 
 // Train is considered to be a "ghost" train/false signal if
 // trainNo do not contain any alphanumeric characters.
 // False signals typically have trainNo "----"
-function IsGhostTrain(trainNo) {
+function IsGhostTrain (trainNo) {
     assert(typeof trainNo === "string");
 
     return !trainNo.match(/[0-9a-z*]/gi);
 } // IsGhostTrain ()
 
-function parseAndStoreGhostObject(msgObject) {
+/*
+function parseAndStoreGhostObject (msgObject) {
     let ghostBerth = null;
     assert(typeof msgObject === "object");
     assert(msgObject.hasOwnProperty("values"));
@@ -475,13 +513,13 @@ function parseAndStoreGhostObject(msgObject) {
     // todo: save to opstore
     ctsGhosts[ghostBerth] = msgObject;
 } // parseAndStoreGhostObject()
-
+*/
 function updateTrainNoChangeSuspects(trainNo, timestampString) {
     assert(typeof trainNo === "string");
     assert(typeof timestampString === "string");
     if (ctstrainChangeSuspectObject.hasOwnProperty(trainNo)) { // train did not change number since we are still getting data from it
         ctstrainChangeSuspectObject[trainNo].countCTSMsg += 1;
-        log.info ("Train change did not occur for train number: " + trainNo + ". Received events: " + ctstrainChangeSuspectObject[trainNo].countCTSMsg + " Timestamp: " + timestampString);
+        log.info ("Received event from suspect train number: " + trainNo + ". Received events: " + ctstrainChangeSuspectObject[trainNo].countCTSMsg + " Timestamp: " + timestampString);
     }
 } // updateTrainNoChangeSuspects()
 /**
@@ -494,7 +532,7 @@ function updateTrainNoChangeSuspects(trainNo, timestampString) {
  * @param msgObject
  * @returns {name of berth}
  */
-function getBerthName(msgObject) {
+function getBerthName (msgObject) {
     let berth = null;
     assert (typeof msgObject === "object");
 
@@ -518,7 +556,7 @@ function isSpecialCTSCode (code) {
 /**
  * @return {boolean}
  */
-function IsYellowTrain(trainNo) {
+function IsYellowTrain (trainNo) {
     let tn = null;
     assert(typeof trainNo === "string");
 
@@ -617,11 +655,10 @@ function trainChangeNumber (room, oldTrainNo) {
     assert(ctstrainChangeSuspectObject.hasOwnProperty(oldTrainNo));
 
     trainChangeSuspectObject = ctstrainChangeSuspectObject[oldTrainNo];
-    log.info("trainChangeNumber. oldTrainNo: " + oldTrainNo);
-    log.info("trainChangeSuspect: " + JSON.stringify(trainChangeSuspectObject, undefined, 2));
-
     newTrainNo = trainChangeSuspectObject.newTrainNo;
     msgObject = trainChangeSuspectObject.msgObject;
+    log.info("trainChangeNumber. oldTrainNo: " + oldTrainNo + " newTrainNo: " + newTrainNo + " extra messages received: " + trainChangeSuspectObject.countCTSMsg);
+
 
     assert(typeof newTrainNo === "string");
     assert(typeof msgObject === "object");
@@ -646,6 +683,9 @@ function trainChangeNumber (room, oldTrainNo) {
     // Train-number change occured, notify client
     // Notify clients
     log.info("CTS-trainnumber_changed. Oldnumber: " + oldTrainNo + " New number: " + newTrainNo + " msgObject.values.destination: " + msgObject.values.destination);
+    msgObject.isTrainNoChange = true;
+    msgObject.newTrainNo = newTrainNo;
+    saveCTSEvent(msgObject);
     io.to(room).emit("cts_trainnumber_changed", { "new_train_no": newTrainNo, "old_train_no": oldTrainNo, "msgObject": msgObject }); // notify the client
     //ctsLiveObject[msgObject.values.address] = JSON.parse(JSON.stringify(ctsLiveObject[Infra_fromBerthObject.TrainNumber])); // clone the object. "=" only assigns reference
     delete trainChangeSuspectObject[oldTrainNo]; // Not suspected anymore because change confirmed
