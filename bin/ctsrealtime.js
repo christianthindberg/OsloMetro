@@ -14,7 +14,7 @@
  *
  *  const trainsInTraffic - generate event "trainsintraffic" with number of trains we have heard from during last hour
  *  const removeTrains - generate event "removetrain" if no signal received from train in 60 mins
- *  
+ *
  *  --> ctshistory: CTSRealTime.parseAndSendCTShistory = function (room, channel, msgObject)
 
         redisStore.publish("cts_ghost_train", eID);

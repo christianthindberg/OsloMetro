@@ -264,23 +264,46 @@ opstore.subscribe("OwnModuleAggregate");
 opstore.subscribe("Log");
 opstore.subscribe("Error");
 opstore.subscribe("cts");
-/*
+
+opstore.subscribe("cts_ghost_train");
+opstore.subscribe("cts_special_code");
+opstore.subscribe("cts_trainno_change");
+opstore.subscribe("cts_event_invalid");
+opstore.subscribe("cts_event");
+
+
 opstore.on("error", function (err) {
     console.log("Error " + err);
 });
-*/
+
 // Start Redis communication
 opstore.on("subscribe", function (channel, message ) {
     io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + message);
     log.info("succesful subscribe to Redis: " + channel + " " + count);
 });
 
+
 // Handle data from Redis
-opstore.on("message", function storeEventHandler (channel, msg) {
+opstore.on("message", function (channel, msg) {
     const msgObject = JSON.parse(msg);
 
     if (channel === "cts") {
         ctsrealtime.parseAndSendCTS("realtime", channel, msgObject);
+    }
+    else if (channel === "cts_event") {
+        //console.log ("cts_event: " + msg);
+    }
+    else if (channel === "cts_ghost_train") {
+        console.log ("ghostTrain: " + msg);
+    }
+    else if (channel === "cts_special_code") {
+        console.log ("specialcode: " + msg);
+    }
+    else if (channel === "cts_trainno_change") {
+        console.log ("trainnochange: " + msg);
+    }
+    else if (channel === "cts_event_invalid") {
+        console.log ("eventinvalid: " + msg);
     }
     else if (channel === "pax") {
         apcrealtime.parsePassengerData("realtime", channel, msgObject);

@@ -16,7 +16,7 @@
 
 "use strict";
 
-const redis = require("ioredis");
+let Redis = require("ioredis");
 const os = require("os");
 const flatten = require("flat");
 const unflatten = require("flat").unflatten;
@@ -30,11 +30,11 @@ let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
 // some vars to keep track of Redis
 
 // used for storing data
-const redisStore = os.platform() === "darwin" ? new redis() : new redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const redisStore = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 // used to receive subscription notifications
-const redisSubscriberClient = os.platform() === "darwin" ? new redis() : new redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const redisSubscriberClient = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 // used for testing
-const pub = os.platform() === "darwin" ? new redis() : new redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const pub = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 console.log ("Redis connect: " + JSON.stringify(redisStore));
 
 let Store = {
@@ -92,6 +92,7 @@ Store.getFirstAndLastEvent = function (callback) {
     });
 }; // getFirstAndLastEvent()
 
+
 Store.saveCTSEvent = function (msgObject, callback) {
     assert.ok(msgObject.hasOwnProperty("values"), "Store.saveCTSEvent - no property msgObject.values: " + JSON.stringify(msgObject, undefined,2));
     assert.ok(new Date(msgObject.values.time_stamp) instanceof Date, "Store.saveCTSEvent - not timestring msgObject.values.time_stamp");
@@ -101,10 +102,6 @@ Store.saveCTSEvent = function (msgObject, callback) {
     if (Store.isMaster()) {
         const timestamp = new Date(msgObject.values.time_stamp).getTime();
         const trainNo = msgObject.values.address;
-        // todo: zadd per berth and per berth/train
-        // todo: zadd per train number change/berth
-        // todo: zadd per line
-        // todo: zadd per ghost
 
         //logMemory.info ("test memory %d", process.memoryUsage().rss);
 
@@ -122,26 +119,26 @@ Store.saveCTSEvent = function (msgObject, callback) {
                 multi.zadd(km(k.destination, msgObject.values.destination), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
 
                 if (msgObject.values.isGhost) {
-                    redisStore.publish("cts_ghost_train", eID);
+                    pub.publish("cts_ghost_train", JSON.stringify(msgObject));
                     multi.zadd(km(k.ghost), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
                 }
                 else if (msgObject.values.isSpecialCode) {
-                    redisStore.publish("cts_special_code", eID);
+                    pub.publish("cts_special_code", JSON.stringify(msgObject));
                 }
                 else if (msgObject.values.isTrainNoChange) {
-                    redisStore.publish("cts_trainno_change", eID);
+                    pub.publish("cts_trainno_change", JSON.stringify(msgObject));
                 }
                 else if (msgObject.values.isValidToBerth) {
+                    pub.publish("cts_event", JSON.stringify(msgObject));
                     multi.zadd(km(k.berth, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical berth
                     multi.zadd(km(k.trainberth, trainNo, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train AND berth
                     multi.sadd(km(k.berthKeys), msgObject.values.to_infra_berth.Name); // keep a set containg all berths
                     if (msgObject.values.isTrainJump) {
                         multi.zadd(km(k.trainjumps), timestamp, eID);
                     }
-                    redisStore.publish("cts_event", eID);
                 }
                 else { // not valid toBerth..
-                    redisStore.publish("cts_event_invalid", eID);
+                    pub.publish("cts_event_invalid", JSON.stringify(msgObject));
                 }
 
 
@@ -245,7 +242,7 @@ Store.subscribe = function (topic) {
 Store.publish = function (topic, data) {
     assert(typeof topic === "string");
     assert(data);
-    redisStore.publish (topic, data);
+    pub.publish (topic, data);
 }; // publish()
 
 Store.on = function (topic, callbackfn) {
