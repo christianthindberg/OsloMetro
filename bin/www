@@ -29,6 +29,7 @@ const ctsrealtime = require("./ctsrealtime")(io);
 const apcrealtime = require("./apcrealtime")(io);
 
 let numberOfUsers = 0;
+const realtime = "realtime";
 
 
 // "middleware for socketio. If this function return "next()" connection is established. if it returns next(new Error...) connection is refused
@@ -46,7 +47,7 @@ infrastructure.readMetroInfrastructure();
 
 // send server time to all clients every second
 const emitTime = setInterval(function () {
-    io.to("realtime").emit("timetick", Date.now());
+    io.to(realtime).emit("timetick", Date.now());
 }, 1000 * 1);  // Send server time to all connected clients every second
 /*
 opstore.on("err_flushall", function(msg) {
@@ -66,9 +67,9 @@ io.on('connection', function (socket) {
     //console.log('a user connected');
     socket.emit("id", socket.id);
     socket.emit("ip", socket.request.connection.remoteAddress);
-    socket.join("realtime");
-    socket.room = "realtime"; // NB: do not confuse with socket.rooms which is property of socket.io
-    socket.mode = "realtime";
+    socket.join(realtime);
+    socket.room = realtime; // NB: do not confuse with socket.rooms which is property of socket.io
+    socket.mode = realtime;
 
     ++numberOfUsers;
 
@@ -221,7 +222,7 @@ io.on('connection', function (socket) {
 
 function handleRealtime (socket, cmdArray) {
     if (!socket.joined) {
-        socket.emit("help", {"realtime": cmdDictionary.realtime});
+        socket.emit("help", {realtime: cmdDictionary.realtime});
         return;
     }
     let toSocketID = socket.room;
@@ -230,7 +231,7 @@ function handleRealtime (socket, cmdArray) {
         socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
         return;
     }
-    if (tmpSocket.room === "realtime") {
+    if (tmpSocket.room === realtime) {
         socket.emit("chat message", "Already processing realtime");
         return;
     }
@@ -243,14 +244,14 @@ function handleRealtime (socket, cmdArray) {
         console.log("received realtime. tmp.socket.mode: " + tmpSocket.mode);
     }
 
-    if (tmpSocket.room && tmpSocket.room !== "realtime") {  // remember: tmpSocket is the socket of the map-client, not current (cmd) client
+    if (tmpSocket.room && tmpSocket.room !== realtime) {  // remember: tmpSocket is the socket of the map-client, not current (cmd) client
         tmpSocket.leave(tmpSocket.room);
     }
 
-    tmpSocket.join("realtime");
-    tmpSocket.room = "realtime";
-    tmpSocket.mode = "realtime";
-    socket.to(toSocketID).emit("realtime", "start");
+    tmpSocket.join(realtime);
+    tmpSocket.room = realtime;
+    tmpSocket.mode = realtime;
+    socket.to(toSocketID).emit(realtime, "start");
 } // handleRealtime ()
 
 //
@@ -268,7 +269,7 @@ opstore.subscribe("cts");
 opstore.subscribe("cts_ghost_train");
 opstore.subscribe("cts_special_code");
 opstore.subscribe("cts_trainno_change");
-opstore.subscribe("cts_event_invalid");
+opstore.subscribe("cts_event_missing_to");
 opstore.subscribe("cts_event");
 
 
@@ -287,35 +288,42 @@ opstore.on("subscribe", function (channel, message ) {
 opstore.on("message", function (channel, msg) {
     const msgObject = JSON.parse(msg);
 
+    //io.to(room).emit("cts_train_jump", msgObject);
+    //io.to(room).emit("cts_trainnumber_first_time", msgObject); // notify the client
+
     if (channel === "cts") {
-        ctsrealtime.parseAndSendCTS("realtime", channel, msgObject);
+        ctsrealtime.parseAndSendCTS(realtime, channel, msgObject);
     }
     else if (channel === "cts_event") {
-        //console.log ("cts_event: " + msg);
+        console.log ("cts_event: " + msg);
+        io.to(realtime).emit("cts", [msgObject]);
     }
     else if (channel === "cts_ghost_train") {
         console.log ("ghostTrain: " + msg);
+        io.to(realtime).emit("cts_ghost_train", [msgObject]);
     }
     else if (channel === "cts_special_code") {
         console.log ("specialcode: " + msg);
+        io.to(realtime).emit("cts_special_code", [msgObject]);
     }
     else if (channel === "cts_trainno_change") {
         console.log ("trainnochange: " + msg);
+        io.to(realtime).emit("cts_trainnumber_changed", msgObject);
     }
-    else if (channel === "cts_event_invalid") {
+    else if (channel === "cts_event_missing_to") {
         console.log ("eventinvalid: " + msg);
     }
     else if (channel === "pax") {
-        apcrealtime.parsePassengerData("realtime", channel, msgObject);
+        apcrealtime.parsePassengerData(realtime, channel, msgObject);
     }
     else if (channel === "LineAggregate") {
-        apcrealtime.parseSumPerLine("realtime", channel, msgObject);
+        apcrealtime.parseSumPerLine(realtime, channel, msgObject);
     }
     else if (channel === "StationAggregate") {
-        apcrealtime.parseSumPerStation("realtime", channel, msgObject);
+        apcrealtime.parseSumPerStation(realtime, channel, msgObject);
     }
     else if (channel === "OwnModuleAggregate") { // todo: add room to all of these: realtime
-        apcrealtime.parseSumPerOwnModule("realtime", channel, msgObject);
+        apcrealtime.parseSumPerOwnModule(realtime, channel, msgObject);
     }
     else if (channel === "Log" || channel === "Error") {
         io.emit("Log", channel + ": " + msg)

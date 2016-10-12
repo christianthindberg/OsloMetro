@@ -23,7 +23,15 @@ const unflatten = require("flat").unflatten;
 const assert = require("assert");
 const logger = require("./logger");
 const log = logger().getLogger("opstore");
+let KafkaRest = require("kafka-rest");
+let kafka = new KafkaRest({"url": "http://ec2-52-211-70-204.eu-west-1.compute.amazonaws.com:8082"});
 //const logMemory = logger().getLogger("memory-usage");
+
+kafka.topics.list(function (err, topics) {
+    for (let i=0; i< topics.length; i++) {
+        console.log(topics[i].toString());
+    }
+});
 
 // max number of events to store
 let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
@@ -92,6 +100,39 @@ Store.getFirstAndLastEvent = function (callback) {
     });
 }; // getFirstAndLastEvent()
 
+/**
+ *
+ * @param msgObject: CTS-event
+ * @param callback: standard nodejs err, reply callback to notify caller that asynch operations completed
+ *
+ * CTS_EVENT_ID: counter, ensures each is msgObject is stored with a unique ID
+ * hset: hash of all CTS events. Stores each msgObject
+ * secondary indexes enable us to extract a set of events based on start- and stop-time
+ * Each index allow this for one type of "object", ie. per line, destination, train, ...
+ * An index consist of eventID and timestamp.
+ * We maintain the following indexes:
+ *  ctsTimestamp: ALL eventIDs and their timestamps
+ *  trainLog<train_no>      : - one list for each train
+ *  Line<line>              : - one list of events for each line
+ *  Destination<destination>: - one list for each destination
+ *  berth                   : - one list for each individual berth
+ *  berthtrain              : - one list for each combination of train and berth
+ *  ghost                   : - list of ghost events
+ *  trainjumps              : - list of trainjum events
+ *
+ *  Sets, storing keys. These sets contain all trainnumbers, destinations, berths that we have received data on
+ *  May be useful for accessing some of the indexes above
+ *  -trainLogKeys
+ *  - destinationKeys
+ *  - berthkeys
+ *
+ * Publishes:
+ * - cts_ghost_train
+ * - cts_special_code
+ * - cts_trainno_change
+ * - cts_event
+ * - cts-event_missing_to
+ */
 
 Store.saveCTSEvent = function (msgObject, callback) {
     assert.ok(msgObject.hasOwnProperty("values"), "Store.saveCTSEvent - no property msgObject.values: " + JSON.stringify(msgObject, undefined,2));
@@ -112,6 +153,9 @@ Store.saveCTSEvent = function (msgObject, callback) {
             }
             else {
                 multi.hset(km(k.ctsEvents), eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+                kafka.topic("metro-cts").partition(0).produce([JSON.stringify(msgObject)], function (err, response) {
+                    console.log(JSON.stringify(response));
+                });
                 // parameters are KEY, SCORE, MEMBER (or value)
                 multi.zadd(km(k.ctsTimestamp), timestamp, eID); // sorted list of all events timestamp/eventID
                 multi.zadd(km(k.trainLog, trainNo), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
@@ -120,6 +164,8 @@ Store.saveCTSEvent = function (msgObject, callback) {
 
                 if (msgObject.values.isGhost) {
                     pub.publish("cts_ghost_train", JSON.stringify(msgObject));
+                    //http://ec2-52-211-70-204.eu-west-1.compute.amazonaws:8082, topic metro-cts
+
                     multi.zadd(km(k.ghost), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
                 }
                 else if (msgObject.values.isSpecialCode) {
@@ -138,13 +184,11 @@ Store.saveCTSEvent = function (msgObject, callback) {
                     }
                 }
                 else { // not valid toBerth..
-                    pub.publish("cts_event_invalid", JSON.stringify(msgObject));
+                    pub.publish("cts_event_missing_to", JSON.stringify(msgObject));
                 }
-
 
                 multi.sadd(km(k.trainlogKeys), trainNo); // keep a set containg all logical train numbers
                 multi.sadd(km(k.destinationKeys), msgObject.values.destination); // keep a set containg all destinations
-
 
                 multi.exec(function (err, data) {
                     if (err)

@@ -20,6 +20,7 @@
     "https": "^1.0.0",
     "ioredis": "^2.4.0",
     "jade": "~1.11.0",
+    "kafka-rest": "0.0.4",
     "log4js": "^0.6.38",
     "morgan": "~1.7.0",
     "node-gyp-install": "^2.2.0",

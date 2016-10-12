@@ -346,7 +346,7 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
 
     if (IsGhostTrain(trainNo)) {
         msgObject.values.isGhost = true;
-        io.to(room).emit("cts_ghost_train", msgObject); // Notify all clients
+        //io.to(room).emit("cts_ghost_train", msgObject); // Notify all clients
         saveCTSEvent(msgObject);
         return;
     }
@@ -358,10 +358,9 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     // Special CTS code?
     if (isSpecialCTSCode(CTS_toBerth) || isSpecialCTSCode(CTS_fromBerth)) {
         // todo: save to opstore
-        helpers.incProperty(specialBerths, CTS_fromBerth);
-        helpers.incProperty(specialBerths, CTS_toBerth);
+        //helpers.incProperty(specialBerths, CTS_fromBerth);
+        //helpers.incProperty(specialBerths, CTS_toBerth);
         msgObject.values.isSpecialCode = true;
-        io.to(room).emit("cts_special_code", msgObject);
         saveCTSEvent(msgObject);
         return;
     }
@@ -384,7 +383,7 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     updateCTSLiveObject(room, msgObject);
 
     saveCTSEvent(msgObject);
-    io.to(room).emit(channel, [msgObject]); // pass on current train/berth as an array of 1 element
+    //io.to(room).emit(channel, [msgObject]); // pass on current train/berth as an array of 1 element
 
 }; // parseandsendCTS ()
 
@@ -424,7 +423,7 @@ function checkTrainNoChange (room, msgObject) {
             msgObject.values.jump_ctsTo = toBerthName;
             msgObject.values.jump_infraTo = infrastructure.getNextBerth(fromBerthName);
             saveCTSEvent(msgObject);
-            io.to(room).emit("cts_train_jump", msgObject);
+            //io.to(room).emit("cts_train_jump", msgObject);
         }
     } // new train on berth
 } // checkTrainNoChange()
@@ -472,7 +471,7 @@ function updateCTSLiveObject (room, msgObject) {
     if (!ctsLiveObject.hasOwnProperty([trainNo])) { // first time we receive data for this trainNo, or it was previously deleted due to train number change
         //console.log("CTS-trainnumber_first_time: " + msgObject.values.address);
         msgObject.values.firstTime = true;
-        io.to(room).emit("cts_trainnumber_first_time", msgObject); // notify the client
+        //io.to(room).emit("cts_trainnumber_first_time", msgObject); // notify the client
         ctsLiveObject[trainNo] = [];
     }
     // insert this berth event first in the list of events for this train
@@ -686,7 +685,7 @@ function trainChangeNumber (room, oldTrainNo) {
     msgObject.isTrainNoChange = true;
     msgObject.newTrainNo = newTrainNo;
     saveCTSEvent(msgObject);
-    io.to(room).emit("cts_trainnumber_changed", { "new_train_no": newTrainNo, "old_train_no": oldTrainNo, "msgObject": msgObject }); // notify the client
+    //io.to(room).emit("cts_trainnumber_changed", { "new_train_no": newTrainNo, "old_train_no": oldTrainNo, "msgObject": msgObject }); // notify the client
     //ctsLiveObject[msgObject.values.address] = JSON.parse(JSON.stringify(ctsLiveObject[Infra_fromBerthObject.TrainNumber])); // clone the object. "=" only assigns reference
     delete trainChangeSuspectObject[oldTrainNo]; // Not suspected anymore because change confirmed
 
