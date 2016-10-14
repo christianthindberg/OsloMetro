@@ -314,11 +314,15 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
 
     assert (typeof room === "string");
     assert (typeof channel === "string");
-    assert(typeof msgObject === "object", "Invalid msgObject: " + JSON.stringify(msgObject));
+    //assert(typeof msgObject === "object", "Invalid msgObject: " + JSON.stringify(msgObject));
+
+    if (!isValidMsgObject(msgObject)) {
+        log.error("paseAndSendCTS. Received invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
+        return;
+    }
 
     // todo: fix all emits/room
     if (!msgObject.values) {
-        log.error("paseAndSendCTS. Received msgObject without values: " + JSON.stringify(msgObject, undefined, 2));
         return;
     }
     msgObject = helpers.removeSpaces(msgObject);
@@ -386,6 +390,20 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     //io.to(room).emit(channel, [msgObject]); // pass on current train/berth as an array of 1 element
 
 }; // parseandsendCTS ()
+
+function isValidMsgObject (msgObject) {
+    if (!typeof msgObject === "object")
+        return false;
+    if (!typeof msgObject.topic === "string")
+        return false;
+    if (!typeof msgObject.values === "object")
+        return false;
+    if (!typeof msgObject.values.time_stamp === "string")
+        return false;
+    if (!typeof msgObject.values.address === "string")
+        return false;
+    return true;
+} // isValidMsgObject
 
 function checkTrainNoChange (room, msgObject) {
     assert(typeof msgObject === "object");
@@ -514,8 +532,8 @@ function parseAndStoreGhostObject (msgObject) {
 } // parseAndStoreGhostObject()
 */
 function updateTrainNoChangeSuspects(trainNo, timestampString) {
-    assert(typeof trainNo === "string");
-    assert(typeof timestampString === "string");
+    assert(typeof trainNo === "string", "Invalid trainNo: " + trainNo);
+    assert(typeof timestampString === "string", "Invalid timestampString: " + timestampString);
     if (ctstrainChangeSuspectObject.hasOwnProperty(trainNo)) { // train did not change number since we are still getting data from it
         ctstrainChangeSuspectObject[trainNo].countCTSMsg += 1;
         log.info ("Received event from suspect train number: " + trainNo + ". Received events: " + ctstrainChangeSuspectObject[trainNo].countCTSMsg + " Timestamp: " + timestampString);
