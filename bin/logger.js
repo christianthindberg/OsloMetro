@@ -64,16 +64,20 @@ function logger() {
             }
           } // tokens
         } // layout
-      } // appender
+      }, // appender
+      {
+        type: "console"
+      }
     ]
   };
 
   log4js.configure(config, {});
-
+  /*
   if (os.platform() === "darwin") { // running locally on Mac
     log4js.loadAppender("console");
     log4js.addAppender(log4js.appenders.console());
   }
+  */
 
 /*
  {

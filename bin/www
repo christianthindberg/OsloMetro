@@ -291,19 +291,24 @@ opstore.on("message", function (channel, msg) {
     //io.to(room).emit("cts_train_jump", msgObject);
     //io.to(room).emit("cts_trainnumber_first_time", msgObject); // notify the client
 
+    // emit all data we get as a separate topic, except for log-data
+    if (channel !== "Log") {
+        io.emit("data", msg);
+    }
+
     if (channel === "cts") {
         ctsrealtime.parseAndSendCTS(realtime, channel, msgObject);
     }
     else if (channel === "cts_event") {
-        console.log ("cts_event: " + msg);
+        //console.log ("cts_event: " + msg);
         io.to(realtime).emit("cts", [msgObject]);
     }
     else if (channel === "cts_ghost_train") {
-        console.log ("ghostTrain: " + msg);
+        //console.log ("ghostTrain: " + msg);
         io.to(realtime).emit("cts_ghost_train", [msgObject]);
     }
     else if (channel === "cts_special_code") {
-        console.log ("specialcode: " + msg);
+        //console.log ("specialcode: " + msg);
         io.to(realtime).emit("cts_special_code", [msgObject]);
     }
     else if (channel === "cts_trainno_change") {
@@ -311,7 +316,7 @@ opstore.on("message", function (channel, msg) {
         io.to(realtime).emit("cts_trainnumber_changed", msgObject);
     }
     else if (channel === "cts_event_missing_to") {
-        console.log ("eventinvalid: " + msg);
+        log.info ("cts_event_missing_to: " + msg);
     }
     else if (channel === "pax") {
         apcrealtime.parsePassengerData(realtime, channel, msgObject);
@@ -330,11 +335,6 @@ opstore.on("message", function (channel, msg) {
     }
     else {
         console.log ("Channel: " + channel + " Message: " + msg);
-    }
-
-    // emit all data we get as a separate topic, except for log-data
-    if (channel !== "Log") {
-        io.emit("data", msg);
     }
 });
 

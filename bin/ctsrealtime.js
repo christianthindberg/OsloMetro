@@ -316,16 +316,15 @@ CTSRealTime.parseAndSendCTS = function (room, channel, msgObject) {
     assert (typeof channel === "string");
     //assert(typeof msgObject === "object", "Invalid msgObject: " + JSON.stringify(msgObject));
 
+    msgObject = helpers.removeSpaces(msgObject);
+
     if (!isValidMsgObject(msgObject)) {
         log.error("paseAndSendCTS. Received invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
         return;
     }
 
     // todo: fix all emits/room
-    if (!msgObject.values) {
-        return;
-    }
-    msgObject = helpers.removeSpaces(msgObject);
+
 
     // todo: remove
     trainNo = msgObject.values.address;

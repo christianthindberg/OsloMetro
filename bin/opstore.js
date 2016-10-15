@@ -27,6 +27,7 @@ let KafkaRest = require("kafka-rest");
 let kafka = new KafkaRest({"url": "http://ec2-52-211-70-204.eu-west-1.compute.amazonaws.com:8082"});
 //const logMemory = logger().getLogger("memory-usage");
 
+
 kafka.topics.list(function (err, topics) {
     for (let i=0; i< topics.length; i++) {
         console.log(topics[i].toString());
@@ -154,7 +155,14 @@ Store.saveCTSEvent = function (msgObject, callback) {
             else {
                 multi.hset(km(k.ctsEvents), eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
                 kafka.topic("metro-cts").partition(0).produce([JSON.stringify(msgObject)], function (err, response) {
-                    console.log(JSON.stringify(response));
+                    if (err) {
+                        log.error("saveCTSEvent. Writing to Ruter Kafka failed: " + err);
+                    }
+                    /*
+                    else {
+                        log.info("saveCTSEvent. Successful write to Ruter Kafka. Got response: " + response);
+                    }
+                    */
                 });
                 // parameters are KEY, SCORE, MEMBER (or value)
                 multi.zadd(km(k.ctsTimestamp), timestamp, eID); // sorted list of all events timestamp/eventID
