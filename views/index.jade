@@ -769,8 +769,8 @@ body
       }; // drawTrain()
 
       var drawTrainSpecialCode = function (data) {
-        var TrainG = d3.select("#train_id" + getIDFromName(data.values.address));
-        var code = data.values.to_berth;
+        var TrainG = d3.select("#train_id" + getIDFromName(data[0].values.address));
+        var code = data[0].values.to_berth;
         var TrainRect = null;
         var d = null;
 
@@ -778,10 +778,10 @@ body
             return;
 
         if (code && (code === "INTERP" || code === "EXIT" || code === "LOST" || code === "CANCEL" || code === "NOTD")) {
-            code = data.values.to_berth;
+            code = data[0].values.to_berth;
         }
         else {
-            code = data.values.from_berth;
+            code = data[0].values.from_berth;
         }
 
         var d = TrainG.datum();
@@ -819,11 +819,11 @@ body
 
       var drawTrainGhost = function (data) {
         //console.log("cts_ghost_train:" + JSON.stringify(msg, undefined, 2));
-        if (data.values.to_infra_berth) {
-          addGhost(data.values.to_infra_berth);
+        if (data[0].values.to_infra_berth) {
+          addGhost(data[0].values.to_infra_berth);
         }
-        else if (data.values.from_infra_berth) {
-          addGhost(data.values.from_infra_berth);
+        else if (data[0].values.from_infra_berth) {
+          addGhost(data[0].values.from_infra_berth);
         }
         else {
           console.log("Ghost disappeared: " + JSON.stringify(data, undefined, 2));
@@ -831,11 +831,11 @@ body
       }; // drawTrainGhost()
 
       var drawTrainNumberChanged = function (data) {
-        var newTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data.msgObject.values.address)).select("rect"); // remember trains have a group object as its top-level element...
-        var newBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data.msgObject.values.to_infra_berth.Name));
-        var oldTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data.old_train_no)).select("rect");
-        var oldTrainG = OM_DrawLayer.select("#train_id" + getIDFromName(data.old_train_no));
-        var oldBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data.msgObject.values.from_infra_berth.Name));
+        var newTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].newTrainNo)).select("rect"); // remember trains have a group object as its top-level element...
+        var newBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data[0].values.to_infra_berth.Name));
+        var oldTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].values.address)).select("rect");
+        var oldTrainG = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].values.address));
+        var oldBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data[0].values.from_infra_berth.Name));
 
         setBlinkAlarm([newTrain, oldTrain, oldBerth, newBerth]);
 
@@ -856,7 +856,7 @@ body
                   .remove();
         }
         if (oldBerth.empty()) {
-          console.log("Non-existing berth had a train number change. Old number: " + data.old_train_no + " New number: " + data.msgObject.values.address + "Berth: " + data.msgObject.values.from_infra_berth.Name);
+          console.log("Non-existing berth had a train number change. Old number: " + data[0].values.address + " New number: " + data[0].newTrainNo + "Berth: " + data[0].values.from_infra_berth.Name);
         }
         else {
           var dd = oldBerth.datum();
@@ -868,7 +868,7 @@ body
           oldBerth.attr("r", function (d) {
             return parseInt(d3.select(this).attr("r")) + 1;
           });
-          console.log("Existing berth had a train number change. Old number: " + data.old_train_no + " New number: " + data.msgObject.values.address + " Berth: " + data.msgObject.values.from_infra_berth.Name);
+          console.log("Existing berth had a train number change. Old number: " + data[0].values.address + " New number: " + data[0].newTrainNo + " Berth: " + data[0].values.from_infra_berth.Name);
         }
       }; // drawTrainNumberChanged()
 
@@ -2161,6 +2161,12 @@ body
 
       var socket = io();
 
+      window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+        socket.emit("Client Error", errorMsg + " Script: " + url + " Line: " + lineNumber
+                + " Column: " + column + " StackTrace: " + errorObj);
+        return false;
+      }
+
       socket.on("connect", function (data) {
         d3.select("#clockTime").style("background-color", "whitesmoke");
         console.log("connect: " + JSON.stringify(data));
@@ -2217,26 +2223,29 @@ body
 
       // receive continuosly updated train positions
       // one or more trains and their newest berth passings
-      socket.on("cts", function (msg) {
+      socket.on("cts_event", function (msg) {
         if (bInitInfrastructure) {
           drawTrain(msg); // array of berths for 1 train
         }
       });
 
-      socket.on("cts_special_code", function (msg) {
+      socket.on("cts_special", function (msg) {
         drawTrainSpecialCode(msg);
       });
 
-      socket.on("cts_ghost_train", function (msg) {
+      socket.on("cts_ghost", function (msg) {
         drawTrainGhost(msg);
       });
 
-      socket.on("cts_trainnumber_changed", function (msg) {
+      socket.on("cts_trnochg", function (msg) {
         drawTrainNumberChanged(msg);
       });
+
+      /*
       socket.on("cts_trainnumber_first_time", function (msg) {
         //console.log("cts_trainnumber_first_time: ", ": train " + msg.values.address);
       });
+      */
 
       var resetToNormalColors = false;
       socket.on("okberths", function (msg) {

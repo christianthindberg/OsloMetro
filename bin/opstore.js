@@ -29,7 +29,11 @@ let kafka = new KafkaRest({"url": "http://ec2-52-211-70-204.eu-west-1.compute.am
 
 
 kafka.topics.list(function (err, topics) {
-    for (let i=0; i< topics.length; i++) {
+    if (err) {
+        log.error ("kafka.topics.list. Unable to list topics: " + err);
+        return;
+    }
+    for (let i=0; i < topics.length; i++) {
         console.log(topics[i].toString());
     }
 });
@@ -154,49 +158,35 @@ Store.saveCTSEvent = function (msgObject, callback) {
             }
             else {
                 multi.hset(km(k.ctsEvents), eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+                multi.zadd(km(k.ctsTimestamp), timestamp, eID); // sorted list of all events timestamp/eventID
+
                 kafka.topic("metro-cts").partition(0).produce([JSON.stringify(msgObject)], function (err, response) {
                     if (err) {
                         log.error("saveCTSEvent. Writing to Ruter Kafka failed: " + err);
                     }
-                    /*
-                    else {
-                        log.info("saveCTSEvent. Successful write to Ruter Kafka. Got response: " + response);
-                    }
-                    */
                 });
-                // parameters are KEY, SCORE, MEMBER (or value)
-                multi.zadd(km(k.ctsTimestamp), timestamp, eID); // sorted list of all events timestamp/eventID
-                multi.zadd(km(k.trainLog, trainNo), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
-                multi.zadd(km(k.line, msgObject.values.Line), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
-                multi.zadd(km(k.destination, msgObject.values.destination), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
 
-                if (msgObject.values.isGhost) {
-                    pub.publish("cts_ghost_train", JSON.stringify(msgObject));
-                    //http://ec2-52-211-70-204.eu-west-1.compute.amazonaws:8082, topic metro-cts
+                if (msgObject.values.event === "ghost") {
+                    //pub.publish("cts_ghost_train", JSON.stringify(msgObject));
+                    multi.zadd(km(k.ghost), timestamp, eID); // keep sorted set of timestamp/eventIDs per ghost train
+                }
+                else if (msgObject.values.event === "trnochg") {
+                    //pub.publish("cts_trainno_change", JSON.stringify(msgObject));
+                    multi.zadd(km(k.trainnochange), timestamp, eID);
+                }
+                else if (msgObject.values.event === "special") {
+                    //pub.publish("cts_special_code", JSON.stringify(msgObject));
+                    addIndexes(timestamp, eID, msgObject, multi);
+                }
+                else if (msgObject.values.event === "event") { // normal event
+                    //pub.publish("cts_event", JSON.stringify(msgObject));
+                    addIndexes(timestamp, eID, msgObject, multi);
 
-                    multi.zadd(km(k.ghost), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
-                }
-                else if (msgObject.values.isSpecialCode) {
-                    pub.publish("cts_special_code", JSON.stringify(msgObject));
-                }
-                else if (msgObject.values.isTrainNoChange) {
-                    pub.publish("cts_trainno_change", JSON.stringify(msgObject));
-                }
-                else if (msgObject.values.isValidToBerth) {
-                    pub.publish("cts_event", JSON.stringify(msgObject));
-                    multi.zadd(km(k.berth, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical berth
-                    multi.zadd(km(k.trainberth, trainNo, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train AND berth
-                    multi.sadd(km(k.berthKeys), msgObject.values.to_infra_berth.Name); // keep a set containg all berths
-                    if (msgObject.values.isTrainJump) {
-                        multi.zadd(km(k.trainjumps), timestamp, eID);
-                    }
                 }
                 else { // not valid toBerth..
-                    pub.publish("cts_event_missing_to", JSON.stringify(msgObject));
+                    //pub.publish("cts_event_missing_to", JSON.stringify(msgObject));
                 }
 
-                multi.sadd(km(k.trainlogKeys), trainNo); // keep a set containg all logical train numbers
-                multi.sadd(km(k.destinationKeys), msgObject.values.destination); // keep a set containg all destinations
 
                 multi.exec(function (err, data) {
                     if (err)
@@ -207,6 +197,38 @@ Store.saveCTSEvent = function (msgObject, callback) {
         }); // store to Redis
     }
 }; // saveCTSEvent()
+
+function addIndexes (timestamp, eID, msgObject, multi) {
+    assert (typeof timestamp === "number");
+    assert(typeof eID === "number");
+    assert (typeof msgObject === "object");
+
+    let trainNo = msgObject.values.address;
+
+    if (!trainNo) {
+        return;
+    }
+
+    multi.zadd(km(k.trainLog, trainNo), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
+    multi.sadd(km(k.trainlogKeys), trainNo); // keep a set containg all logical train numbers
+
+    if (msgObject.values.destination) {
+        multi.zadd(km(k.destination, msgObject.values.destination), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
+        multi.sadd(km(k.destinationKeys), msgObject.values.destination); // keep a set containg all destinations
+    }
+    if (msgObject.values.Line) {
+        multi.zadd(km(k.line, msgObject.values.Line), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
+    }
+
+    if (msgObject.values.to_infra_berth && msgObject.values.to_infra_berth.Name) {
+        multi.zadd(km(k.berth, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical berth
+        multi.zadd(km(k.trainberth, trainNo, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train AND berth
+        multi.sadd(km(k.berthKeys), msgObject.values.to_infra_berth.Name); // keep a set containg all berths
+    }
+    if (msgObject.values.isTrainJump) {
+        multi.zadd(km(k.trainjumps), timestamp, eID);
+    }
+} // addIndexes()
 
 Store.redisFreeOldData = setInterval(function () {
     if (!Store.isMaster()) {
@@ -340,6 +362,8 @@ k.berth = km(k.base, "cts", "berth");
 k.trainberth = km(k.base, "cts", "trainlognr", "berth");
 k.line = km(k.base, "cts", "line");
 k.destination = km(k.base, "cts", "destination");
+
+k.trainnochange = km(k.base, "cts", "trnochg");
 
 k.trainLog = km(k.base, "cts","trainlognr"); // sorted lists, one for each logical train number containing score timestamp, member ctsEventID
 k.trainlogKeys = km(k.base, "cts","key","trainlognr"); // set of strings, each a logical train number
