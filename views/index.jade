@@ -89,6 +89,7 @@ body
 
       // Approximate line colors, add a few "red"´s in case number of lines are increased
       var LineColor = ["cornflowerblue", "coral", "mediumorchid", "mediumblue", "mediumseagreen", "red", "red", "red", "red", "red", "red"];
+      var showDestination = false;
 
 
       //
@@ -878,7 +879,7 @@ body
 
       var bTextDestination = true;
       var setTrainTexts = function () {
-        bTextDestination = !bTextDestination;
+        bTextDestination = showDestination ? showDestination : !bTextDestination;
         var trainTexts = d3.selectAll("text.train")
                 .text(function (d) {
                   return bTextDestination ? getDestination(d) : d.values.address;
@@ -2257,6 +2258,10 @@ body
       socket.on("blinkalarms", function (msg) {
         showBlinkAlarms = !showBlinkAlarms;
         console.log ("blink alarm: " + showBlinkAlarms);
+      });
+      socket.on("destination", function (msg) {
+        showDestination = !showDestination;
+        console.log("destination: " + showDestination);
       });
 
       // The physical strain still exist:-) but the TrainNo the server has had no CTS signals from the logical train

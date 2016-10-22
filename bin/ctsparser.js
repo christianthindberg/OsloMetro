@@ -16,7 +16,7 @@
  *          to do this we also need to keep track of the last berth the train has been on that was unique to a line
  *
  *
- *  CTSRealTime.parseAndSendCTS
+ *  CTSRealTime.parseCTSData
  *      function checkTrainNoChange
  *      function isValidFromBerth
  *      function isValidToBerth
@@ -110,7 +110,7 @@ let CTSParser = {
  * event properties contain spaces. These are removed
  * trains sometimes "jump" i.e. they do not move according to the infrastructure masterdata
  *
- * parseAndSendCTS calculate "missing" events (i.e. trainChange) and add "missing" information.
+ * parseCTSData calculate "missing" events (i.e. trainChange) and add "missing" information.
  *
  * The following data is always added to an event during parsing:
  * msgObject.values.event =
@@ -130,7 +130,7 @@ let CTSParser = {
  *      in this case also the following values are set: jump_ctsFrom, jump_ctsTo, jump_infraTo
  *
  */
-CTSParser.parseAndSendCTS = function (msgObject) {
+CTSParser.parseCTSData = function (msgObject) {
     let trainNo = 0;
     let timestamp = null;
     let isValidTo = false;
@@ -139,7 +139,7 @@ CTSParser.parseAndSendCTS = function (msgObject) {
     msgObject = helpers.removeSpaces(msgObject);
 
     if (!isValidMsgObject(msgObject)) {
-        log.error("parseAndSendCTS. Received invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
+        log.error("parseCTSData. Received invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
         return null;
     }
 
@@ -166,7 +166,7 @@ CTSParser.parseAndSendCTS = function (msgObject) {
 
     // Special CTS code?
     if (isSpecialCTSCode(msgObject.values.to_berth) || isSpecialCTSCode(msgObject.values.from_berth)) {
-        msgObject.values.event = "special";
+        msgObject.values.event = "special"; // todo: add support for EXIT event
         return msgObject;
     }
 
@@ -259,7 +259,7 @@ function trainChangeNumber (oldTrainNo) {
         // we have received messages relating to the old trainNumber after we thought it had changed
         // Check how lang ago it is...
         if (!lastEventFromTrainObject.hasOwnProperty(oldTrainNo)) {
-            log.error ("Old train no: " + oldTrainNo + " was already deleted");
+            log.error ("trainChangeNumber. Old train no: " + oldTrainNo + " was already deleted");
             return; // old train number object already deleted. This may happen if we receive the same CTS-message several times (?? is this true?)
         }
 
@@ -331,7 +331,7 @@ function isValidToBerth (msgObject) {
 
     if (!msgObject.values.to_infra_berth) {
         helpers.incProperty(missingToBerths, msgObject.values.to_berth); // for debugging - log that we encountered to-berth that was not matched
-        //log.warn("parseAndSendCTS. msgObject did not contain to_infra_berth: " + JSON.stringify(msgObject, undefined, 2));
+        //log.warn("parseCTSData. msgObject did not contain to_infra_berth: " + JSON.stringify(msgObject, undefined, 2));
         //saveInvalidCTSEvent(msgObject);
         return false; // not going anywhere, just return
     }

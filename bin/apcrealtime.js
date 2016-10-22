@@ -188,8 +188,8 @@ APC.parsePassengerData = function (room, channel, msgObject) {
             break; // seems all passenger files contains an empty record at the end - just ignore it
         }
         if (!items || items.length < 15) { // at present there will be 70 items in a record, but this may change in the future. We assume that the first 15 will stay unchanged
-            log.error("parsePassengerData - msgObject contained invalid data. Record " + records[i] + " msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
-            return;
+            log.error("parsePassengerData - msgObject contained invalid data. Record " + i + " of " + records.length + ": " + records[i] + " msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
+            return;  // replace with continue?
         }
 
         passengerObject = {
@@ -267,6 +267,7 @@ APC.parsePassengerData = function (room, channel, msgObject) {
     io.to(room).emit("trains", tmpAPCObject);
     io.to(room).emit("pax", passengerTable);
     io.to(room).emit("LastPaxUpdateTime", lastPaxUpdateTimeUnix);
+    //return { passengers: tmpPassengerTable, trains: tmpAPCObject, updateTime: lastPaxUpdateTime};
 }; // parsePassengerData ()
 
 

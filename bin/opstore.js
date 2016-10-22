@@ -154,7 +154,7 @@ Store.saveCTSEvent = function (msgObject, callback) {
         redisStore.incr('CTS_EVENT_ID', function (err, eID) {
             var multi = redisStore.multi();
             if (err) {
-                console.log("Store.saveCTSEvent. redis error: " + err);
+                log.error("Store.saveCTSEvent. redis error: " + err);
             }
             else {
                 multi.hset(km(k.ctsEvents), eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
@@ -190,7 +190,7 @@ Store.saveCTSEvent = function (msgObject, callback) {
 
                 multi.exec(function (err, data) {
                     if (err)
-                        console.log("err: " + err + " data: " + data);
+                        log.error("SaveCTSEvent. multi.exec Error: " + err + " data: " + data);
                     callback(err, data);
                 });
             }
@@ -230,13 +230,75 @@ function addIndexes (timestamp, eID, msgObject, multi) {
     }
 } // addIndexes()
 
+
+Store.scanStore = function (from,to, callbackfn) {
+    let count = 0;
+    var stream = redisStore.zscanStream(km(k.ctsTimestamp), { match: "*", count: 100} );
+    var keys = [];
+    stream.on('data', function (resultKeys) {
+        // `resultKeys` is an array of strings representing key names
+        //for (var i = 0; i < resultKeys.length; i++) {
+        //    keys.push(resultKeys[i]);
+        //}
+        console.log("Keys are: " + resultKeys.toString());
+        count += 1;
+        console.log("Length: " + resultKeys.length);
+        console.log("Count: " + count);
+    });
+    stream.on('end', function () {
+        //console.log('done with the keys: ', keys);
+        console.log("Final count: " + count);
+    });
+    /*
+    redisStore.zrangebyscore(keyMgr(opStore.cts_timestamp), startTime, stopTime, function (err, reply) {
+        if (err) {
+            log.warn("playAllTrains - Redis count error: " + err);
+            return;
+        }
+        eventIDs = reply;
+        //console.log ("playAllTrains - eventIDs: " + eventIDs.toString());
+        if (!eventIDs) {
+            log.warn("playAllTrains - unable to retrieve cts events");
+            return;
+        }
+        redisStore.hmget(keyMgr(opStore.cts), eventIDs, function (err, ctsEvents) {
+            let tmpSocket = null;
+            let trainObj = {};
+            let prop = null;
+            let i = 0;
+            if (err) {
+                log.warn("playAllTrains - Redis could not retrieve historical data: " + err);
+                return;
+            }
+            if (!Array.isArray(ctsEvents)) {
+                log.warn("playAllTrains - Redis request did not return valid response. Expected array: " + ctsEvents);
+                return;
+            }
+
+            tmpSocket = io.sockets.connected[toSocketID];
+            if (!tmpSocket) {
+                log.error("playAllTrains - Internal communications error. Connection lost: " + toSocketID);
+                return;
+            }
+            tmpSocket.historyList = [];
+            for (i = 0; i < ctsEvents.length; i++) {
+                flatmsgObject = JSON.parse(ctsEvents[i]);
+                msgObject = unflatten(flatmsgObject);
+                tmpSocket.historyList.push(msgObject);
+            }
+            log.info("playAllTrains. tmpSocket.historyList.length: " + tmpSocket.historyList.length);
+            playBackEvent(toSocketID, "cts");
+        }); // redis hmget-callback
+    }); // redis zrange-callback
+    */
+}; // scanStore()
 Store.redisFreeOldData = setInterval(function () {
     if (!Store.isMaster()) {
         return;
     }
     redisStore.zcount(km(k.ctsTimestamp), "-inf", "+inf", function (err, count) {
         if (err) {
-            console.log("Store.redisFreeOldData. Redis count error: " + err);
+            log.eror("Store.redisFreeOldData. Redis count error: " + err);
         }
         else if (count > maxCTS) {
             // get all events from the oldes (starting at index 0) and up to count-maxCTS
@@ -251,7 +313,7 @@ Store.redisFreeOldData = setInterval(function () {
                 multi.exec(function (err, replies) {
                     var trainKeys = [];
                     if (err) {
-                        console.error("Store.redisFreeOldData. Unable to delete: " + err + " Reply: " + reply);
+                        log.error("Store.redisFreeOldData. Unable to delete: " + err + " Reply: " + reply);
                         return;
                     }
                     trainKeys = replies[2];
@@ -260,7 +322,7 @@ Store.redisFreeOldData = setInterval(function () {
                     }
                     multi.exec(function (err, replies) {
                         if (err) {
-                            console.error("Unable to delete: " + err + " Reply: " + reply);
+                            log.error("Unable to delete: " + err + " Reply: " + reply);
                             return;
                         }
                         // todo: iterate through replies and remove any smembers with no events?
@@ -313,17 +375,33 @@ Store.subscribe = function (topic) {
     return redisSubscriberClient.subscribe(topic);
 }; // subscribe()
 
+redisSubscriberClient.on("Error", function (err) {
+    log.error("redisSubscriberClient.on-Error: " + err);
+});
+
+redisSubscriberClient.on("subscribe", function (channel, message ) {
+    //io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + message);
+    log.info("succesful subscribe to Redis: " + channel + " " + count);
+});
+pub.on("subscribe", function (channel, message ) {
+    //io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + message);
+    log.info("succesful subscribe to Redis: " + channel + " " + count);
+});
+/*
 Store.publish = function (topic, data) {
     assert(typeof topic === "string");
     assert(data);
     pub.publish (topic, data);
 }; // publish()
+*/
 
 Store.on = function (topic, callbackfn) {
     console.log("Store.on. topic: " + topic);
     redisSubscriberClient.on (topic, callbackfn);
     //return redisSubscriberClient.on (event, callbackfn);
 };
+
+//pub.on("subscribe")
 
 Store.unsubscribe = function () {
     redisSubscriberClient.unsubscribe();
@@ -382,11 +460,11 @@ function km() {  // km - short for "Key Manager"
 Store.k = k;
 Store.km = km;
 
-redisSubscriberClient.on("error", function (err) {
+redisSubscriberClient.on("Error", function (err) {
     log.error("redisSubscriberClient.on -  Error " + err);
     //callback(err, null);
 });
-redisStore.on("error", function (err) {
+redisStore.on("Error", function (err) {
     log.error("redisStore.on -  Error " + err);
     //callback(err, null);
 });

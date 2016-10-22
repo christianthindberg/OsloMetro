@@ -50,11 +50,15 @@ CTSLiveStatus.updateCTSLiveObject = function (msgObject) {
     let trainNo = null;
     assert (typeof msgObject === "object");
 
+    if (msgObject.event === "trnochg") {
+        delete ctsLiveObject[msgObject.values.address];
+        msgObject.values.address = msgObject.newTrainNo;
+    }
+
     trainNo = msgObject.values.address;
 
     if (!ctsLiveObject.hasOwnProperty([trainNo])) { // first time we receive data for this trainNo, or it was previously deleted due to train number change
         //console.log("CTS-trainnumber_first_time: " + msgObject.values.address);
-        msgObject.values.firstTime = true;
         ctsLiveObject[trainNo] = [];
     }
     // insert this berth event first in the list of events for this train

@@ -99,6 +99,7 @@ body
         //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
       });
 
+      /*
       socket.on('Log', function (msg) {
         var bError = msg.search(/error|excep/i) == -1 ? false : true;
         d3.select('#messages').append("li")
@@ -111,6 +112,7 @@ body
         scrollable.property("scrollTop", scrollable.property("scrollHeight"));
         //d3.selectAll("li").style("color", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";});
       });
+      */
 
       socket.on('demo_passengers', function (msg) {
         iFirst = msg.indexOf(":");

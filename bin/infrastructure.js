@@ -33,7 +33,7 @@ let berthTable = [];  // gps coordinates etc for each berth ("sporfelt")
 let trackswitchTable = []; // gps coordinates etc for each track switch ("sporveksel")
 let endberthTable = []; // gps coordinates etc for "special" berths at the end of the tracks
 
-let stationObject = {}; // same as stationTable, but "assosiative array", i.e. object with properties. Easier handling for parseAndSendCTS-function
+let stationObject = {}; // same as stationTable, but "assosiative array", i.e. object with properties. Easier handling for parseCTSData-function
 let tracksObject = {}; // keep track of "Centrumsbanen", "Kolsåsbanen" etc
 let infraObject = {}; // one property for each berth, switch etc holding the number of the train that last passed this element
 
@@ -268,7 +268,7 @@ Infrastructure.getNumInfraElements = function () {
  * berthTable = [];  // gps coordinates etc for each berth ("sporfelt")
  * trackswitchTable = []; // gps coordinates etc for each track switch ("sporveksel")
  * endberthTable = []; // gps coordinates etc for "special" berths at the end of the tracks
- * stationObject = {}; // same as stationTable, but "assosiative array", i.e. object with properties. Easier handling for parseAndSendCTS-function
+ * stationObject = {}; // same as stationTable, but "assosiative array", i.e. object with properties. Easier handling for parseCTSData-function
  * tracksObject = {}; // keep track of "Centrumsbanen", "Kolsåsbanen" etc
  * infraObject = {}; // All elements in the infrastructure
  */

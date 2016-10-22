@@ -48,18 +48,18 @@ function logger() {
   let config = {};
 
   config = {
-    "appenders": [
+    appenders: [
       {
-        "type":       "file",
-        "filename":   logDirSub + "oslometro.log", //logDirSub + "application.log",
-        "maxLogSize": 102400,
-        "backups":    3,
-        "pattern":    "-yyyy-MM-dd",
-        "layout":     {
-          "type":    "pattern",
-          "pattern": "%d (PID: %x{pid}) %p %c - %m",
-          "tokens":  {
-            "pid": function () {
+        type:       "file",
+        filename:   logDirSub + "oslometro.log", //logDirSub + "application.log",
+        maxLogSize: 102400,
+        backups:    3,
+        pattern:    "-yyyy-MM-dd",
+        layout:     {
+          type:    "pattern",
+          pattern: "%d (PID: %x{pid}) %p %c - %m",
+          tokens:  {
+            pid: function () {
               return process.pid;
             }
           } // tokens

@@ -7,8 +7,15 @@ const opstore = require ("./opstore");
 const assert = require ("assert");
 const logger = require('./logger');
 const log = logger().getLogger('ctshistory');
+const helpers = require("./helpers");
 
-function handleHistoryPlayback (socket, cmdArray) {
+let io = null;
+
+let CTSHistory = {
+    version: 1.0
+};
+
+CTSHistory.handleHistoryPlayback = function (socket, cmdArray) {
     let tmpSocket = null;
     let toSocketID = null;
     let trainsArray = [];
@@ -61,7 +68,7 @@ function handleHistoryPlayback (socket, cmdArray) {
     else {
         playAllTrains (toSocketID, startTime, stopTime);
     }
-} // handleHistoryPlayback()
+}; // handleHistoryPlayback()
 
 const playSomeTrains = function (toSocketID, startTime, stopTime, trainsArray) {
     const multi = redisStore.multi();
@@ -139,6 +146,7 @@ const playAllTrains = function (toSocketID, startTime, stopTime) {
     assert(typeof startTime === "number");
     assert(typeof stopTime === "number");
 
+    /*
     redisStore.zrangebyscore(keyMgr(opStore.cts_timestamp), startTime, stopTime, function (err, reply) {
         if (err) {
             log.warn("playAllTrains - Redis count error: " + err);
@@ -179,6 +187,7 @@ const playAllTrains = function (toSocketID, startTime, stopTime) {
             playBackEvent(toSocketID, "cts");
         }); // redis hmget-callback
     }); // redis zrange-callback
+    */
 }; //playAllTrains()
 
 var playbackSpeed = 4;
@@ -250,7 +259,7 @@ function playBackEvent (toSocketID, channel) {
     setTimeout(playBackEvent, (nextTimeStamp - currTimeStamp)/playbackSpeed, toSocketID, channel);
 } // playBackEvent()
 
-function handlePlaybackCancel (socket, cmdArray) {
+CTSHistory.handlePlaybackCancel = function (socket, cmdArray) {
 
     assert (typeof socket === "string");
     assert (Array.isArray(cmdArray));
@@ -275,7 +284,41 @@ function handlePlaybackCancel (socket, cmdArray) {
         tmpSocket.bCancelledByUser = true; // playback() will read this state, stop playback and set mode to "ready"
         socket.emit("chat message", "Cancelling history playback...");
     }
-} // handlePlaybackCancel()
+}; // handlePlaybackCancel()
+
+CTSHistory.handleRealtime = function (socket, cmdArray) {
+    if (!socket.joined) {
+        socket.emit("help", {realtime: cmdDictionary.realtime});
+        return;
+    }
+    let toSocketID = socket.room;
+    let tmpSocket = io.sockets.connected[toSocketID];
+    if (!toSocketID|| !tmpSocket) {
+        socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
+        return;
+    }
+    if (tmpSocket.room === realtime) {
+        socket.emit("chat message", "Already processing realtime");
+        return;
+    }
+
+    if (tmpSocket.mode === "history") { // playBack is ongoing
+        socket.emit("chat message", "Cancel ongoing playback/operation first, then issue new realtime command.");
+        return;
+    }
+    if (tmpSocket.mode !== "ready") {
+        console.log("received realtime. tmp.socket.mode: " + tmpSocket.mode);
+    }
+
+    if (tmpSocket.room && tmpSocket.room !== realtime) {  // remember: tmpSocket is the socket of the map-client, not current (cmd) client
+        tmpSocket.leave(tmpSocket.room);
+    }
+
+    tmpSocket.join(realtime);
+    tmpSocket.room = realtime;
+    tmpSocket.mode = realtime;
+    socket.to(toSocketID).emit(realtime, "start");
+}; // handleRealtime ()
 
 function handleAggregateSend (socket, cmdArray) {
     let tmpSocket = null, toSocketID = null;
@@ -496,3 +539,10 @@ function aggregateAndSendEvents (toSocketID, channel, eventArray) {
     eventArray = []; // memory ok for garbage collection
     eventObj = null;
 } // aggregateAndSendEvents()
+
+module.exports = function (pio) {
+    if (pio) {
+        io = pio;
+    }
+    return CTSHistory;
+}

@@ -17,6 +17,7 @@ const log = logger().getLogger('commands');
 let io = null;
 
 const ctslivestatus = require("./ctslivestatus")(null);
+const ctshistory = require("./ctshistory")(null);
 
 let cmdDictionary = {
     sub:        "subscribe to some redis channels. Used to verify that connection to Redis is ok",
@@ -34,6 +35,8 @@ let cmdDictionary = {
     trains_phys: "list all physical three-car IDs (Note: not yet implemented)",
     range:      "Returns the first and last eventID we have stored and their associated times",
     info:       "Retrieves information about the Redis database",
+    redis:      "List available redis-commands",
+    sockets:    "List currently connected sockets and their join-status",
     max:        "max <number>. If no number is provided returns the max number of cts-events that will be kept in Redis. If number is provided sets the max number of records to keep",
     count:      "retrieves the number of cts events stored in Redis",
     berth:      "Colors berths that we have not received data from RED and the other berths GREEN. Do <berth> again to reset coloring to normal",
@@ -81,7 +84,8 @@ Command.parseAndDo = function (cmdArray, socket) {
             ctshistory.handleAggregateSend (socket, cmdArray);
             break;
         case "history":
-            ctshistory.handleHistoryPlayback (socket, cmdArray);
+            //tshistory.handleHistoryPlayback (socket, cmdArray);
+            opstore.scanStore();
             break;
         case "cancel":
             ctshistory.handlePlaybackCancel(socket, cmdArray);
@@ -306,7 +310,7 @@ function setBlinkAlarms (cmdArray, socket) {
     //socket.emit('blinkalarms', null);
 } // setBlinkAlarms ()
 
-function setDestination (cmdArray, sockets) {
+function setDestination (cmdArray, socket) {
     assert.ok(Array.isArray(cmdArray), "function setDestination invalid parameter cmdArray: " + cmdArray);
     assert.ok(typeof socket === "object");
 
@@ -348,7 +352,7 @@ function generateTestGhosts (cmdArray, socket) {
     for (let train in tmpCTSLive) {
         let msgObject = JSON.parse(JSON.stringify(ctslivestatus.getLiveObject(train)[0])); // make a copy
         msgObject.values.address = "----";
-        //parseAndSendCTS(toSocketID, "cts", msgObject);
+        //parseCTSData(toSocketID, "cts", msgObject);
         opstore.publish("cts", JSON.stringify(msgObject));
         ++countGhosts;
         if (countGhosts === 3)

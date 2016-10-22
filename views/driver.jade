@@ -105,7 +105,7 @@ body
             // how many pixels to offset berth positions/tracks.
             // The berths are very close to each other, need to add offset otherwise berths are drawn on top of each other
             var trackOffset = d3.select("#splittrackschbox").property('checked') ? 20 : 0;
-            var showDestination = true;
+            var showDestination = false;
 
 
             // D3 scales, i.e variables that will point to conversion functions from "real world" coordinates (in our case gps) to screen pixels
@@ -1109,7 +1109,7 @@ body
 
             var bTextDestination = true;
             var setTrainTexts = function () {
-                bTextDestination = !bTextDestination;
+                bTextDestination = showDestination? showDestination : !bTextDestination;
                 var trainTexts = vis.selectAll("text.train")
                     .text(function (d) { return bTextDestination ?  getDestination(d) : d.values.address; });
             };

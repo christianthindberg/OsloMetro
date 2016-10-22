@@ -24,11 +24,11 @@ function MyIsNumber(p) {
 
 function getToBerthName (msgObject) {
     if (!msgObject) {
-        console.error("getToBerthName - msgObject null");
+        log.error("getToBerthName - msgObject null");
         return null;
     }
     if (!msgObject.values) {
-        console.log("getToBerthName - msgObject.values null");
+        log.error("getToBerthName - msgObject.values null");
         return null;
     }
     if (!msgObject.values.to_infra_berth)
@@ -39,11 +39,11 @@ function getToBerthName (msgObject) {
 }
 function checkToBerthLatLng (msgObject) {
     if (!msgObject) {
-        console.error("parseFloatLatLng - msgObject null");
+        log.error("parseFloatLatLng - msgObject null");
         return false;
     }
     if (!msgObject.values) {
-        console.log("parseFloatLatLng - msgObject.values null");
+        log.error("parseFloatLatLng - msgObject.values null");
         return false;
     }
     if (!msgObject.values.to_infra_berth)

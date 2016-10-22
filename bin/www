@@ -14,7 +14,6 @@ const logger = require('./logger');
 const log = logger().getLogger('wwww');
 const infrastructure = require("./infrastructure");
 const helpers = require("./helpers");
-const ctshistory = require("./ctshistory");
 const opstore = require('./opstore.js');  // opstore: short for Operational Store, in this case Redis
 const ctsparser = require("./ctsparser")(handleCTSEvent);
 
@@ -26,6 +25,7 @@ app.set('port', port);
 //Create HTTP server.
 const server = http.createServer(app);
 const io = require('socket.io')(server);
+const ctshistory = require("./ctshistory")(io);
 const ctslivestatus = require("./ctslivestatus")(io);
 const cmd = require ("./commands")(io);
 const apcrealtime = require("./apcrealtime")(io);
@@ -154,39 +154,6 @@ io.on('connection', function (socket) {
 // END CLIENT-COMMUNICATION
 //
 
-function handleRealtime (socket, cmdArray) {
-    if (!socket.joined) {
-        socket.emit("help", {realtime: cmdDictionary.realtime});
-        return;
-    }
-    let toSocketID = socket.room;
-    let tmpSocket = io.sockets.connected[toSocketID];
-    if (!toSocketID|| !tmpSocket) {
-        socket.emit("chat message", "internal error - communications ID not found (socket.room) " + toSocketID);
-        return;
-    }
-    if (tmpSocket.room === realtime) {
-        socket.emit("chat message", "Already processing realtime");
-        return;
-    }
-
-    if (tmpSocket.mode === "history") { // playBack is ongoing
-        socket.emit("chat message", "Cancel ongoing playback/operation first, then issue new realtime command.");
-        return;
-    }
-    if (tmpSocket.mode !== "ready") {
-        console.log("received realtime. tmp.socket.mode: " + tmpSocket.mode);
-    }
-
-    if (tmpSocket.room && tmpSocket.room !== realtime) {  // remember: tmpSocket is the socket of the map-client, not current (cmd) client
-        tmpSocket.leave(tmpSocket.room);
-    }
-
-    tmpSocket.join(realtime);
-    tmpSocket.room = realtime;
-    tmpSocket.mode = realtime;
-    socket.to(toSocketID).emit(realtime, "start");
-} // handleRealtime ()
 
 //
 // BACK END COMMUNICATIONS
@@ -198,25 +165,9 @@ opstore.subscribe("StationAggregate");
 opstore.subscribe("OwnModuleAggregate");
 opstore.subscribe("Log");
 opstore.subscribe("Error");
+opstore.subscribe("test");
 
 opstore.subscribe("cts");
-
-opstore.subscribe("cts_ghost_train");
-opstore.subscribe("cts_special_code");
-opstore.subscribe("cts_trainno_change");
-opstore.subscribe("cts_event_missing_to");
-opstore.subscribe("cts_event");
-
-
-opstore.on("error", function (err) {
-    console.log("Error " + err);
-});
-
-// Start Redis communication
-opstore.on("subscribe", function (channel, message ) {
-    io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + message);
-    log.info("succesful subscribe to Redis: " + channel + " " + count);
-});
 
 
 // Handle data from Redis
@@ -224,15 +175,10 @@ opstore.on("message", function (channel, msg) {
     let msgObject = JSON.parse(msg);
 
     //io.to(room).emit("cts_train_jump", msgObject);
-    //io.to(room).emit("cts_trainnumber_first_time", msgObject); // notify the client
 
-    // emit all data we get as a separate topic, except for log-data
-    if (channel !== "Log") {
-        io.emit("data", msg);
-    }
 
     if (channel === "cts") {
-        msgObject = ctsparser.parseAndSendCTS(msgObject); // parses the event and calles opstore.saveCTS which in turn publish one of the events below
+        msgObject = ctsparser.parseCTSData(msgObject); // parses the event and calles opstore.saveCTS which in turn publish one of the events below
         handleCTSEvent(msgObject);
     }
     else if (channel === "pax") {
@@ -247,11 +193,16 @@ opstore.on("message", function (channel, msg) {
     else if (channel === "OwnModuleAggregate") { // todo: add room to all of these: realtime
         apcrealtime.parseSumPerOwnModule(realtime, channel, msgObject);
     }
-    else if (channel === "Log" || channel === "Error") {
-        io.emit("Log", channel + ": " + msg)
+    else if (channel === "Log" || channel === "Error") { // "log" means we have received data from a kinesis-log stream, "error" means the kinesis consumer has encountered an item with no topic
+        io.emit("Log", "opstore.on -- " + channel + ": " + msg)
     }
     else {
         log.error ("opstore.On. Unknown channel: " + channel + " Message: " + msg);
+    }
+
+    // emit all data we get as a separate topic, except for log-data
+    if (channel !== "Log") {
+        io.emit("data", msg);
     }
 });
 
