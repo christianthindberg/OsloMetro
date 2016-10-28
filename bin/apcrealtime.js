@@ -10,8 +10,9 @@ const infrastructure = require("./infrastructure");
 const assert = require("assert");
 const logger = require('./logger');
 const log = logger().getLogger('apcrealtime');
-
-let io = null;
+const opstore = require("./opstore");  // opstore: short for Operational Store, in this case Redis
+const flatten = require("flat");
+const unflatten = require("flat").unflatten;
 
 let passengerTable = [];
 let sumPerLineTable = [];
@@ -23,7 +24,8 @@ let APC = {};
 
 APC.getAPCObject = function () {
     return APCObject;
-};
+}; // getAPCObject()
+
 // Passengers
 APC.getPassengerTable = function () {
     return passengerTable;
@@ -83,11 +85,10 @@ APC.parseSumPerLine = function (room, channel, msgObject) {
 
     if (!msgObject.values || !Array.isArray(msgObject.values)) {
         log.warn("parseSumPerLine - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
-        return;
+        return null;
     }
-    if (msgObject.values.length > 0) {
-        sumPerLineTable = [];
-    }
+
+    sumPerLineTable = [];
 
     for (i = 0; i < msgObject.values.length; i+=1) {
         lineObj = JSON.parse(msgObject.values[i]);
@@ -97,7 +98,7 @@ APC.parseSumPerLine = function (room, channel, msgObject) {
             "TotalAlighting": lineObj["sum(TotalAlighting)"]
         });
     }
-    io.to(room).emit(channel, sumPerLineTable);
+    return sumPerLineTable;
 }; // parseSumPerLine()
 
 APC.parseSumPerStation = function (room, channel, msgObject) {
@@ -110,11 +111,10 @@ APC.parseSumPerStation = function (room, channel, msgObject) {
 
     if (!msgObject.values || !Array.isArray(msgObject.values)) {
         log.warn("parseSumPerStation - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
-        return;
+        return null;
     }
-    if (msgObject.values.length > 0) {
-        sumPerStationTable = [];
-    }
+    sumPerStationTable = [];
+
     for (i = 0; i < msgObject.values.length; i+=1) {
         stationObj = JSON.parse(msgObject.values[i]);
         sumPerStationTable.push({
@@ -123,7 +123,7 @@ APC.parseSumPerStation = function (room, channel, msgObject) {
             "TotalAlighting": stationObj["sum(TotalAlighting)"]
         });
     }
-    io.to(room).emit(channel, sumPerStationTable);
+    return sumPerStationTable;
 }; // parseSumPerStation ()
 
 APC.parseSumPerOwnModule = function (room, channel, msgObject) {
@@ -136,12 +136,11 @@ APC.parseSumPerOwnModule = function (room, channel, msgObject) {
 
     if (!msgObject.values || !Array.isArray(msgObject.values)) {
         log.warn("parseSumPerOwnModule - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
-        return;
+        return null;
     }
 
-    if (msgObject.values.length > 0) {
-        sumPerOwnModuleTable = [];
-    }
+    sumPerOwnModuleTable = [];
+
     for (i = 0; i < msgObject.values.length; i+=1) {
         OwnModuleObj = JSON.parse(msgObject.values[i]);
         sumPerOwnModuleTable.push({
@@ -150,17 +149,88 @@ APC.parseSumPerOwnModule = function (room, channel, msgObject) {
             "TotalAlighting": OwnModuleObj.Alighting
         });
     }
-    io.to(room).emit(channel, sumPerOwnModuleTable);
+    return sumPerOwnModuleTable;
 }; // parseSumPerOwnModule ()
+
+const apcAggregate = setInterval(function () {
+    let timeNow = new Date().getTime();
+    //console.log ("apcAggregate stop: " + new Date(timeNow).toTimeString());
+    let range = 20*60*1000;
+    //console.log("apcAggregate start: " + new Date(timeNow-range).toTimeString());
+    opstore.getAPCEvents(timeNow - range, timeNow, apcAgg);
+    /*
+    if (prevStartTime === 0) {
+        opstore.getAPCEvents(timeNow - range, timeNow, apcAgg);
+    }
+    else {
+        let minusObj = opstore.getAPCEvents(prevStartTime, timeNow - range, minusAgg);
+        let plusObj = opstore.getAPCEvents(prevStopTime, timeNow, plusAgg);
+    }
+    */
+    prevStopTime = timeNow;
+    prevStartTime = timeNow - range;
+}, 1 * 60 * 1000); // check every minute
+
+let prevStopTime = 0;
+let prevStartTime = 0;
+
+function minusAgg(err, events) {
+    lastMinusLine = {};
+
+    for (let i=0; i<events.length; i++) {
+        let Line = events[i].value.passengers.LineNumber;
+        let Station = events[i].value.station.stationCode;
+
+        if (!lastMinusLine.hasOwnProperty(Line)) {
+            lastMinusLine[Line] = { "TotalBoarding" : 0, "TotalAlighting": 0 };
+        }
+
+
+    }
+} // minusAgg()
+
+let lastMinusLine = {};
+let lastPlusLine = {};
+let lastMinusStation = {};
+let lastPlusStation = {};
+let aggObject = {};
+
+function plusAgg (err, events) {
+    //lastPlus += 1;
+} // plusAgg
+
+function apcAgg (err, events) {
+    //assert (Array.isArray(events));
+
+    if (err) {
+        log.error("apcAgg. Error from opstore: " + err);
+        return;
+    }
+
+    /*
+    lineAggregate = {};
+    for (let i=0; i < events.length; i++) {
+        let flatmsgObject = JSON.parse(events[i]);
+        let msgObject = unflatten(flatmsgObject);
+        let iLine = msgObject.value.passengers.LineNumber;
+        let alight = msgObject.value.passengers.TotalAlighting;
+        let board = msgObject.value.passengers.TotalBoarding;
+        lineAggregate[iLine] = lineAggregate.hasOwnProperty(iLine) ? lineAggregate[iLine] + alight : alight;
+        // todo: add eventEmitter...
+    }
+    */
+} // apcAgg()
+
+let lineAggregate = {};
+let stationAggregate = {};
 
 APC.parsePassengerData = function (room, channel, msgObject) {
     // The PIDAS also sends useful information about the trains. Keep track of updated trains info also
     let tmpAPCObject = {};
     let tmpPassengerTable = [];
     let records = null;
-    let bStationFound = false;
     let i = 0;
-    let station = null;
+    let lastPaxUpdateTime = 0;
 
     assert(typeof room === "string");
     assert(typeof channel === "string");
@@ -168,14 +238,14 @@ APC.parsePassengerData = function (room, channel, msgObject) {
 
     if (!msgObject.values) {
         log.info("parsePassengerData - invalid msgObject: " + JSON.stringify(msgObject, undefined, 2));
-        return;
+        return null;
     }
 
     records = msgObject.values.toString().split("\n");
 
     if (records === null || records === undefined || records.length === 0) { // we did NOT receive data
-        log.warn("parsePassengerData - msgObject did not contain data: " + JSON.stringify(msgObject));
-        return;
+        log.error("parsePassengerData - msgObject did not contain data: " + JSON.stringify(msgObject));
+        return null;
     }
 
     //passengerTable = []; // throw away the old data
@@ -184,38 +254,16 @@ APC.parsePassengerData = function (room, channel, msgObject) {
     for (i = 0; i < records.length; i += 1) {
         let items = records[i].toString().split(";");
         let passengerObject = null;
+
         if (items && items.length === 1 && items[0] === "" && i === records.length - 1) {
             break; // seems all passenger files contains an empty record at the end - just ignore it
         }
         if (!items || items.length < 15) { // at present there will be 70 items in a record, but this may change in the future. We assume that the first 15 will stay unchanged
             log.error("parsePassengerData - msgObject contained invalid data. Record " + i + " of " + records.length + ": " + records[i] + " msgObject: " + JSON.stringify(msgObject) + " room: " + room + " channel: " + channel);
-            return;  // replace with continue?
+            continue;  // we assume that even if one record is invalid, the other records are good. This is a debatable assumption of course...
         }
 
-        passengerObject = {
-            DateAndTimeUnix: parseInt(items[0], 10) * 1000, // time in milliseconds
-            TogNumber: parseInt(items[1], 10),
-            OwnModuleNo: parseInt(items[2], 10),
-            CoupledModuleNo: parseInt(items[3], 10),
-            ModuleConfig: parseInt(items[4], 10),
-            LeadingOrGuided: parseInt(items[5], 10),
-            TotalBoarding: parseInt(items[6], 10),
-            TotalAlighting: parseInt(items[7], 10),
-            CurrentStationID: parseInt(items[8], 10),
-            RouteCodeID: parseInt(items[9], 10),
-            LineNumber: parseInt(items[10], 10),
-            StartStationID: parseInt(items[11], 10),
-            EndStationID: parseInt(items[12], 10),
-            SensorDiagnoseError: parseInt(items[13], 10),
-            DataInvalid: parseInt(items[14], 10),
-            DateAndTimeUnixDataReceived: 0
-        };
-        passengerObject.DateAndTimeUnixDataReceived = Date.now();
-        // An undocumented "feature" of the Siemens PIDAS system is that it sometimes adds 500 to the PIDAS_ID/CurrentStationID
-        // This is believed to occur if the train pass a station for the second time wihout having been able to upload the data from the previous pass
-        if (passengerObject.CurrentStationID > 500) {
-            passengerObject.CurrentStationID -= 500;
-        }
+        passengerObject = buildPassengerObject (items);
 
         // find info about the station corresponding to PIDAS_ID
         let stationObject = infrastructure.getStationByID(passengerObject.CurrentStationID);
@@ -225,7 +273,8 @@ APC.parsePassengerData = function (room, channel, msgObject) {
             }
         }
         else {
-            setLastPaxUpdateTime(passengerObject.DateAndTimeUnix);
+            setLastPaxUpdateTime(passengerObject.DateAndTimeUnix); // global last time
+            lastPaxUpdateTime = lastPaxUpdateTime < passengerObject.DateAndTimeUnix ? passengerObject.DateAndTimeUnix : lastPaxUpdateTime;
             // Merge together passengerData received and stationData
             tmpPassengerTable.push({   // use "key" and "value" so data are ready to be used by D3js on client side
                 "key":   passengerObject.CurrentStationID.toString(),
@@ -247,29 +296,62 @@ APC.parsePassengerData = function (room, channel, msgObject) {
         } // push to tmpPassengerTable
 
 
-        // Keep track of the last data received each physical train
-        if (!tmpAPCObject.hasOwnProperty([passengerObject.OwnModuleNo])) {
-            tmpAPCObject[passengerObject.OwnModuleNo] = passengerObject;
-        } else if (tmpAPCObject [passengerObject.OwnModuleNo].DateAndTimeUnix < passengerObject.DateAndTimeUnix) {
+        // Keep track of the last data received for each physical train
+
+        // within this batch of data..
+        if (!tmpAPCObject.hasOwnProperty(passengerObject.OwnModuleNo) ||
+            tmpAPCObject[passengerObject.OwnModuleNo].DateAndTimeUnix < passengerObject.DateAndTimeUnix) {
             tmpAPCObject[passengerObject.OwnModuleNo] = passengerObject;
         }
+
+        // ...and globally  (APC/trains may deliver data out of order
+        if (!APCObject.hasOwnProperty(passengerObject.OwnModuleNo) ||
+            APCObject[passengerObject.OwnModuleNo].DateAndTimeUnix < passengerObject.DateAndTimeUnix) {
+            APCObject[passengerObject.OwnModuleNo] = passengerObject;
+        }
+
     } // for - all passenger data/parsed all received records
 
     // passenger data succesfully parsed - store globally for new clients
     passengerTable = tmpPassengerTable;
-    for (let prop in tmpAPCObject) {
-        if (tmpAPCObject.hasOwnProperty(prop)) { // do not iterate over inherited props
-            APCObject[prop] = tmpAPCObject[prop];
-        }
-    }
 
-    // Send only new information to clients, keep the total APCObject globally available to send to new connecting clients
-    io.to(room).emit("trains", tmpAPCObject);
-    io.to(room).emit("pax", passengerTable);
-    io.to(room).emit("LastPaxUpdateTime", lastPaxUpdateTimeUnix);
-    //return { passengers: tmpPassengerTable, trains: tmpAPCObject, updateTime: lastPaxUpdateTime};
+    // return only new information to clients, keep the total APCObject globally available to send to new connecting clients
+    return { passengers: tmpPassengerTable, trains: tmpAPCObject, updateTime: lastPaxUpdateTime};
 }; // parsePassengerData ()
 
+function buildPassengerObject (items) {
+    assert(Array.isArray(items));
+    assert(items.length > 14);
+
+    // Note: a APC record contain much more data, including individual alight/boarding per individual door
+    // at least for now we choose to ignore these additional items
+
+    let passengerObject = {
+        DateAndTimeUnix: parseInt(items[0], 10) * 1000, // time in milliseconds
+        TogNumber: parseInt(items[1], 10),
+        OwnModuleNo: parseInt(items[2], 10),
+        CoupledModuleNo: parseInt(items[3], 10),
+        ModuleConfig: parseInt(items[4], 10),
+        LeadingOrGuided: parseInt(items[5], 10),
+        TotalBoarding: parseInt(items[6], 10),
+        TotalAlighting: parseInt(items[7], 10),
+        CurrentStationID: parseInt(items[8], 10),
+        RouteCodeID: parseInt(items[9], 10),
+        LineNumber: parseInt(items[10], 10),
+        StartStationID: parseInt(items[11], 10),
+        EndStationID: parseInt(items[12], 10),
+        SensorDiagnoseError: parseInt(items[13], 10),
+        DataInvalid: parseInt(items[14], 10),
+        DateAndTimeUnixDataReceived: 0
+    };
+    passengerObject.DateAndTimeUnixDataReceived = Date.now();
+    // An undocumented "feature" of the Siemens PIDAS system is that it sometimes adds 500 to the PIDAS_ID/CurrentStationID
+    // This is believed to occur if the train pass a station for the second time wihout having been able to upload the data from the previous pass
+    if (passengerObject.CurrentStationID > 500) {
+        passengerObject.CurrentStationID -= 500;
+    }
+    return passengerObject;
+} // bildPassengerObject()
 
 let lastPaxUpdateTimeUnix = 0;
 function setLastPaxUpdateTime (DateAndTimeUnix) {
@@ -282,7 +364,4 @@ APC.getLastPaxUpdateTimeUnix = function () {
     return lastPaxUpdateTimeUnix;
 }; // getLastPaxUpdateTimeUnix()
 
-module.exports = function (pio) {
-    io = pio;
-    return APC;
-};
+module.exports = APC;

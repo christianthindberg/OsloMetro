@@ -219,7 +219,7 @@ function getFirstAndLastCTSEvent (cmdArray, socket) {
     assert.ok(Array.isArray(cmdArray));
     assert.ok(typeof socket === "object");
 
-    opstore.getFirstAndLastEvent (function (err, result) {
+    opstore.getFirstAndLastCTSEvent (function (err, result) {
         if (err) {
             log.warn("getFirstAndLastCTSEvent. Unable to retrieve range. Error: " + err);
             socket.emit('chat message', "Unable to retrieve first and last event. Error: " + err);

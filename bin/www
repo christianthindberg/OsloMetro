@@ -14,9 +14,9 @@ const logger = require('./logger');
 const log = logger().getLogger('wwww');
 const infrastructure = require("./infrastructure");
 const helpers = require("./helpers");
-const opstore = require('./opstore.js');  // opstore: short for Operational Store, in this case Redis
+const opstore = require("./opstore");  // opstore: short for Operational Store, in this case Redis
 const ctsparser = require("./ctsparser")(handleCTSEvent);
-
+const apcrealtime = require("./apcrealtime"); // todo: rename to apcparser
 
 //Get port from environment and store in Express.
 const port = normalizePort(process.env.PORT || '3000');
@@ -28,7 +28,6 @@ const io = require('socket.io')(server);
 const ctshistory = require("./ctshistory")(io);
 const ctslivestatus = require("./ctslivestatus")(io);
 const cmd = require ("./commands")(io);
-const apcrealtime = require("./apcrealtime")(io);
 
 let numberOfUsers = 0;
 const realtime = "realtime";
@@ -182,16 +181,20 @@ opstore.on("message", function (channel, msg) {
         handleCTSEvent(msgObject);
     }
     else if (channel === "pax") {
-        apcrealtime.parsePassengerData(realtime, channel, msgObject);
+        msgObject = apcrealtime.parsePassengerData(realtime, channel, msgObject);
+        handleAPCEvent(msgObject);
     }
     else if (channel === "LineAggregate") {
-        apcrealtime.parseSumPerLine(realtime, channel, msgObject);
+        msgObject = apcrealtime.parseSumPerLine(realtime, channel, msgObject);
+        io.to(realtime).emit(channel, msgObject);
     }
     else if (channel === "StationAggregate") {
-        apcrealtime.parseSumPerStation(realtime, channel, msgObject);
+        msgObject = apcrealtime.parseSumPerStation(realtime, channel, msgObject);
+        io.to(realtime).emit(channel, msgObject);
     }
     else if (channel === "OwnModuleAggregate") { // todo: add room to all of these: realtime
-        apcrealtime.parseSumPerOwnModule(realtime, channel, msgObject);
+        msgObject = apcrealtime.parseSumPerOwnModule(realtime, channel, msgObject);
+        io.to(realtime).emit(channel, msgObject);
     }
     else if (channel === "Log" || channel === "Error") { // "log" means we have received data from a kinesis-log stream, "error" means the kinesis consumer has encountered an item with no topic
         io.emit("Log", "opstore.on -- " + channel + ": " + msg)
@@ -221,28 +224,52 @@ function saveCTSEvent (msgObject) {
 
     opstore.saveCTSEvent (msgObject, function (err, success) {
         if (err) {
-            log.error("saveCTSEvent. saveCTSEvent error: " + err);
+            log.error("saveCTSEvent. Error saving to opstore: " + err);
         }
     });
-} // saveNormalCTSEvent()
+} // saveCTSEvent()
+
+function handleAPCEvent (msgObject) {
+    if (!msgObject) {
+        log.error("opstore.on-apc. Invalid msgObject");
+        return;
+    }
+    saveAPCEvent (msgObject);
+
+    io.to(realtime).emit("trains", msgObject.trains);
+    io.to(realtime).emit("pax", msgObject.passengers); // todo: replace "pax" with "apc" (automatic passenger counting)
+    io.to(realtime).emit("LastPaxUpdateTime", msgObject.lastPaxUpdateTime);
+} // handlePAXEvent ()
+
+function saveAPCEvent (msgObject) {
+    assert (typeof msgObject === "object");
+
+    opstore.saveAPCEvent (msgObject, function (err, success) {
+        if (err) {
+            log.error("saveAPCEvent. Error saving to opstore: " + err);
+        }
+    });
+} // saveAPCEvent ()
 
 // todo: REDIS clean up is not working properly, i.e. if web app terminate and restart, the number of redis connections may increase?
 process.on('exit', function () {
-    console.log('About to exit.');
+    log.info('About to exit.');
     //todo: check if subscription is active and if connection is open
     opstore.unsubscribe();
     opstore.end();
 });
 process.on('SIGINT', function () {
-    console.log('Got CTRL-D');
+    log.info('Got CTRL-D');
     //todo: check if subscription is active and if connection is open
     opstore.unsubscribe();
     opstore.end();
     process.exit(2);
 });
 process.on('uncaughtException', function (e) {
-    console.log('Uncaught Exception...');
-    console.log(e.stack);
+    //console.log('Uncaught Exception...');
+    //console.log(e.stack);
+    log.error('Uncaught Exception...');
+    log.error(e.stack);
     //todo: check if subscription is active and if connection is open
     opstore.unsubscribe();
     opstore.end();
@@ -291,11 +318,11 @@ function onError(error) {
     // handle specific listen errors with friendly messages
     switch (error.code) {
         case 'EACCES':
-            console.error(bind + ' requires elevated privileges');
+            log.error(bind + ' requires elevated privileges');
             process.exit(1);
             break;
         case 'EADDRINUSE':
-            console.error(bind + ' is already in use');
+            log.error(bind + ' is already in use');
             process.exit(1);
             break;
         default:

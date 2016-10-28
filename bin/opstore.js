@@ -93,7 +93,7 @@ Store.getTrainNumbersLogical = function (callback) {
     redisStore.smembers(km(k.trainlogKeys), callback);
 }; // getTrainNumbersLogical()
 
-Store.getFirstAndLastEvent = function (callback) {
+Store.getFirstAndLastCTSEvent = function (callback) {
     assert.ok(typeof callback === "function");
 
     const multi = redisStore.multi();
@@ -103,7 +103,69 @@ Store.getFirstAndLastEvent = function (callback) {
     multi.exec(function (err, result) {
         callback(err,result);
     });
-}; // getFirstAndLastEvent()
+}; // getFirstAndLastCTSEvent()
+
+Store.getAPCEvents = function (fromTimestamp, toTimestamp, callback) {
+    assert (typeof fromTimestamp === "number");
+    assert (typeof toTimestamp === "number");
+    assert (typeof callback === "function");
+
+    let eventsArr = [];
+    let testRange = toTimestamp - fromTimestamp;
+    let testTime = new Date(testRange)
+
+    redisStore.zrangebyscore(km(k.apcTimestamp), fromTimestamp, toTimestamp, function (err, events) {
+        if (err) {
+            log.error("getACPEvents. Error retrieving apcKeys: " + err.message);
+            //callback (err, events);
+            return;
+        }
+        else if (events.length === 0) {
+            //callback (err, events);
+            return;
+        }
+        else {
+            redisStore.hmget(km(k.apcEvents), events, function (err, arrHashes) {
+                let aggObj = { "Line":{}, "Station": {}, "Module": {} };
+                let i= 0, j=0;
+                let test = Object.keys(aggObj);
+
+                if (err) {
+                   log.error ("getAPCEvents. Error retrieving apcEvents: " + err.message);
+                    //callback (err, arrHashes);
+                    return;
+                }
+                else {
+                    for (i = 0; i < arrHashes.length; i++) {
+                        let apcEvent = unflatten(JSON.parse(arrHashes[i]));
+                        assert (apcEvent.hasOwnProperty("Line") && apcEvent.hasOwnProperty("Station") && apcEvent.hasOwnProperty("Module"));
+
+                        for (j=0; j<Object.keys(aggObj).length; j++) {
+                            const general = Object.keys(aggObj)[j];     // general === "Line" || "Station" || "Modle"
+                            const specific = apcEvent[general];    // ex 3, KOL, 30023
+                            let t2 = aggObj[general];
+                            let t3 = general + "." + specific;
+
+                            if (!aggObj[general].hasOwnProperty(specific)) { // f.ex aggObj.Station.KOL
+                                aggObj[general][specific] = { "Alight": 0, "Board": 0, "Count": 0, "MaxBoard": 0, "MinBoard": 1000, "MaxAlight": 0, "MinAlight": 1000 };
+                                test = aggObj[general][specific];
+                            }
+                            aggObj[general][specific]["Board"] += apcEvent.Board;
+                            aggObj[general][specific]["Alight"] += apcEvent.Alight;
+                            aggObj[general][specific]["Count"] += 1;
+                            aggObj[general][specific]["MaxAlight"] = Math.max(aggObj[general][specific].MaxAlight, apcEvent.Alight);
+                            aggObj[general][specific]["MaxBoard"] =  Math.max(aggObj[general][specific].MaxBoard, apcEvent.Board);
+                            aggObj[general][specific]["MinAlight"] = Math.min(aggObj[general][specific].MinAlight, apcEvent.Alight);
+                            aggObj[general][specific]["MinBoard"] =  Math.min(aggObj[general][specific].MinBoard, apcEvent.Board);
+                        }
+                    }
+                    callback (err, aggObj);
+                    return;
+                }
+            }); // hmget
+        } // else
+    }); // zrangebyscore
+}; // getAPCEvents()
 
 /**
  *
@@ -140,67 +202,67 @@ Store.getFirstAndLastEvent = function (callback) {
  */
 
 Store.saveCTSEvent = function (msgObject, callback) {
-    assert.ok(msgObject.hasOwnProperty("values"), "Store.saveCTSEvent - no property msgObject.values: " + JSON.stringify(msgObject, undefined,2));
-    assert.ok(new Date(msgObject.values.time_stamp) instanceof Date, "Store.saveCTSEvent - not timestring msgObject.values.time_stamp");
-    assert.ok(typeof callback === "function", "Store.save CTSEvent - callback is not function");
-    assert.ok(msgObject.values.hasOwnProperty("to_infra_berth"));
+    assert (msgObject.hasOwnProperty("values"), "no property msgObject.values: ");
+    assert (new Date(msgObject.values.time_stamp) instanceof Date, "not timestring: msgObject.values.time_stamp");
+    assert (typeof callback === "function", "callback is not function");
+    assert (msgObject.values.hasOwnProperty("to_infra_berth"));
 
-    if (Store.isMaster()) {
-        const timestamp = new Date(msgObject.values.time_stamp).getTime();
-        const trainNo = msgObject.values.address;
-
-        //logMemory.info ("test memory %d", process.memoryUsage().rss);
-
-        redisStore.incr('CTS_EVENT_ID', function (err, eID) {
-            var multi = redisStore.multi();
-            if (err) {
-                log.error("Store.saveCTSEvent. redis error: " + err);
-            }
-            else {
-                multi.hset(km(k.ctsEvents), eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
-                multi.zadd(km(k.ctsTimestamp), timestamp, eID); // sorted list of all events timestamp/eventID
-
-                kafka.topic("metro-cts").partition(0).produce([JSON.stringify(msgObject)], function (err, response) {
-                    if (err) {
-                        log.error("saveCTSEvent. Writing to Ruter Kafka failed: " + err);
-                    }
-                });
-
-                if (msgObject.values.event === "ghost") {
-                    //pub.publish("cts_ghost_train", JSON.stringify(msgObject));
-                    multi.zadd(km(k.ghost), timestamp, eID); // keep sorted set of timestamp/eventIDs per ghost train
-                }
-                else if (msgObject.values.event === "trnochg") {
-                    //pub.publish("cts_trainno_change", JSON.stringify(msgObject));
-                    multi.zadd(km(k.trainnochange), timestamp, eID);
-                }
-                else if (msgObject.values.event === "special") {
-                    //pub.publish("cts_special_code", JSON.stringify(msgObject));
-                    addIndexes(timestamp, eID, msgObject, multi);
-                }
-                else if (msgObject.values.event === "event") { // normal event
-                    //pub.publish("cts_event", JSON.stringify(msgObject));
-                    addIndexes(timestamp, eID, msgObject, multi);
-
-                }
-                else { // not valid toBerth..
-                    //pub.publish("cts_event_missing_to", JSON.stringify(msgObject));
-                }
-
-
-                multi.exec(function (err, data) {
-                    if (err)
-                        log.error("SaveCTSEvent. multi.exec Error: " + err + " data: " + data);
-                    callback(err, data);
-                });
-            }
-        }); // store to Redis
+    if (!Store.isMaster()) {
+        return;
     }
+
+    const timestamp = new Date(msgObject.values.time_stamp).getTime();
+    const trainNo = msgObject.values.address;
+
+    //logMemory.info ("test memory %d", process.memoryUsage().rss);
+
+    redisStore.incr(ctsCounter, function (err, eID) {
+        var multi = redisStore.multi();
+        if (err) {
+            log.error("Store.saveCTSEvent. redis error: " + err);
+        }
+        else {
+            multi.hset(km(k.ctsEvents), ctsPrefix + eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+            multi.zadd(km(k.ctsTimestamp), timestamp, ctsPrefix + eID); // sorted list of all events timestamp/eventID
+
+            kafka.topic("metro-cts").partition(0).produce([JSON.stringify(msgObject)], function (err, response) {
+                if (err) {
+                    log.error("saveCTSEvent. Writing to Ruter Kafka failed: " + err);
+                }
+            });
+
+            if (msgObject.values.event === "ghost") {
+                //pub.publish("cts_ghost_train", JSON.stringify(msgObject));
+                multi.zadd(km(k.ghost), timestamp, ctsPrefix + eID); // keep sorted set of timestamp/eventIDs per ghost train
+            }
+            else if (msgObject.values.event === "trnochg") {
+                //pub.publish("cts_trainno_change", JSON.stringify(msgObject));
+                multi.zadd(km(k.trainnochange), timestamp, ctsPrefix + eID);
+            }
+            else if (msgObject.values.event === "special") {
+                //pub.publish("cts_special_code", JSON.stringify(msgObject));
+                addIndexes(timestamp, ctsPrefix + eID, msgObject, multi);
+            }
+            else if (msgObject.values.event === "event") { // normal event
+                //pub.publish("cts_event", JSON.stringify(msgObject));
+                addIndexes(timestamp, ctsPrefix + eID, msgObject, multi);
+            }
+            else { // not valid toBerth..
+                //pub.publish("cts_event_missing_to", JSON.stringify(msgObject));
+            }
+
+            multi.exec(function (err, data) {
+                if (err)
+                    log.error("SaveCTSEvent. multi.exec Error: " + err + " data: " + data);
+                callback(err, data);
+            });
+        }
+    }); // store to Redis
 }; // saveCTSEvent()
 
 function addIndexes (timestamp, eID, msgObject, multi) {
     assert (typeof timestamp === "number");
-    assert(typeof eID === "number");
+    assert(typeof eID === "string");
     assert (typeof msgObject === "object");
 
     let trainNo = msgObject.values.address;
@@ -229,6 +291,69 @@ function addIndexes (timestamp, eID, msgObject, multi) {
         multi.zadd(km(k.trainjumps), timestamp, eID);
     }
 } // addIndexes()
+
+Store.saveAPCEvent = function (msgObject, callback) {
+    assert (typeof  msgObject === "object");
+    assert (msgObject.hasOwnProperty ("trains"), "no property msgObject.values");
+    assert (Array.isArray(msgObject.passengers));
+    assert (typeof msgObject.updateTime === "number");
+
+    const multi = redisStore.multi();
+    const apcArray = msgObject.passengers;
+
+    if (!Store.isMaster()) {
+        return;
+    }
+
+    for (let i=0; i < apcArray.length; i++) {
+        redisStore.incr(APCcounter, function (err, eID) {
+            if (err) {
+                log.error("dkdkdkdk");
+                return;
+            }
+            else {
+                const timestamp = apcArray[i].value.passengers.DateAndTimeUnix; // * 1000;
+                const alightboard = {
+                    "Alight": apcArray[i].value.passengers.TotalAlighting,
+                    "Board": apcArray[i].value.passengers.TotalBoarding,
+                    "Module": apcArray[i].value.passengers.OwnModuleNo,
+                    "Line": apcArray[i].value.passengers.LineNumber,
+                    "Station": apcArray[i].value.station.stationCode
+                };
+
+                console.log("CTS event: " + new Date(timestamp).toTimeString());
+
+                multi.hset(km(k.apcEvents), apcPrefix + eID, JSON.stringify(flatten(alightboard)));
+
+                // secondary index for all events
+                multi.zadd(km(k.apcTimestamp), timestamp, apcPrefix + eID); // sorted list of all events timestamp/eventID
+
+                // secondary indexes for each type
+                multi.zadd(km(k.apcLine, apcArray[i].value.passengers.LineNumber), timestamp, apcPrefix + eID);
+                multi.zadd(km(k.apcStation, apcArray[i].value.station.stationCode), timestamp, apcPrefix + eID);
+                multi.zadd(km(k.apcOwnModuleNo, apcArray[i].value.passengers.OwnModuleNo), timestamp, apcPrefix + eID);
+
+                // For all types of keys, keep sets of keys. Handy for debug and maybe handy in the future
+                multi.sadd(km(k.apcLineKeys), apcArray[i].value.passengers.LineNumber);
+                multi.sadd(km(k.apcStationKeys), apcArray[i].value.station.stationCode);
+                multi.sadd(km(k.apcOwnModuleKeys), apcArray[i].value.passengers.OwnModuleNo);
+
+                kafka.topic("metro-apc").partition(0).produce([JSON.stringify(apcArray[i])], function (err, response) {
+                    if (err) {
+                        log.error("saveAPCEvent. Writing to Ruter Kafka failed: " + err);
+                    }
+                });
+
+                multi.exec(function (err, data) {
+                    if (err)
+                        log.error("SaveAPCEvent. multi.exec Error: " + err + " data: " + data);
+                    callback(err, data);
+                });
+            }
+        }); // incr
+    } // for-loop
+}; // saveAPCEvent()
+
 
 
 Store.scanStore = function (from,to, callbackfn) {
@@ -434,6 +559,10 @@ let k = {};  // short for "Key Store"
 k.base = "om"; // short for "OsloMetro"
 k.users = km(k.base,'users'); //list
 k.status = km(k.base,'status'); //String, :userName
+
+const ctsCounter = "CTS_EVENT_ID";
+const ctsPrefix = "cts";
+
 k.ctsEvents = km(k.base, "cts");  // hash of all valid cts events
 k.ctsTimestamp = km(k.base, "cts", "timestamp"); // sorted list of cts-events
 k.berth = km(k.base, "cts", "berth");
@@ -447,11 +576,19 @@ k.trainLog = km(k.base, "cts","trainlognr"); // sorted lists, one for each logic
 k.trainlogKeys = km(k.base, "cts","key","trainlognr"); // set of strings, each a logical train number
 k.trainjumps = km(k.base, "cts", "trainjump");
 
-k.trainPhys = km(k.base, "cts","trainphysnr"); // sorted lists, one for each physical 3-car-set number containing score timestamp, member ctsEventID
-k.trainKeysPhys = km(k.base, "cts","key", "trainphysnr"); // set of strings, each a physical 3-car-set number
 k.destinationKeys = km(k.base, "cts", "key", "destination");
 k.berthKeys = km(k.base, "cts", "key", "berth");
 
+const APCcounter = "APC_EVENT_ID";
+const apcPrefix = "apc";
+k.apcEvents = km(k.base, "apc");
+k.apcTimestamp = km(k.base, "apc", "timestamp"); // sorted list of cts-events
+k.apcLine = km(k.base, "apc", "line");
+k.apcStation = km(k.base, "apc", "station");
+k.apcOwnModuleNo = km(k.base, "apc","module"); // sorted lists, one for each physical 3-car-set number containing score timestamp, member ctsEventID
+k.apcLineKeys = km(k.base, "apc", "key","line");
+k.apcStationKeys = km(k.base, "apc", "key","station");
+k.apcOwnModuleKeys = km(k.base, "apc","key", "ownmoduleno"); // set of strings, each a physical 3-car-set number
 
 function km() {  // km - short for "Key Manager"
     return Array.prototype.slice.call(arguments).join(":");
@@ -470,35 +607,3 @@ redisStore.on("Error", function (err) {
 });
 
 module.exports = Store;
-
-
-/* To use in main file
-
- var
- ...
- opStore = require('./opStore.module.node.js'),
- km = opStore.km;
- ...
- client.get(km(opStore.status,userName), ...)
- */
-
-/* Todo: add retries ...
- var client = redis.createClient({
- retry_strategy: function (options) {
- if (options.error.code === 'ECONNREFUSED') {
- // End reconnecting on a specific error and flush all commands with a individual error
- return new Error('The server refused the connection');
- }
- if (options.total_retry_time > 1000 * 60 * 60) {
- // End reconnecting after a specific timeout and flush all commands with a individual error
- return new Error('Retry time exhausted');
- }
- if (options.times_connected > 10) {
- // End reconnecting with built in error
- return undefined;
- }
- // reconnect after
- return Math.max(options.attempt * 100, 3000);
- }
- });
- */
