@@ -20,6 +20,8 @@ let sumPerStationTable = [];
 let sumPerOwnModuleTable = [];
 let APCObject = {}; // Automated Passenger Counting, i.e. physical id for each 3-car train set, and other data from the onboard PIDAS-system
 
+let fnAggregateCallback = null;
+
 let APC = {};
 
 APC.getAPCObject = function () {
@@ -152,77 +154,32 @@ APC.parseSumPerOwnModule = function (room, channel, msgObject) {
     return sumPerOwnModuleTable;
 }; // parseSumPerOwnModule ()
 
+const timeDelta = 1*60*1000; // check every minute
+let aggPrevStop = 0;
+let aggObj = { "Line":{}, "Station": {}, "Module": {} };
+let aggMinusObj = { "Line":{}, "Station": {}, "Module": {} };
+
 const apcAggregate = setInterval(function () {
+    let aggMinusObj = { "Line":{}, "Station": {}, "Module": {} };
     let timeNow = new Date().getTime();
-    //console.log ("apcAggregate stop: " + new Date(timeNow).toTimeString());
-    let range = 20*60*1000;
-    //console.log("apcAggregate start: " + new Date(timeNow-range).toTimeString());
-    opstore.getAPCEvents(timeNow - range, timeNow, apcAgg);
-    /*
-    if (prevStartTime === 0) {
-        opstore.getAPCEvents(timeNow - range, timeNow, apcAgg);
+    let range = 20*60*1000; // get data for the last 20 minutes
+    let fromTimestamp = timeNow - range;
+
+    if (aggPrevStop === 0) {
+        aggPrevStop = fromTimestamp;
     }
-    else {
-        let minusObj = opstore.getAPCEvents(prevStartTime, timeNow - range, minusAgg);
-        let plusObj = opstore.getAPCEvents(prevStopTime, timeNow, plusAgg);
-    }
-    */
-    prevStopTime = timeNow;
-    prevStartTime = timeNow - range;
-}, 1 * 60 * 1000); // check every minute
 
-let prevStopTime = 0;
-let prevStartTime = 0;
-
-function minusAgg(err, events) {
-    lastMinusLine = {};
-
-    for (let i=0; i<events.length; i++) {
-        let Line = events[i].value.passengers.LineNumber;
-        let Station = events[i].value.station.stationCode;
-
-        if (!lastMinusLine.hasOwnProperty(Line)) {
-            lastMinusLine[Line] = { "TotalBoarding" : 0, "TotalAlighting": 0 };
+    opstore.getAPCEventAggregate(aggPrevStop, fromTimestamp, timeNow, timeDelta, aggObj, aggMinusObj, function (err, aggregatedObject) {
+        if (err) {
+            return;
         }
-
-
-    }
-} // minusAgg()
-
-let lastMinusLine = {};
-let lastPlusLine = {};
-let lastMinusStation = {};
-let lastPlusStation = {};
-let aggObject = {};
-
-function plusAgg (err, events) {
-    //lastPlus += 1;
-} // plusAgg
-
-function apcAgg (err, events) {
-    //assert (Array.isArray(events));
-
-    if (err) {
-        log.error("apcAgg. Error from opstore: " + err);
-        return;
-    }
-
-    /*
-    lineAggregate = {};
-    for (let i=0; i < events.length; i++) {
-        let flatmsgObject = JSON.parse(events[i]);
-        let msgObject = unflatten(flatmsgObject);
-        let iLine = msgObject.value.passengers.LineNumber;
-        let alight = msgObject.value.passengers.TotalAlighting;
-        let board = msgObject.value.passengers.TotalBoarding;
-        lineAggregate[iLine] = lineAggregate.hasOwnProperty(iLine) ? lineAggregate[iLine] + alight : alight;
-        // todo: add eventEmitter...
-    }
-    */
-} // apcAgg()
-
-let lineAggregate = {};
-let stationAggregate = {};
+        else {
+            aggObj = aggregatedObject;
+            aggPrevStop = timeNow;
+            fnAggregateCallback (aggObj);
+        }
+    });
+}, timeDelta); // check every minute
 
 APC.parsePassengerData = function (room, channel, msgObject) {
     // The PIDAS also sends useful information about the trains. Keep track of updated trains info also
@@ -312,6 +269,10 @@ APC.parsePassengerData = function (room, channel, msgObject) {
 
     } // for - all passenger data/parsed all received records
 
+    if (!tmpPassengerTable) { // all records were invalid
+        return null;
+    }
+
     // passenger data succesfully parsed - store globally for new clients
     passengerTable = tmpPassengerTable;
 
@@ -364,4 +325,8 @@ APC.getLastPaxUpdateTimeUnix = function () {
     return lastPaxUpdateTimeUnix;
 }; // getLastPaxUpdateTimeUnix()
 
-module.exports = APC;
+module.exports = function (aggregateCallback) {
+    assert (typeof  aggregateCallback === "function");
+    fnAggregateCallback = aggregateCallback;
+    return APC;
+}

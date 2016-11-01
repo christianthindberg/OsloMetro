@@ -105,67 +105,117 @@ Store.getFirstAndLastCTSEvent = function (callback) {
     });
 }; // getFirstAndLastCTSEvent()
 
-Store.getAPCEvents = function (fromTimestamp, toTimestamp, callback) {
+
+// Beware of nesting...
+/**
+ *
+ * getACPEventAggregate -- called at regular interval, f.ex every 10th second, and calclulate the aggregate (i.e. total number of boarding, alighting)
+ *                          over a given period (ex. 20 minutes)
+ *                          Since we are called regularly there is no need to recalculate the full 20 minute periode. We only calculate the newest 10 second period and the 10 second period
+ *                          that is now too old to be part of the 20 min aggregate.
+ *
+ *                          Thus we implement a sliding time window, where we add the newest 10 seconds of data and remove the oldest 10 seconds
+ *
+ * @param prevStop:         when did we stop last time we aggregated? this will typically be 10 seconds ago
+ * @param fromTimestamp     the starting point. This will typically be 20 minutes earlier than the curent time
+ * @param toTimestamp       typically equal to current time
+ * @param timeDelta         how much are we moving the sliding time windows forward? Typically 10 seconds
+ * @param aggObj            The object containing the result of aggregateing all boardings over the sliding window time frame
+ * @param aggMinusObj       Object used to store the data we remove from the time window
+ * @param callback          Function for returning the results. Note: calls to Redis are asynch, so we typically need to do a bit of nesting. todo: consider using promises
+ *
+ *
+ */
+Store.getAPCEventAggregate = function (prevStop, fromTimestamp, toTimestamp, timeDelta, aggObj, aggMinusObj, callback) {
     assert (typeof fromTimestamp === "number");
     assert (typeof toTimestamp === "number");
     assert (typeof callback === "function");
 
     let eventsArr = [];
     let testRange = toTimestamp - fromTimestamp;
-    let testTime = new Date(testRange)
+    let testTime = new Date(testRange);
+    const multi = redisStore.multi();
 
-    redisStore.zrangebyscore(km(k.apcTimestamp), fromTimestamp, toTimestamp, function (err, events) {
+    multi.zrangebyscore(km(k.apcTimestamp), fromTimestamp-timeDelta, fromTimestamp);
+    multi.zrangebyscore(km(k.apcTimestamp), prevStop, toTimestamp);
+    multi.exec (function (err, reply) {
         if (err) {
             log.error("getACPEvents. Error retrieving apcKeys: " + err.message);
-            //callback (err, events);
-            return;
-        }
-        else if (events.length === 0) {
-            //callback (err, events);
-            return;
+            return callback (err, aggObj);
         }
         else {
-            redisStore.hmget(km(k.apcEvents), events, function (err, arrHashes) {
-                let aggObj = { "Line":{}, "Station": {}, "Module": {} };
-                let i= 0, j=0;
-                let test = Object.keys(aggObj);
-
-                if (err) {
-                   log.error ("getAPCEvents. Error retrieving apcEvents: " + err.message);
-                    //callback (err, arrHashes);
-                    return;
+            const minusEvents = reply[0][1];
+            const addEvents = reply[1][1];
+            if (addEvents.length === 0) {
+                callback (err, aggObj);
+            }
+            else {
+                const multi = redisStore.multi();
+                if (minusEvents.length > 0) {
+                    multi.hmget(km(k.apcEvents), minusEvents);
                 }
-                else {
-                    for (i = 0; i < arrHashes.length; i++) {
-                        let apcEvent = unflatten(JSON.parse(arrHashes[i]));
-                        assert (apcEvent.hasOwnProperty("Line") && apcEvent.hasOwnProperty("Station") && apcEvent.hasOwnProperty("Module"));
-
-                        for (j=0; j<Object.keys(aggObj).length; j++) {
-                            const general = Object.keys(aggObj)[j];     // general === "Line" || "Station" || "Modle"
-                            const specific = apcEvent[general];    // ex 3, KOL, 30023
-                            let t2 = aggObj[general];
-                            let t3 = general + "." + specific;
-
-                            if (!aggObj[general].hasOwnProperty(specific)) { // f.ex aggObj.Station.KOL
-                                aggObj[general][specific] = { "Alight": 0, "Board": 0, "Count": 0, "MaxBoard": 0, "MinBoard": 1000, "MaxAlight": 0, "MinAlight": 1000 };
-                                test = aggObj[general][specific];
-                            }
-                            aggObj[general][specific]["Board"] += apcEvent.Board;
-                            aggObj[general][specific]["Alight"] += apcEvent.Alight;
-                            aggObj[general][specific]["Count"] += 1;
-                            aggObj[general][specific]["MaxAlight"] = Math.max(aggObj[general][specific].MaxAlight, apcEvent.Alight);
-                            aggObj[general][specific]["MaxBoard"] =  Math.max(aggObj[general][specific].MaxBoard, apcEvent.Board);
-                            aggObj[general][specific]["MinAlight"] = Math.min(aggObj[general][specific].MinAlight, apcEvent.Alight);
-                            aggObj[general][specific]["MinBoard"] =  Math.min(aggObj[general][specific].MinBoard, apcEvent.Board);
-                        }
+                multi.hmget(km(k.apcEvents), addEvents);
+                multi.exec(function (err, reply) {
+                    if (err) {
+                        log.error ("getAPCEventAggregate. Error retrieving apcEvents: " + err.message);
+                        callback (err, null);
                     }
-                    callback (err, aggObj);
-                    return;
-                }
-            }); // hmget
-        } // else
+                    else {
+                        const arrMinusHashes = minusEvents.length > 0 ? reply [0][1]: [];
+                        const arrHashes = minusEvents.length > 0 ? reply[1][1] : reply [0][1];
+
+                        aggregateEvents(aggObj, arrHashes);
+                        aggregateEvents(aggMinusObj, arrMinusHashes);
+                        // subtract events...
+                        for (let prop in aggMinusObj) { // "Line", "Station", ...
+                            if (aggMinusObj.hasOwnProperty(prop) && aggObj.hasOwnProperty(prop)) {
+                                let specificMinusObj = aggMinusObj[prop];
+                                let specificAggObj = aggObj[prop];
+                                for (let p in specificMinusObj) { //"1", "2", "KOL", ...
+                                    if (specificMinusObj.hasOwnProperty(p) && specificAggObj.hasOwnProperty(p)) {
+                                        specificAggObj[p]["Board"] -= specificMinusObj[p]["Board"];
+                                        specificAggObj[p]["Alight"] -= specificMinusObj[p]["Alight"];
+                                        specificAggObj[p]["Count"] -= specificMinusObj[p]["Count"];
+                                    }
+                                }
+                            }
+                        }
+                        callback (err, aggObj);
+                    } // inner inner else :-)
+                }); // hmget
+            } // inner else
+        } // outer else
     }); // zrangebyscore
-}; // getAPCEvents()
+}; // getAPCEventAggregate()
+
+function aggregateEvents (aggObj, arrHashes) {
+    let i= 0, j=0;
+
+    // iterate the events list
+    for (i = 0; i < arrHashes.length; i++) {
+        let apcEvent = unflatten(JSON.parse(arrHashes[i]));
+
+        if (!apcEvent.hasOwnProperty("Line") || !apcEvent.hasOwnProperty("Station") || !apcEvent.hasOwnProperty("Module")) {
+            log.error ("getAPCEventAggregate. retrieved invalid apcEvent: " + JSON.stringify(apcEvent));
+            return callback (new Error("getAPCEventAggregate. retrieved invalid apcEvent: " + JSON.stringify(apcEvent)), null);
+        }
+
+        // iterate the keys of the aggregator object - Line, Station, Module
+        for (j=0; j<Object.keys(aggObj).length; j++) {
+            const generalKey = Object.keys(aggObj)[j];     // generalKey === "Line" || "Station" || "Module"
+            const specificKey = apcEvent[generalKey];    // ex 3, KOL, 30023
+
+            if (!aggObj[generalKey].hasOwnProperty(specificKey)) { // f.ex aggObj.Station.KOL
+                aggObj[generalKey][specificKey] = { "Alight": 0, "Board": 0, "Count": 0 };
+            }
+            // add the current event to the aggregate
+            aggObj[generalKey][specificKey]["Board"] += apcEvent.Board;
+            aggObj[generalKey][specificKey]["Alight"] += apcEvent.Alight;
+            aggObj[generalKey][specificKey]["Count"] += 1;
+        } // for "Line", "Station", "Module"
+    } // for events list
+    return aggObj;
+} // aggregateEvents()
 
 /**
  *
@@ -308,7 +358,7 @@ Store.saveAPCEvent = function (msgObject, callback) {
     for (let i=0; i < apcArray.length; i++) {
         redisStore.incr(APCcounter, function (err, eID) {
             if (err) {
-                log.error("dkdkdkdk");
+                log.error("dkdkdkdk"); // todo: fix
                 return;
             }
             else {
@@ -316,12 +366,13 @@ Store.saveAPCEvent = function (msgObject, callback) {
                 const alightboard = {
                     "Alight": apcArray[i].value.passengers.TotalAlighting,
                     "Board": apcArray[i].value.passengers.TotalBoarding,
+                    "Timestamp": timestamp,
                     "Module": apcArray[i].value.passengers.OwnModuleNo,
                     "Line": apcArray[i].value.passengers.LineNumber,
                     "Station": apcArray[i].value.station.stationCode
                 };
 
-                console.log("CTS event: " + new Date(timestamp).toTimeString());
+                console.log("APC event: " + new Date(timestamp).toTimeString());
 
                 multi.hset(km(k.apcEvents), apcPrefix + eID, JSON.stringify(flatten(alightboard)));
 

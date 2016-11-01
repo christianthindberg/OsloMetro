@@ -16,7 +16,7 @@ const infrastructure = require("./infrastructure");
 const helpers = require("./helpers");
 const opstore = require("./opstore");  // opstore: short for Operational Store, in this case Redis
 const ctsparser = require("./ctsparser")(handleCTSEvent);
-const apcrealtime = require("./apcrealtime"); // todo: rename to apcparser
+const apcrealtime = require("./apcrealtime")(sendAPCAggregate); // todo: rename to apcparser?
 
 //Get port from environment and store in Express.
 const port = normalizePort(process.env.PORT || '3000');
@@ -157,16 +157,14 @@ io.on('connection', function (socket) {
 //
 // BACK END COMMUNICATIONS
 // Subscribe to operational data store (i.e Redis) topics
-
-opstore.subscribe("pax");
+opstore.subscribe("CTS");
+opstore.subscribe("PAX");
 opstore.subscribe("LineAggregate");
 opstore.subscribe("StationAggregate");
 opstore.subscribe("OwnModuleAggregate");
 opstore.subscribe("Log");
 opstore.subscribe("Error");
-opstore.subscribe("test");
 
-opstore.subscribe("cts");
 
 
 // Handle data from Redis
@@ -176,11 +174,11 @@ opstore.on("message", function (channel, msg) {
     //io.to(room).emit("cts_train_jump", msgObject);
 
 
-    if (channel === "cts") {
+    if (channel === "CTS") {
         msgObject = ctsparser.parseCTSData(msgObject); // parses the event and calles opstore.saveCTS which in turn publish one of the events below
         handleCTSEvent(msgObject);
     }
-    else if (channel === "pax") {
+    else if (channel === "PAX") {
         msgObject = apcrealtime.parsePassengerData(realtime, channel, msgObject);
         handleAPCEvent(msgObject);
     }
@@ -251,15 +249,30 @@ function saveAPCEvent (msgObject) {
     });
 } // saveAPCEvent ()
 
+function sendAPCAggregate (aggregateObject) {
+    if (!aggregateObject) {
+        return;
+    }
+    if (aggregateObject.hasOwnProperty("Line")) {
+        io.to(realtime).emit("LineAggregate", aggregateObject["Line"]);
+    }
+    if (aggregateObject.hasOwnProperty("Station")) {
+        io.to(realtime).emit("StationAggregate", aggregateObject["Station"]);
+    }
+    if (aggregateObject.hasOwnProperty("Module")) {
+        io.to(realtime).emit("OwnModuleAggregate", aggregateObject["Module"]);
+    }
+} // sendAPCAggregate ()
+
 // todo: REDIS clean up is not working properly, i.e. if web app terminate and restart, the number of redis connections may increase?
 process.on('exit', function () {
-    log.info('About to exit.');
+    //log.info('About to exit.');
     //todo: check if subscription is active and if connection is open
     opstore.unsubscribe();
     opstore.end();
 });
 process.on('SIGINT', function () {
-    log.info('Got CTRL-D');
+    //log.info('Got CTRL-D');
     //todo: check if subscription is active and if connection is open
     opstore.unsubscribe();
     opstore.end();

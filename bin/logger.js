@@ -17,6 +17,7 @@ permissions and limitations under the License.
 
 const log4js = require("log4js");
 const os = require("os");
+const process = require("process");
 /*
 var AWS = require('aws-sdk');
 var awsConfig = require('./config');
