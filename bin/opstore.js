@@ -20,12 +20,14 @@ let Redis = require("ioredis");
 const os = require("os");
 const flatten = require("flat");
 const unflatten = require("flat").unflatten;
+const schedule = require("node-schedule");
 const assert = require("assert");
 const logger = require("./logger");
 const log = logger().getLogger("opstore");
 let KafkaRest = require("kafka-rest");
 let kafka = new KafkaRest({"url": "http://ec2-52-211-70-204.eu-west-1.compute.amazonaws.com:8082"});
 //const logMemory = logger().getLogger("memory-usage");
+const helpers = require("./helpers");
 
 
 kafka.topics.list(function (err, topics) {
@@ -105,6 +107,103 @@ Store.getFirstAndLastCTSEvent = function (callback) {
     });
 }; // getFirstAndLastCTSEvent()
 
+// Each element holds the data and function to handle a the corresponding stream or aggregate
+let arrIntervals = [];
+let arrStreams = [];
+
+/**
+ * createIntervalAggregator: adds together properties over a time intervel, i.e. every hour at 00 the current aggregate is delivered, and values are set to zero
+ *      to start aggregating the next hour.
+ * @param hashKey       : redis key for the hash we want to aggregate over
+ * @param groupByProps  : Array containing strings identical to the hash field/properties ("Line", "Station", ...) by which we want to group
+ * @param addProps      : Array containing strings identical to the hash field/properties ("Aligth", "Board") that we want to sum
+ * @param timeSchedule  : Periodic time where we deliver our aggregate and resets all values to zero to start a new aggregation period
+ * @param callback      : function to call to serve aggregated data back to caller
+ */
+let countIntervalCreate = 0;
+Store.createIntervalAggregator = function (hashKey, groupByProps, addProps, timeSchedule, callback) {
+    assert (typeof hashKey === "string");
+    assert (Array.isArray(groupByProps));
+    assert (Array.isArray(addProps));
+    assert (typeof timeSchedule === "object");
+    assert (typeof callback === "function");
+
+    let groupByObj = {};
+
+    countIntervalCreate += 1;
+    log.info ("createIntervalAggregator called: " + countIntervalCreate);
+
+    // build the groupByObj
+    for (let i=0; i<groupByProps.length;i++) {
+        groupByObj[groupByProps[i]] = {};
+        for (let j=0;j<addProps.length;j++) {
+            groupByObj[groupByProps[i]][addProps[j]] = 0;
+        }
+    }
+
+    //arrIntervals.push (new classStream (hashKey, groupByProps, addProps, length, callback))
+
+    arrIntervals.push( {"Name"     : hashKey,
+        "func"      : function () { callback (null, "testeritestings"); },
+        "count"     : 0,
+        "aggObj"    : groupByObj });
+
+    schedule.scheduleJob (timeSchedule, arrIntervals[arrIntervals.length-1].func);
+}; // createIntervalAggregator()
+
+/**
+ * createStreamAggregator: adds together properties over a "stream" (i.e. time window of f.ex 20 minutes, updated every 10 seconds)
+ *
+ * @param hashKey       : Redis key for the hash we want to aggregate over
+ * @param groupByProps  : Array containing strings identical to the hash field/properties ("Line", "Station", ...) by which we want to group
+ * @param addProps      : Array containing strings identical to the hash field/properties ("Alight", "Board") that we want to sum
+ * @param length        : Length of the stream, i.e. 20 minutes
+ * @param timeSchedule  : timedelta, i.e. how often we update the stream data (ex every 10 seconds
+ * @param callback      : function to call to serve aggregated data back to caller
+ *
+ */
+let countStreamCreate = 0;
+Store.createStreamAggregator = function (hashKey, groupByProps, addProps, length, timeSchedule, callback) {
+    assert (typeof hashKey === "string");
+    assert (Array.isArray(groupByProps));
+    assert (Array.isArray(addProps));
+    assert (typeof length === "number");
+    assert (typeof timeSchedule === "object");
+    assert (typeof callback === "function");
+
+    countStreamCreate += 1;
+    log.info ("createStreamAggregator called: " + countStreamCreate);
+
+    let Stream = new classStream (hashKey, groupByProps, addProps, length, callback);
+    arrStreams.push(Stream);
+
+
+    schedule.scheduleJob (timeSchedule, Stream.getAPCEventAggregate.bind(Stream));
+}; // createStreamAggregator()
+
+function classStream (hashKey, groupByProps, addProps, length, callback) {
+    this.Name               = hashKey;
+    this.length             = length; // sliding time window in milliseconds
+    this.timeFirstCall      = 0;
+    this.timeWindowStart    = 0;
+    this.timeWindowEnd      = 0;
+    this.timeNow            = 0;
+    this.count              = 0;
+    this.callback           = callback;
+    this.bBlock             = false; // ensure we do not do getAPCEventAggregate while still executing previous call
+
+    this.aggObj = {};
+    this.aggMinusObjTemplate = null;
+
+    // build the groupByObj
+    for (let i=0; i<groupByProps.length;i++) {
+        this.aggObj[groupByProps[i]] = {};
+        for (let j=0;j<addProps.length;j++) {
+            this.aggObj[groupByProps[i]][addProps[j]] = 0;
+        }
+    }
+    this.aggMinusObjTemplate = JSON.parse(JSON.stringify(this.aggObj));
+} // classStream
 
 // Beware of nesting...
 /**
@@ -126,69 +225,133 @@ Store.getFirstAndLastCTSEvent = function (callback) {
  *
  *
  */
-Store.getAPCEventAggregate = function (prevStop, fromTimestamp, toTimestamp, timeDelta, aggObj, aggMinusObj, callback) {
-    assert (typeof fromTimestamp === "number");
-    assert (typeof toTimestamp === "number");
-    assert (typeof callback === "function");
-
-    let eventsArr = [];
-    let testRange = toTimestamp - fromTimestamp;
-    let testTime = new Date(testRange);
+classStream.prototype.getAPCEventAggregate = function () {
+    const self = this;  // "this" context is lost when doing async calls, so we store it in local variable
     const multi = redisStore.multi();
+    self.timeNow = new Date().getTime();
+    let aggMinusObj = JSON.parse(JSON.stringify(self.aggMinusObjTemplate)); // create a fresh empty minus object, i.e. all values set to zero
 
-    multi.zrangebyscore(km(k.apcTimestamp), fromTimestamp-timeDelta, fromTimestamp);
-    multi.zrangebyscore(km(k.apcTimestamp), prevStop, toTimestamp);
+    if (self.bBlock) {
+        log.info ("getACPEventAggregate. Called again while still calculating previous aggregate");
+        return;
+    }
+    self.bBlock = true;
+
+    if (self.timeFirstCall === 0) {
+        self.timeFirstCall = self.timeNow;
+        self.timeWindowStart = self.timeNow;
+        self.timeWindowEnd = self.timeNow;
+        self.bBlock = false;
+        return; // No data to aggregate the first time, just initiallize timers
+    }
+
+    // Initially, the stream has zero length and we start building it from timeNow
+    // the stream grows until its time window is equal to length
+    // after that we slide the time window forward by the time passed since we were last called
+
+    // Retrieve new elements
+    assert (self.timeNow > self.timeWindowEnd);
+    log.info("getACPEvents. Time since last call: " + (self.timeNow - self.timeWindowEnd) + ": -- " + helpers.millisToHrMinSec(self.timeNow - self.timeWindowEnd));
+    log.info ("apc1:                1477853401000 = "              + new Date(1477853401000).toLocaleString());
+    log.info ("apc56890:            1478153874000 = "              + new Date(1478153874000).toLocaleString());
+    log.info ("self.timeNow:        " + self.timeNow + " = "       + new Date(self.timeNow).toLocaleString());
+    log.info ("self.timeWindowEnd:  " + self.timeWindowEnd + " = " + new Date(self.timeWindowEnd).toLocaleString());
+    multi.zrangebyscore(km(k.apcTimestamp), self.timeNow - self.timeWindowEnd, self.timeNow);
+
+    // Retrieve elements to subtract
+    if (self.timeNow - self.length > self.timeWindowStart) {
+        multi.zrangebyscore(km(k.apcTimestamp), self.timeWindowStart, self.timeNow - self.length);
+    }
+
     multi.exec (function (err, reply) {
+        const innermulti = redisStore.multi();
+
         if (err) {
             log.error("getACPEvents. Error retrieving apcKeys: " + err.message);
-            return callback (err, aggObj);
+            self.bBlock = false;
+            self.callback (err, null);
+            return;
         }
-        else {
-            const minusEvents = reply[0][1];
-            const addEvents = reply[1][1];
-            if (addEvents.length === 0) {
-                callback (err, aggObj);
-            }
-            else {
-                const multi = redisStore.multi();
-                if (minusEvents.length > 0) {
-                    multi.hmget(km(k.apcEvents), minusEvents);
-                }
-                multi.hmget(km(k.apcEvents), addEvents);
-                multi.exec(function (err, reply) {
-                    if (err) {
-                        log.error ("getAPCEventAggregate. Error retrieving apcEvents: " + err.message);
-                        callback (err, null);
-                    }
-                    else {
-                        const arrMinusHashes = minusEvents.length > 0 ? reply [0][1]: [];
-                        const arrHashes = minusEvents.length > 0 ? reply[1][1] : reply [0][1];
 
-                        aggregateEvents(aggObj, arrHashes);
-                        aggregateEvents(aggMinusObj, arrMinusHashes);
-                        // subtract events...
-                        for (let prop in aggMinusObj) { // "Line", "Station", ...
-                            if (aggMinusObj.hasOwnProperty(prop) && aggObj.hasOwnProperty(prop)) {
-                                let specificMinusObj = aggMinusObj[prop];
-                                let specificAggObj = aggObj[prop];
-                                for (let p in specificMinusObj) { //"1", "2", "KOL", ...
-                                    if (specificMinusObj.hasOwnProperty(p) && specificAggObj.hasOwnProperty(p)) {
-                                        specificAggObj[p]["Board"] -= specificMinusObj[p]["Board"];
-                                        specificAggObj[p]["Alight"] -= specificMinusObj[p]["Alight"];
-                                        specificAggObj[p]["Count"] -= specificMinusObj[p]["Count"];
-                                    }
-                                }
-                            }
-                        }
-                        callback (err, aggObj);
-                    } // inner inner else :-)
-                }); // hmget
-            } // inner else
-        } // outer else
+        let minusEvents = [];
+        let addEvents = reply[0][1];
+
+        if (reply.length === 2) {
+            assert(self.timeNow - self.length > self.timeWindowStart);
+            minusEvents = reply[1][1];
+        }
+
+        if (addEvents.length === 0) {
+            self.bBlock = false;
+            self.callback (err, null);
+            return;
+        }
+
+        innermulti.hmget(km(k.apcEvents), addEvents);
+        if (minusEvents.length > 0) {
+            innermulti.hmget(km(k.apcEvents), minusEvents);
+        }
+
+        innermulti.exec(function (err, reply) {
+            let arrMinusHashes = [];
+            let arrHashes = [];
+
+            if (err) {
+                log.error ("getAPCEventAggregate. Error retrieving apcEvents: " + err.message);
+                self.bBlock = false;
+                self.callback (err, null);
+                return;
+            }
+
+            arrHashes = minusEvents.length > 0 ? reply[1][1] : reply [0][1];
+            arrMinusHashes = minusEvents.length > 0 ? reply [0][1]: [];
+
+
+            if (!aggregateEvents(self.aggObj, arrHashes)) {
+                self.bBlock = false;
+                self.callback (new Error("Unable to aggregate events"), null);
+                return;
+            }
+            if (minusEvents.length > 0) {
+                if (!aggregateEvents(aggMinusObj, arrMinusHashes)) {
+                    self.bBlock = false;
+                    self.callback (new Error ("Unable to aggregate minus events"), null);
+                    return;
+                }
+                // subtract events...
+                for (let prop in aggMinusObj) { // "Line", "Station", ...
+                    if (aggMinusObj.hasOwnProperty(prop) && self.aggObj.hasOwnProperty(prop)) {
+                        let specificMinusObj = aggMinusObj[prop];
+                        let specificAggObj = self.aggObj[prop];
+                        for (let p in specificMinusObj) { //"1", "2", "KOL", ...
+                            if (specificMinusObj.hasOwnProperty(p) && specificAggObj.hasOwnProperty(p)) {
+                                // todo: get rid of hard-coded object properties
+                                specificAggObj[p]["Board"] -= specificMinusObj[p]["Board"];
+                                specificAggObj[p]["Alight"] -= specificMinusObj[p]["Alight"];
+                                specificAggObj[p]["Count"] -= specificMinusObj[p]["Count"];
+                            } // if
+                        } // for
+                    } // if
+                } // for
+            } // if (minusEvents.length > 0
+
+            // update sliding time window start and end times
+            if (self.timeNow - self.length > self.timeWindowStart) {
+                self.timeWindowStart = self.timeNow - self.length;
+            }
+            self.timeWindowEnd = self.timeNow;
+            self.bBlock = false;
+            self.callback (err, self.aggObj);
+            return;
+        }); // hmget
     }); // zrangebyscore
 }; // getAPCEventAggregate()
 
+// todo: make function general, i.e. get rid of "Alight", "Station" and other hard coded references to properties
 function aggregateEvents (aggObj, arrHashes) {
+    assert (typeof aggObj === "object");
+    assert (Array.isArray(arrHashes));
+
     let i= 0, j=0;
 
     // iterate the events list
@@ -197,7 +360,7 @@ function aggregateEvents (aggObj, arrHashes) {
 
         if (!apcEvent.hasOwnProperty("Line") || !apcEvent.hasOwnProperty("Station") || !apcEvent.hasOwnProperty("Module")) {
             log.error ("getAPCEventAggregate. retrieved invalid apcEvent: " + JSON.stringify(apcEvent));
-            return callback (new Error("getAPCEventAggregate. retrieved invalid apcEvent: " + JSON.stringify(apcEvent)), null);
+            return null;
         }
 
         // iterate the keys of the aggregator object - Line, Station, Module

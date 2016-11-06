@@ -6,6 +6,7 @@
 
 "use strict";
 
+const assert = require ("assert");
 
 function MyIsNaN(p) {
     //var test = typeof p;
@@ -54,6 +55,8 @@ function checkToBerthLatLng (msgObject) {
 }
 
 function incProperty (obj, prop) {
+    assert (typeof obj === "object");
+    assert (typeof prop === "string");
     if (obj === "null" || typeof obj !== "object" || !prop)
         return false;
     if (!obj.hasOwnProperty([prop]))
@@ -64,9 +67,18 @@ function incProperty (obj, prop) {
 } // incProperty()
 
 function removeSpaces  (obj) {
+    assert (typeof obj === "object");
     //JSON.parse(JSON.stringify(obj)) -- fastest way to clone object in javascript, ref. stackoverflow
     return JSON.parse(JSON.stringify(obj).replace(/"\s+|\s+"/g, '"')); //"\s+|\s+" ?
 } // removeSpaces()
+
+function millisToHrMinSec (millis) {
+    assert(typeof millis === "number");
+
+    let ms = 1000 * Math.round(millis/1000); // round to nearest second
+    let d = new Date(ms);
+    return d.getUTCHours() + ":" + d.getUTCMinutes() + ":" + d.getUTCSeconds(); // "4:59"
+} // millisToMinsAndSecs()
 
 exports.MyIsNaN = MyIsNaN;
 exports.MyIsNumber = MyIsNumber;
@@ -74,3 +86,4 @@ exports.getToBerthName = getToBerthName;
 exports.checkToBerthLatLang = checkToBerthLatLng;
 exports.incProperty = incProperty;
 exports.removeSpaces = removeSpaces;
+exports.millisToHrMinSec = millisToHrMinSec;

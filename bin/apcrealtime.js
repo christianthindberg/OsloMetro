@@ -13,6 +13,8 @@ const log = logger().getLogger('apcrealtime');
 const opstore = require("./opstore");  // opstore: short for Operational Store, in this case Redis
 const flatten = require("flat");
 const unflatten = require("flat").unflatten;
+const schedule = require("node-schedule");
+
 
 let passengerTable = [];
 let sumPerLineTable = [];
@@ -154,32 +156,34 @@ APC.parseSumPerOwnModule = function (room, channel, msgObject) {
     return sumPerOwnModuleTable;
 }; // parseSumPerOwnModule ()
 
-const timeDelta = 1*60*1000; // check every minute
-let aggPrevStop = 0;
-let aggObj = { "Line":{}, "Station": {}, "Module": {} };
-let aggMinusObj = { "Line":{}, "Station": {}, "Module": {} };
 
-const apcAggregate = setInterval(function () {
-    let aggMinusObj = { "Line":{}, "Station": {}, "Module": {} };
-    let timeNow = new Date().getTime();
-    let range = 20*60*1000; // get data for the last 20 minutes
-    let fromTimestamp = timeNow - range;
-
-    if (aggPrevStop === 0) {
-        aggPrevStop = fromTimestamp;
+function apcStreamCallback (err, msg) {
+    if (err) {
+        log.error ("apcStreamCallback. Error: " + err.msg);
+        return;
     }
+    console.log("apcStreamCallback: " + JSON.stringify(msg) + " " + new Date().toLocaleString());
+} // apcStreamCallback()
 
-    opstore.getAPCEventAggregate(aggPrevStop, fromTimestamp, timeNow, timeDelta, aggObj, aggMinusObj, function (err, aggregatedObject) {
-        if (err) {
-            return;
-        }
-        else {
-            aggObj = aggregatedObject;
-            aggPrevStop = timeNow;
-            fnAggregateCallback (aggObj);
-        }
-    });
-}, timeDelta); // check every minute
+function apcIntervalCallback (err, msg) {
+    if (err) {
+        log.error ("apcIntervalCallback. Error: " + err.msg);
+        return;
+    }
+    console.log("apcIntervalCallback: " + msg + " " + new Date().toLocaleString());
+} // apcIntervalCallback()
+
+function setupStreams () {
+    let rule10s = new schedule.RecurrenceRule();
+    let ruleHour = new schedule.RecurrenceRule();
+    rule10s.second = new schedule.Range(0, 59, 10); // run job every 10th second
+    ruleHour.second = 5; // run job 5 seconds past every minute. todo: change to minute 0 to run every hour at 00
+
+    opstore.createStreamAggregator ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, rule10s, apcStreamCallback);
+    opstore.createIntervalAggregator ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], ruleHour, apcIntervalCallback);
+} // setupstreams()
+
+setupStreams();
 
 APC.parsePassengerData = function (room, channel, msgObject) {
     // The PIDAS also sends useful information about the trains. Keep track of updated trains info also
@@ -312,7 +316,7 @@ function buildPassengerObject (items) {
         passengerObject.CurrentStationID -= 500;
     }
     return passengerObject;
-} // bildPassengerObject()
+} // buildPassengerObject()
 
 let lastPaxUpdateTimeUnix = 0;
 function setLastPaxUpdateTime (DateAndTimeUnix) {
