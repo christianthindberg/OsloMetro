@@ -250,16 +250,15 @@ function saveAPCEvent (msgObject) {
 } // saveAPCEvent ()
 
 function sendAPCAggregate (aggregateObject) {
-    if (!aggregateObject) {
-        return;
-    }
-    if (aggregateObject.hasOwnProperty("Line")) {
+    assert(typeof aggregateObject === "object");
+
+    if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
         io.to(realtime).emit("LineAggregate", aggregateObject["Line"]);
     }
-    if (aggregateObject.hasOwnProperty("Station")) {
+    if (aggregateObject.hasOwnProperty("Station") && !helpers.isEmpty(aggregateObject.Station)) {
         io.to(realtime).emit("StationAggregate", aggregateObject["Station"]);
     }
-    if (aggregateObject.hasOwnProperty("Module")) {
+    if (aggregateObject.hasOwnProperty("Module") && !helpers.isEmpty(aggregateObject.Module)) {
         io.to(realtime).emit("OwnModuleAggregate", aggregateObject["Module"]);
     }
 } // sendAPCAggregate ()

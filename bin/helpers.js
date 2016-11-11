@@ -77,8 +77,15 @@ function millisToHrMinSec (millis) {
 
     let ms = 1000 * Math.round(millis/1000); // round to nearest second
     let d = new Date(ms);
-    return d.getUTCHours() + ":" + d.getUTCMinutes() + ":" + d.getUTCSeconds(); // "4:59"
+    return d.getHours()-1 + ":" + d.getMinutes() + ":" + d.getSeconds(); // "4:59"
 } // millisToMinsAndSecs()
+
+function isEmpty(obj) {
+    if (!obj)
+        return true;
+    for (let x in obj) { return false; }
+    return true;
+} // isEmpty()
 
 exports.MyIsNaN = MyIsNaN;
 exports.MyIsNumber = MyIsNumber;
@@ -87,3 +94,4 @@ exports.checkToBerthLatLang = checkToBerthLatLng;
 exports.incProperty = incProperty;
 exports.removeSpaces = removeSpaces;
 exports.millisToHrMinSec = millisToHrMinSec;
+exports.isEmpty = isEmpty;

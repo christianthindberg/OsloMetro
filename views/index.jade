@@ -1378,22 +1378,22 @@ body
       }; //initDrawLinesBarChart
 
       var DrawLinesBarChart = function (data) {
-        yLines.domain([0, d3.max(data, function(d) { return d.TotalAlighting; })]);
+        yLines.domain([0, d3.max(data, function(d) { return d.value.Alight; })]);
 
         var bar = chartLines.selectAll("rect")
-            .data(data, function(d) { return d.LineNumber; })
+            .data(data, function(d) { return d.key; }) //LineNumber
               .each(transform);
 
         bar.enter()
             .append("rect")
-              .style("fill", function (d) { return LineColor[d.LineNumber - 1]; })
-              .attr("x", function(d) { return xLines(d.LineNumber); })
+              .style("fill", function (d) { return LineColor[d.key - 1]; }) // LineNumber
+              .attr("x", function(d) { return xLines(d.key); }) // LineNumber
               .attr("width", xLines.rangeBand())
               .attr("y", innerHeightLines)
               .attr("height", 0)
                 .transition().duration(1500).ease("sin-in-out")
-              .attr("y", function (d) {return yLines(d.TotalAlighting);})
-              .attr("height", function (d) { return innerHeightLines - yLines(d.TotalAlighting); });
+              .attr("y", function (d) {return yLines(d.value.Alight);}) // TotalAlighting
+              .attr("height", function (d) { return innerHeightLines - yLines(d.value.Alight); }); // TotalAlighting
 
         // Handle update + exit
 
@@ -1407,13 +1407,13 @@ body
         function transform (d) {
           return d3.select(this)
             .transition().duration(1500).ease("sin-in-out")
-            .attr("y", function(d) { return yLines(d.TotalAlighting); })
-            .attr("height", function(d) { return innerHeightLines - yLines(d.TotalAlighting); });
+            .attr("y", function(d) { return yLines(d.value.Alight); }) // TotalAlighting
+            .attr("height", function(d) { return innerHeightLines - yLines(d.value.Alight); }); // TotalAlighting
         }
 
         bar.on("mouseenter", function () {
           var thisObj = d3.select(this);
-          var Line = thisObj.datum().LineNumber;
+          var Line = thisObj.datum().key; //LineNumber;
           d3.selectAll("circle.passengerselement")
               .filter(function(d) {return d.value.passengers.LineNumber == Line;})
               .style("fill", "brown");
@@ -1423,7 +1423,7 @@ body
 
         bar.on("mouseleave", function () {
           var thisObj = d3.select(this);
-          var Line = thisObj.datum().LineNumber;
+          var Line = thisObj.datum().key; //LineNumber;
           d3.selectAll("circle.passengerselement")
               .filter(function(d) {return d.value.passengers.LineNumber == Line;})
               .style("fill", LineColor[Line - 1]);
@@ -2293,14 +2293,14 @@ body
 
       socket.on("LineAggregate", function (msg) {
         //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
-        DrawLinesBarChart(msg);
+        DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
       });
       socket.on("StationAggregate", function (msg) {
-        DrawStationsBarChart(msg);
-        addHeatmapData(msg);
+        DrawStationsBarChart(d3.entries(msg));
+        addHeatmapData(d3.entries(msg));
       });
       socket.on("OwnModuleAggregate", function (msg) {
-        DrawOwnModuleChart(msg);
+        DrawOwnModuleChart(d3.entries(msg));
       });
 
       //

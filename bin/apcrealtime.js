@@ -157,30 +157,36 @@ APC.parseSumPerOwnModule = function (room, channel, msgObject) {
 }; // parseSumPerOwnModule ()
 
 
-function apcStreamCallback (err, msg) {
+function apcStreamCallback (err, aggregateObj) {
+    assert(typeof aggregateObj === "object");
+
     if (err) {
-        log.error ("apcStreamCallback. Error: " + err.msg);
+        log.error ("apcStreamCallback. Error: " + err.message);
         return;
     }
-    console.log("apcStreamCallback: " + JSON.stringify(msg) + " " + new Date().toLocaleString());
+    if (!aggregateObj) {
+        return;
+    }
+    console.log("apcStreamCallback: " + new Date().toLocaleString() + " : " + JSON.stringify(aggregateObj));
+    fnAggregateCallback (aggregateObj);
 } // apcStreamCallback()
 
-function apcIntervalCallback (err, msg) {
+function apcIntervalCallback (err, aggregateObj) {
     if (err) {
-        log.error ("apcIntervalCallback. Error: " + err.msg);
+        log.error ("apcIntervalCallback. Error: " + err.message);
         return;
     }
-    console.log("apcIntervalCallback: " + msg + " " + new Date().toLocaleString());
+    console.log("apcIntervalCallback: " + new Date().toLocaleString() + " : " + JSON.stringify(aggregateObj));
 } // apcIntervalCallback()
 
 function setupStreams () {
     let rule10s = new schedule.RecurrenceRule();
     let ruleHour = new schedule.RecurrenceRule();
     rule10s.second = new schedule.Range(0, 59, 10); // run job every 10th second
-    ruleHour.second = 5; // run job 5 seconds past every minute. todo: change to minute 0 to run every hour at 00
-
-    opstore.createStreamAggregator ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, rule10s, apcStreamCallback);
-    opstore.createIntervalAggregator ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], ruleHour, apcIntervalCallback);
+    //ruleHour.minute = 0; // run job 5 seconds past every minute. todo: change to minute 0 to run every hour at 00
+    ruleHour.second = 0;
+    opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, rule10s, apcStreamCallback);
+    opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], ruleHour, apcIntervalCallback);
 } // setupstreams()
 
 setupStreams();
