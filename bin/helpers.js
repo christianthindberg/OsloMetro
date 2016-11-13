@@ -77,8 +77,12 @@ function millisToHrMinSec (millis) {
 
     let ms = 1000 * Math.round(millis/1000); // round to nearest second
     let d = new Date(ms);
-    return d.getHours()-1 + ":" + d.getMinutes() + ":" + d.getSeconds(); // "4:59"
+    return d.getHours()-1 + ":" + d.getMinutes() + ":" + d.getSeconds(); // "4:59:03"
 } // millisToMinsAndSecs()
+
+function HrMinSecToMillis (hr, min, sec) {
+    return (hr*60*60 + min*60 + sec) * 1000;
+} // HrMinSecToMillis()
 
 function isEmpty(obj) {
     if (!obj)
@@ -94,4 +98,5 @@ exports.checkToBerthLatLang = checkToBerthLatLng;
 exports.incProperty = incProperty;
 exports.removeSpaces = removeSpaces;
 exports.millisToHrMinSec = millisToHrMinSec;
+exports.HrMinSecToMillis = HrMinSecToMillis;
 exports.isEmpty = isEmpty;

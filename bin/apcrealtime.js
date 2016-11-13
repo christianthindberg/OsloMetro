@@ -13,18 +13,20 @@ const log = logger().getLogger('apcrealtime');
 const opstore = require("./opstore");  // opstore: short for Operational Store, in this case Redis
 const flatten = require("flat");
 const unflatten = require("flat").unflatten;
-const schedule = require("node-schedule");
+//const schedule = require("node-schedule");
 
 
 let passengerTable = [];
-let sumPerLineTable = [];
-let sumPerStationTable = [];
-let sumPerOwnModuleTable = [];
+let sumPerLineTable = []; // to be deleted and replaced by aggObj
+let sumPerStationTable = []; // to be deleted and replaced by aggObj
+let sumPerOwnModuleTable = []; // to be deleted and replaced by aggObj
 let APCObject = {}; // Automated Passenger Counting, i.e. physical id for each 3-car train set, and other data from the onboard PIDAS-system
 
-let fnAggregateCallback = null;
+//let fnAggregateCallback = null;
 
-let APC = {};
+let APC = {
+    version: 1.0
+};
 
 APC.getAPCObject = function () {
     return APCObject;
@@ -156,7 +158,7 @@ APC.parseSumPerOwnModule = function (room, channel, msgObject) {
     return sumPerOwnModuleTable;
 }; // parseSumPerOwnModule ()
 
-
+/*
 function apcStreamCallback (err, aggregateObj) {
     assert(typeof aggregateObj === "object");
 
@@ -178,18 +180,20 @@ function apcIntervalCallback (err, aggregateObj) {
     }
     console.log("apcIntervalCallback: " + new Date().toLocaleString() + " : " + JSON.stringify(aggregateObj));
 } // apcIntervalCallback()
+*/
 
-function setupStreams () {
-    let rule10s = new schedule.RecurrenceRule();
-    let ruleHour = new schedule.RecurrenceRule();
-    rule10s.second = new schedule.Range(0, 59, 10); // run job every 10th second
-    //ruleHour.minute = 0; // run job 5 seconds past every minute. todo: change to minute 0 to run every hour at 00
-    ruleHour.second = 0;
-    opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, rule10s, apcStreamCallback);
-    opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], ruleHour, apcIntervalCallback);
-} // setupstreams()
+APC.createStream = function (schedule, isSlidingWindow, callback) {
+    assert (typeof schedule === "object");
+    assert (typeof isSlidingWindow === "boolean");
+    assert (typeof callback === "function");
 
-setupStreams();
+    if (isSlidingWindow) {
+        opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, schedule, callback);
+    }
+    else {
+        opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], schedule, callback);
+    }
+}; // createStream()
 
 APC.parsePassengerData = function (room, channel, msgObject) {
     // The PIDAS also sends useful information about the trains. Keep track of updated trains info also
@@ -335,8 +339,4 @@ APC.getLastPaxUpdateTimeUnix = function () {
     return lastPaxUpdateTimeUnix;
 }; // getLastPaxUpdateTimeUnix()
 
-module.exports = function (aggregateCallback) {
-    assert (typeof  aggregateCallback === "function");
-    fnAggregateCallback = aggregateCallback;
-    return APC;
-}
+module.exports = APC;

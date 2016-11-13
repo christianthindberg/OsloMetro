@@ -16,7 +16,9 @@ const infrastructure = require("./infrastructure");
 const helpers = require("./helpers");
 const opstore = require("./opstore");  // opstore: short for Operational Store, in this case Redis
 const ctsparser = require("./ctsparser")(handleCTSEvent);
-const apcrealtime = require("./apcrealtime")(sendAPCAggregate); // todo: rename to apcparser?
+const apcrealtime = require("./apcrealtime"); // todo: rename to apcparser?
+const schedule = require("node-schedule");
+
 
 //Get port from environment and store in Express.
 const port = normalizePort(process.env.PORT || '3000');
@@ -45,6 +47,7 @@ let socketAuth = function socketAuth(socket, next) {
 io.use(socketAuth);
 
 infrastructure.readMetroInfrastructure();
+//setupAPCStreams();
 
 // send server time to all clients every second
 const emitTime = setInterval(function () {
@@ -80,7 +83,7 @@ io.on('connection', function (socket) {
         "trackswitches": infrastructure.getTrackSwitchTable(),
         "endberths": infrastructure.getEndBerthTable(),
         "tracks": infrastructure.getTracksObject(),
-        "trains": apcrealtime.getAPCObject() // note: this is only trains where we know their serial number (i.e. "OwnModuleID")
+        "trains": apcrealtime.getAPCObject() // note: this is only train sets that have APC installed
     });
 
     if (apcrealtime.hasPassengers) {
@@ -166,7 +169,6 @@ opstore.subscribe("Log");
 opstore.subscribe("Error");
 
 
-
 // Handle data from Redis
 opstore.on("message", function (channel, msg) {
     let msgObject = JSON.parse(msg);
@@ -207,6 +209,10 @@ opstore.on("message", function (channel, msg) {
     }
 });
 
+//
+// CTS section
+//
+
 function handleCTSEvent (msgObject) {
     if (!msgObject) {
         log.error("opstore.on-cts. Invalid msgObject");
@@ -226,6 +232,10 @@ function saveCTSEvent (msgObject) {
         }
     });
 } // saveCTSEvent()
+
+//
+// APC section
+//
 
 function handleAPCEvent (msgObject) {
     if (!msgObject) {
@@ -249,19 +259,62 @@ function saveAPCEvent (msgObject) {
     });
 } // saveAPCEvent ()
 
-function sendAPCAggregate (aggregateObject) {
+function sendAPCSlidingWindow (aggregateObject) {
     assert(typeof aggregateObject === "object");
 
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
-        io.to(realtime).emit("LineAggregate", aggregateObject["Line"]);
+        io.to(realtime).emit("LineAggregateSlidingWindow", aggregateObject["Line"]);
     }
     if (aggregateObject.hasOwnProperty("Station") && !helpers.isEmpty(aggregateObject.Station)) {
-        io.to(realtime).emit("StationAggregate", aggregateObject["Station"]);
+        io.to(realtime).emit("StationAggregateSlidingWindow", aggregateObject["Station"]);
     }
     if (aggregateObject.hasOwnProperty("Module") && !helpers.isEmpty(aggregateObject.Module)) {
-        io.to(realtime).emit("OwnModuleAggregate", aggregateObject["Module"]);
+        io.to(realtime).emit("OwnModuleAggregateSlidingWindow", aggregateObject["Module"]);
     }
-} // sendAPCAggregate ()
+} // sendAPCSlidingWindow ()
+
+function sendAPCFixedInterval (aggregateObject) {
+    assert(typeof aggregateObject === "object");
+
+    if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
+        io.to(realtime).emit("LineAggregateFixedInterval", aggregateObject["Line"]);
+    }
+    if (aggregateObject.hasOwnProperty("Station") && !helpers.isEmpty(aggregateObject.Station)) {
+        io.to(realtime).emit("StationAggregateFixedInterval", aggregateObject["Station"]);
+    }
+    if (aggregateObject.hasOwnProperty("Module") && !helpers.isEmpty(aggregateObject.Module)) {
+        io.to(realtime).emit("OwnModuleAggregateFixedInterval", aggregateObject["Module"]);
+    }
+} // sendAPCFixedInterval ()
+
+// todo: set fixedInterval to be 04.45 every morning, so that we have a total aggregate per day of operation
+// implemet opstore.getLastCompletedAPC and opstore.getCurrentAPC
+
+function setupAPCStreams () {
+    let rule10s = new schedule.RecurrenceRule();
+    let rule1hr = new schedule.RecurrenceRule();
+    let rule24hr = new schedule.RecurrenceRule();
+
+    rule10s.second = new schedule.Range(0, 59, 10); // run job every 10th second
+    rule1hr.minute = 0; // every hour at 0 minutes past the hour
+
+    // every 24hour period at 4.45 in the morning. The operating day at Sporveien starts at 5.00
+    rule24hr.hour = 4;
+    rule24hr.minute = 45;
+    rule24hr.dayOfWeek = new schedule.Range(0,6);
+
+    apcrealtime.createStream (rule10s, true, sendAPCSlidingWindow);
+    apcrealtime.createStream (rule1hr, false, sendAPCFixedInterval);
+    apcrealtime.createStream (rule24hr, false, sendAPCFixedInterval);
+
+    //opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, rule10s, sendAPCSlidingWindow);
+    //opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], ruleHour, sendAPCFixedInterval);
+
+} // setupAPCstreams()
+
+//
+// Process section
+//
 
 // todo: REDIS clean up is not working properly, i.e. if web app terminate and restart, the number of redis connections may increase?
 process.on('exit', function () {
