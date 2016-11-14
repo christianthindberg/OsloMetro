@@ -182,16 +182,22 @@ function apcIntervalCallback (err, aggregateObj) {
 } // apcIntervalCallback()
 */
 
-APC.createStream = function (schedule, isSlidingWindow, callback) {
+function fnDataAdded (err, aggObj) {
+    let test = aggObj;
+}
+
+APC.createStream = function (schedule, isSlidingWindow, fnPeriodComplete, fnDataAdded) {
     assert (typeof schedule === "object");
     assert (typeof isSlidingWindow === "boolean");
-    assert (typeof callback === "function");
+    assert (typeof fnPeriodComplete === "function");
+    assert (typeof fnDataAdded === "function" || fnDataAdded === null);
+
 
     if (isSlidingWindow) {
-        opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, schedule, callback);
+        opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, schedule, fnPeriodComplete);
     }
     else {
-        opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], schedule, callback);
+        opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], schedule, fnPeriodComplete, fnDataAdded);
     }
 }; // createStream()
 

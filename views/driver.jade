@@ -2085,16 +2085,16 @@ body
             socket.on("trainsintraffic", function (msg) {
                 setTrainsInTraffic(msg);
             });
-            socket.on("LineAggregate", function (msg) {
+            socket.on("LineAggregateSlidingWindow", function (msg) {
                 //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
                 //DrawLinesBarChart(msg);
                 //setLastDataRecTime();
             });
-            socket.on("StationAggregate", function (msg) {
+            socket.on("StationAggregateSlidingWindow", function (msg) {
                 //DrawStationsBarChart(msg);
                 //addHeatmapData(msg);
             });
-            socket.on("OwnModuleAggregate", function (msg) {
+            socket.on("OwnModuleAggregateSlidingWindow", function (msg) {
                 $("#sumPax").text("Passasjerer i dag: " + d3.sum(msg, function (d) { return d.TotalAlighting; } ).toString());
                 //$("#nowPax").text("Passasjerer ombord: " + d3.sum(msg, function (d) { return d.TotalBoarding - d.TotalAlighting; } ).toString());
                 $("#nowAPC").text("Tog med passasjertelling: " + msg.filter(function(obj) { return obj.TotalBoarding > 0; }).length.toString()); // Consider train to be in traffic if passengers have boarded

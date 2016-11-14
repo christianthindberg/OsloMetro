@@ -47,7 +47,7 @@ let socketAuth = function socketAuth(socket, next) {
 io.use(socketAuth);
 
 infrastructure.readMetroInfrastructure();
-//setupAPCStreams();
+setupAPCStreams();
 
 // send server time to all clients every second
 const emitTime = setInterval(function () {
@@ -259,10 +259,10 @@ function saveAPCEvent (msgObject) {
     });
 } // saveAPCEvent ()
 
-function sendAPCSlidingWindow (aggregateObject) {
+function sendAPCSlidingWindow (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
 
-    if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
+    if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) { // todo: move isEmpty() to opstore...
         io.to(realtime).emit("LineAggregateSlidingWindow", aggregateObject["Line"]);
     }
     if (aggregateObject.hasOwnProperty("Station") && !helpers.isEmpty(aggregateObject.Station)) {
@@ -273,7 +273,7 @@ function sendAPCSlidingWindow (aggregateObject) {
     }
 } // sendAPCSlidingWindow ()
 
-function sendAPCFixedInterval (aggregateObject) {
+function sendAPCFixedInterval (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
 
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
@@ -303,9 +303,9 @@ function setupAPCStreams () {
     rule24hr.minute = 45;
     rule24hr.dayOfWeek = new schedule.Range(0,6);
 
-    apcrealtime.createStream (rule10s, true, sendAPCSlidingWindow);
-    apcrealtime.createStream (rule1hr, false, sendAPCFixedInterval);
-    apcrealtime.createStream (rule24hr, false, sendAPCFixedInterval);
+    apcrealtime.createStream (rule10s, true, sendAPCSlidingWindow, null);
+    apcrealtime.createStream (rule1hr, false, sendAPCFixedInterval, null);
+    apcrealtime.createStream (rule24hr, false, sendAPCFixedInterval, sendAPCFixedInterval);
 
     //opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, rule10s, sendAPCSlidingWindow);
     //opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], ruleHour, sendAPCFixedInterval);

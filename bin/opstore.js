@@ -124,27 +124,29 @@ let arrStreams = [];
  */
 let countIntervalCreate = 0; // for debug
 
-Store.createStreamFixedInterval = function (hashKey, groupByProps, addProps, timeSchedule, callback) {
+Store.createStreamFixedInterval = function (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
     assert (typeof hashKey === "string");
     assert (Array.isArray(groupByProps));
     assert (Array.isArray(addProps));
     assert (typeof timeSchedule === "object");
-    assert (typeof callback === "function");
+    assert (typeof fnIntervalCompleted === "function");
+    assert (typeof fnDataAdded === "function" || fnDataAdded === null);
 
     let groupByObj = {};
 
     countIntervalCreate += 1;
     log.info ("createStreamFixedInterval called: " + countIntervalCreate);
 
-    let Stream = new FixedInterval (hashKey, groupByProps, addProps, timeSchedule, callback);
+    let Stream = new FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded);
     arrIntervals.push(Stream);
     schedule.scheduleJob (timeSchedule, Stream.completeFixedIntervalAggregate.bind(Stream));
 }; // createStreamFixedInterval()
 
-function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, callback) {
+function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
     this.Name               = hashKey;
     this.count              = 0; // todo: implement count === number of events in stream
-    this.callback           = callback;
+    this.intervalCompleted  = fnIntervalCompleted;
+    this._dataAdded          = fnDataAdded;
     //this.bBlock             = false; //
     this.addProps           = addProps;
     this.timeSchedule       = timeSchedule;
@@ -152,6 +154,12 @@ function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, callback)
                                         // we are halfway through building the interval from 11 to 12)
     this.aggObjLatest       = null;     // the newest aggregate that we have completed (i.e. the aggregate from 10 to 11 if time now is 11.30)
     this.aggObjTemplate     = null;     // template used by completeFixedIntervalAggregate for creating new "empty" aggObj when interval is completed
+
+    this.dataAdded = function () { // this._dataAdded is null if caller do not want notifications whenever data is added
+        if (this._dataAdded) {
+            this._dataAdded(null, this.aggObj);
+        }
+    };
 
     // build aggObj
     for (let i=0; i<groupByProps.length;i++) {
@@ -192,7 +200,7 @@ function addToFixedIntervals(apcArray) {
  *
  * The job of completeFixedIntervalAggregate is to
  * a) save the hourly aggregate to Redis
- * b) send the aggregate to callback
+ * b) send the aggregate to callback intervalCompleted
  * c) keep a copy of the finished aggregate, ready for getLatestFixedInterval to retrieve it
  * d) reset the aggobj so it is ready for the next hour/fixed interval
  */
@@ -229,8 +237,8 @@ FixedInterval.prototype.saveAPCAggregate = function () {
 FixedInterval.prototype.completeFixedIntervalAggregate = function () {
     // save to Redis
     this.saveAPCAggregate ();
-    // invoke callback
-    this.callback(null, this.aggObj);
+    // invoke callback intervalCompleted
+    this.intervalCompleted (null, this.aggObj);
     // remember this aggregate as our latest completed aggregate
     this.aggObjLatest = this.aggObj;
     // reset aggObj
@@ -331,7 +339,7 @@ SlidingWindow.prototype.calcSlidingWindowAggregate = function () {
         self.timeWindowStart = self.timeNow;
         self.timeWindowEnd = self.timeNow;
         self.bBlock = false;
-        self.callback (null, null);
+        //self.callback (null, null);
         return; // No data to aggregate the first time, just initialize timers
     }
 
@@ -770,6 +778,11 @@ Store.saveAPCEvent = function (msgObject, callback) {
             }
         }); // incr
     } // for-loop
+
+    // Notify all fixed interval streams that data has been added
+    for (let j=0;j<arrIntervals.length;j++) {
+        arrIntervals[j].dataAdded();
+    }
 }; // saveAPCEvent()
 
 
