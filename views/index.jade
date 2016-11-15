@@ -44,7 +44,7 @@ body
     div#lastPaxReceived Siste av/påstigning: --
     div#sumPax Passasjerer hittil i dag: --
     div#nowTrains Tog i trafikk nå: --
-    div#nowAPC Tog med passasjertelling: --
+    div#nowAPC Togsett med passasjertelling: --
     div#circleinfo
     div#map
     html.
@@ -1510,6 +1510,7 @@ body
       // Same should apply to Heatmap and Lines, and Trains...
 
       var oldStationIDs = null;
+
       var bIsStationsChanged = function (oldSt, newSt) {
         if (oldSt == null || oldSt.length != newSt.length)
           return true;
@@ -1519,13 +1520,25 @@ body
         }
         return false;
       }
+
+
+      /*
+       data is array of objects
+       { key: <AMM>,
+       value: {
+       Alight: 30,
+       Board: 23,
+       Count: 4
+       }
+       }
+       */
       var DrawStationsBarChart = function (data) {
 
         // sort x-axis according to CurrentStationID
         //var stationIDs = data.map(function (d) {return d.CurrentStationID;}).sort(function (a,b) {return a-b;});
 
         // sort x-axis according to TotalAlighting
-        var newStationIDs = data.sort(function (a,b) { return (b.TotalAlighting - a.TotalAlighting); }).map(function (obj) { return obj.CurrentStationID; });
+        var newStationIDs = data.sort(function (a,b) { return (b.value.Alight - a.value.Alight); }).map(function (obj) { return obj.key; });
         xStations.domain(newStationIDs);
 
         // If there are other/new stations we delete existing bars and scale the x-axis
@@ -1536,16 +1549,16 @@ body
         }
 
         // set new max value for the Y-axis
-        yStations.domain([0, d3.max(data, function (d) {return d.TotalAlighting;})]);
+        yStations.domain([0, d3.max(data, function (d) {return d.value.Alight;})]);
 
 
         var bar = chartStations.selectAll("rect")
-                .data(data, function (d) {return d.CurrentStationID;});
+                .data(data, function (d) {return d.key;});
 
         bar.enter()
             .append("rect")
               .style("fill", "steelblue")
-              .attr("x", function (d) {return xStations(d.CurrentStationID);})
+              .attr("x", function (d) {return xStations(d.key);})
               .attr("width", xStations.rangeBand())
               .attr("y", innerHeightStations)
               .attr("height", 0); // yStations(d.TotalAlighting)
@@ -1554,11 +1567,11 @@ body
               //.attr("height", function (d) {return innerHeightStations - yStations(d.TotalAlighting);});
 
         bar.transition().duration(1500).ease("sin-in-out")
-          .attr("y", function (d) {return yStations(d.TotalAlighting);})
-          .attr("height", function (d) {return innerHeightStations - yStations(d.TotalAlighting);});
+          .attr("y", function (d) {return yStations(d.value.Alight);})
+          .attr("height", function (d) {return innerHeightStations - yStations(d.value.Alight);});
 
         // Show invalid stationIDs/PidasIDs from Siemens
-        bar.filter(function (d) {return d.CurrentStationID > 104;})
+        bar.filter(function (d) {return d.key > 104;})
           .style("fill", "darkslategray");
 
         bar.exit()
@@ -1579,17 +1592,17 @@ body
         function transform(d) {
           return d3.select(this)
                 .transition().duration(1500).ease("sin-in-out")
-                .attr("y", function (d) {return yStations(d.TotalAlighting);})
-                .attr("height", function (d) {return innerHeightStations - yStations(d.TotalAlighting);});
+                .attr("y", function (d) {return yStations(d.value.Alight);})
+                .attr("height", function (d) {return innerHeightStations - yStations(d.value.Alight);});
         }
 
         bar.on("mouseenter", function () {
           var thisObj = d3.select(this);
           var d = thisObj.datum();
           //var id = "#i" + d.CurrentStationID.toString();  // See comment further up. "i" is added because Firefox fails if ID starts with a nunber
-          var CurrentCircle = d3.select("circle.id" + d.CurrentStationID);
+          var CurrentCircle = d3.select("circle.id" + d.key);
 
-          if (d.CurrentStationID <= 104) {
+          if (d.key <= 104) {
             thisObj.style("fill", "brown");
           }
 
@@ -1604,9 +1617,9 @@ body
           thisObj = d3.select(this);
           var d = thisObj.datum();
           //var id = "#i" + d.CurrentStationID.toString();
-          var CurrentCircle = d3.select("circle.id" + d.CurrentStationID);
+          var CurrentCircle = d3.select("circle.id" + d.key);
 
-          if (d.CurrentStationID <= 104) {
+          if (d.key <= 104) {
             thisObj.style("fill", "steelblue");
           }
 
@@ -1655,6 +1668,17 @@ body
         d3.select("#ownmodulediv").style("height", (stationsBoundingRect.top - topOwnModuleDiv) + "px");
       };
 
+
+      /*
+       data is array of objects
+        { key: <3006>,
+          value: {
+            Alight: 30,
+            Board: 23,
+            Count: 4
+          }
+      }
+      */
       var DrawOwnModuleChart = function (data) {
         var margin = {top: 2, right: 5, bottom: 0, left: 5};
         var imageHeight = 20;
@@ -1663,9 +1687,10 @@ body
         var groupHeight = imageHeight + textHeight + groupGap;
         var groupWidth = parseInt(d3.select("#ownmodulediv").style("width")) - margin.left - margin.right;
 
-        $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) { return d.TotalAlighting; } ).toString());
+        $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) { return d.value.Alight; } ).toString());
         //$("#nowPax").text("Passasjerer ombord: " + d3.sum(data, function (d) { return d.TotalBoarding - d.TotalAlighting; } ).toString());
-        $("#nowAPC").text("Tog med passasjertelling: " + data.filter(function(obj) { return obj.TotalBoarding > 0; }).length.toString()); // Consider train to be in traffic if passengers have boarded
+        // todo: only set this based on operating day fixed window
+        $("#nowAPC").text("Togsett med passasjertelling: " + data.filter(function(obj) { return obj.value.Board > 0; }).length.toString()); // Consider train to be in traffic if passengers have boarded
 
         var markerOwnModule = d3.select("#ownmodules");
         var ownmodulesHeight = margin.top + (data.length * (groupHeight + groupGap));
@@ -1676,12 +1701,12 @@ body
 
         //  JOIN section
         // sort data according to number of passengers onboard, largest number of passengers first
-        // add Onboard and index as properties.  Somewhat dirty, but hey, its javascript :-)
-        var dataSorted = data.sort(function (a, b) { return (b.TotalBoarding - b.TotalAlighting) - (a.TotalBoarding - a.TotalAlighting);})
-          .map(function (obj, i) {obj.Onboard = obj.TotalBoarding - obj.TotalAlighting;obj.index = i; return obj;});
+        // add Onboard and index as properties
+        var dataSorted = data.sort(function (a, b) { return (b.value.Board - b.value.Alight) - (a.value.Board - a.value.Alight);})
+          .map(function (obj, i) {obj.Onboard = obj.value.Board - obj.value.Alight;obj.index = i; return obj;});
 
         var containerElems = markerOwnModule.selectAll("g")
-              .data(dataSorted, function (d) { return d.OwnModuleNo.toString(); });
+              .data(dataSorted, function (d) { return d.key.toString(); });
 
         // Add Trains not seen before
         var newGroup = containerElems.enter()
@@ -1708,11 +1733,11 @@ body
               .attr("font-size", "10px")
               .style("fill", "black")
               .style("font-weight", "thinner")
-              .text(function (d) { return d.OwnModuleNo.toString(); })
+              .text(function (d) { return d.key.toString(); })
 
         // Update AND Enter section
         containerElems.selectAll("rect")   // When key (OwnModuleNo in this case) exist, d3 do not automatically bind updated attributes to children ...
-              .data(dataSorted, function (d) { return d.OwnModuleNo.toString(); })// transition().delay(2000).duration(1500).ease("sin-in-out")
+              .data(dataSorted, function (d) { return d.key.toString(); })// transition().delay(2000).duration(1500).ease("sin-in-out")
                 .attr("width", function (d) { return (Math.abs(d.Onboard/200) * groupWidth) + "px"; })
                 .style("fill", "steelblue") // Siemens sometimes report less than zero people onboard
               .filter(function (d) { return d.Onboard < 0 })
