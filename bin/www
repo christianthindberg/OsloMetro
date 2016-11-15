@@ -172,7 +172,8 @@ opstore.subscribe("Error");
 // Handle data from Redis
 opstore.on("message", function (channel, msg) {
     let msgObject = JSON.parse(msg);
-
+    //log.info("channel: " + channel);
+    //log.info("msg: " + msg);
     //io.to(room).emit("cts_train_jump", msgObject);
 
 
@@ -219,7 +220,7 @@ function handleCTSEvent (msgObject) {
         return;
     }
     saveCTSEvent(msgObject);
-    ctslivestatus.updateCTSLiveObject((msgObject));
+    ctslivestatus.updateCTSLiveObject(msgObject);
     io.to(realtime).emit("cts_" + msgObject.values.event, [msgObject]);
 } // handleCTSEvent()
 
@@ -261,7 +262,7 @@ function saveAPCEvent (msgObject) {
 
 function sendAPCSlidingWindow (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
-
+    log.info("sendAPCSlidingWindows. " + JSON.stringify(aggregateObject));
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) { // todo: move isEmpty() to opstore...
         io.to(realtime).emit("LineAggregateSlidingWindow", aggregateObject["Line"]);
     }
@@ -273,22 +274,35 @@ function sendAPCSlidingWindow (err, aggregateObject) {
     }
 } // sendAPCSlidingWindow ()
 
-function sendAPCFixedInterval (err, aggregateObject) {
+function sendAPCFixedInterval1Hour (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
 
+    log.info ("sendAPCFixedInterval. " + JSON.stringify (aggregateObject));
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
-        io.to(realtime).emit("LineAggregateFixedInterval", aggregateObject["Line"]);
+        io.to(realtime).emit("LineAggregateFixedInterval1Hour", aggregateObject["Line"]);
     }
     if (aggregateObject.hasOwnProperty("Station") && !helpers.isEmpty(aggregateObject.Station)) {
-        io.to(realtime).emit("StationAggregateFixedInterval", aggregateObject["Station"]);
+        io.to(realtime).emit("StationAggregateFixedInterval1Hour", aggregateObject["Station"]);
     }
     if (aggregateObject.hasOwnProperty("Module") && !helpers.isEmpty(aggregateObject.Module)) {
-        io.to(realtime).emit("OwnModuleAggregateFixedInterval", aggregateObject["Module"]);
+        io.to(realtime).emit("OwnModuleAggregateFixedInterval1Hour", aggregateObject["Module"]);
     }
-} // sendAPCFixedInterval ()
+} // sendAPCFixedInterval1Hour ()
 
-// todo: set fixedInterval to be 04.45 every morning, so that we have a total aggregate per day of operation
-// implemet opstore.getLastCompletedAPC and opstore.getCurrentAPC
+function sendAPCFixedIntervalOperatingDay (err, aggregateObject) {
+    assert(typeof aggregateObject === "object");
+
+    log.info ("sendAPCFixedInterval. " + JSON.stringify (aggregateObject));
+    if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
+        io.to(realtime).emit("LineAggregateFixedIntervalOperatingDay", aggregateObject["Line"]);
+    }
+    if (aggregateObject.hasOwnProperty("Station") && !helpers.isEmpty(aggregateObject.Station)) {
+        io.to(realtime).emit("StationAggregateFixedIntervalOperatingDay", aggregateObject["Station"]);
+    }
+    if (aggregateObject.hasOwnProperty("Module") && !helpers.isEmpty(aggregateObject.Module)) {
+        io.to(realtime).emit("OwnModuleAggregateFixedIntervalOperatingDay", aggregateObject["Module"]);
+    }
+} // sendAPCFixedIntervalOperatingDay ()
 
 function setupAPCStreams () {
     let rule10s = new schedule.RecurrenceRule();
@@ -304,12 +318,8 @@ function setupAPCStreams () {
     rule24hr.dayOfWeek = new schedule.Range(0,6);
 
     apcrealtime.createStream (rule10s, true, sendAPCSlidingWindow, null);
-    apcrealtime.createStream (rule1hr, false, sendAPCFixedInterval, null);
-    apcrealtime.createStream (rule24hr, false, sendAPCFixedInterval, sendAPCFixedInterval);
-
-    //opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, rule10s, sendAPCSlidingWindow);
-    //opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], ruleHour, sendAPCFixedInterval);
-
+    apcrealtime.createStream (rule1hr, false, sendAPCFixedInterval1Hour, null);
+    apcrealtime.createStream (rule24hr, false, sendAPCFixedIntervalOperatingDay, sendAPCFixedIntervalOperatingDay);
 } // setupAPCstreams()
 
 //

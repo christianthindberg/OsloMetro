@@ -189,7 +189,7 @@ CTSParser.parseCTSData = function (msgObject) {
 
     msgObject.values.event = "event"; // normal cts event
     return msgObject;
-}; // parseandsendCTS ()
+}; // parseCTSdata ()
 
 function updateTrainNoChangeSuspects(trainNo, timestampString) {
     assert(typeof trainNo === "string", "Invalid trainNo: " + trainNo);

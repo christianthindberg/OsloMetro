@@ -125,7 +125,6 @@ CTSLiveStatus.getAllTails = function (maxBerths) {
 }; // getAllTails()
 
 CTSLiveStatus.getGhosts = function () {
-    // return the full set of Live Data
     return ctsGhosts;
 }; // getCTSLiveObject()
 

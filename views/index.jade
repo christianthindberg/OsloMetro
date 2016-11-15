@@ -183,20 +183,20 @@ body
       var addHeatmapData = function (data) {
         if (!stationTable || stationTable.length == 0)
           return;
-        heatmapRadius = d3.max(data, function(d) { return d.TotalAlighting/4; });  // divide by 4 to avoid radius becoming too large
+        heatmapRadius = d3.max(data, function(d) { return d.value.Alight/4; });  // divide by 4 to avoid radius becoming too large
         heatmapData = [];
         for (var i=0; i<data.length; i++) {
-          var Pidas_ID = data[i].CurrentStationID;
+          var currentStationCode = data[i].key;
           for (j = 0; j < stationTable.length; j++) {
-            if (stationTable[j].CurrentStationID == Pidas_ID) {
+            if (stationTable[j].stationCode === currentStationCode) {
               heatmapData.push({
                 location: new google.maps.LatLng(stationTable[j].platformlat, stationTable[j].platformlng),
-                weight: data[i].TotalAlighting // + data[i].TotalBoarding
+                weight: data[i].value.Alight // + data[i].TotalBoarding
               });
               break;
             }
           }
-          if (j == stationTable.length) {
+          if (j === stationTable.length) {
             // sometimes Siemens sends us non-existing stations...
             //console.log("Invalid PIDAS_ID: " + Pidas_ID + " Alighting: " + data[i].TotalAlighting + " Boarding: " + data[i].TotalBoarding);
           }
@@ -2190,6 +2190,8 @@ body
       window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
         socket.emit("Client Error", errorMsg + " Script: " + url + " Line: " + lineNumber
                 + " Column: " + column + " StackTrace: " + errorObj);
+        console.log("onerror onerror oneror: --" + errorMsg + " Script: " + url + " Line: " + lineNumber
+                + " Column: " + column + " StackTrace: " + errorObj);
         return false;
       }
 
@@ -2274,6 +2276,7 @@ body
       */
 
       var resetToNormalColors = false;
+
       socket.on("okberths", function (msg) {
         ctsOKObject = msg;
         colorOKBerths (resetToNormalColors);
@@ -2317,28 +2320,53 @@ body
       });
 
       socket.on("LineAggregateSlidingWindow", function (msg) {
+        console.log ("LineAggregateSlidingWindow");
         //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
         DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
       });
       socket.on("StationAggregateSlidingWindow", function (msg) {
+        console.log("StationAggregateSlidingWindow");
         DrawStationsBarChart(d3.entries(msg));
         addHeatmapData(d3.entries(msg));
       });
       socket.on("OwnModuleAggregateSlidingWindow", function (msg) {
-        DrawOwnModuleChart(d3.entries(msg));
+        console.log("OwnModuleAggregateSlidingWindow");
+        //DrawOwnModuleChart(d3.entries(msg));
       });
 
-      socket.on("LineAggregateFixedInterval", function (msg) {
+      socket.on("LineAggregateFixedInterval1Hour", function (msg) {
         //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
-        DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
+        console.log("LineAggregateFixedInterval1Hour " + new Date().toTimeString());
+        //DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
       });
-      socket.on("StationAggregateFixedInterval", function (msg) {
-        DrawStationsBarChart(d3.entries(msg));
-        addHeatmapData(d3.entries(msg));
+      socket.on("StationAggregateFixedInterval1Hour", function (msg) {
+        console.log("StationAggregateFixedInterval1Hour " + new Date().toTimeString());
+        //DrawStationsBarChart(d3.entries(msg));
+        //addHeatmapData(d3.entries(msg));
       });
-      socket.on("OwnModuleAggregateFixedInterval", function (msg) {
-        DrawOwnModuleChart(d3.entries(msg));
+      socket.on("OwnModuleAggregateFixedInterval1Hour", function (msg) {
+        console.log("OwnModuleAggregateFixedInterval1Hour " + new Date().toTimeString());
+        //DrawOwnModuleChart(d3.entries(msg));
       });
+
+      socket.on("LineAggregateFixedIntervalOperatingDay", function (msg) {
+        console.log("LineAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
+        //DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
+      });
+      socket.on("StationAggregateFixedIntervalOperatingDay", function (msg) {
+        console.log("StationAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
+        //DrawStationsBarChart(d3.entries(msg));
+        //addHeatmapData(d3.entries(msg));
+      });
+      socket.on("OwnModuleAggregateFixedIntervalOperatingDay", function (msg) {
+        console.log("OwnModuleAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
+        var data = d3.entries(msg);
+        DrawOwnModuleChart(data);
+        $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) { return d.value.Alight; }).toString());
+        //$("#nowPax").text("Passasjerer ombord: " + d3.sum(msg, function (d) { return d.TotalBoarding - d.TotalAlighting; } ).toString());
+        $("#nowAPC").text("Tog med passasjertelling: " + data.length); //filter(function (obj) { return obj.TotalBoarding > 0; }).length.toString()); // Consider train to be in traffic if passengers have boarded
+      });
+
       //
       // HISTORY
       //

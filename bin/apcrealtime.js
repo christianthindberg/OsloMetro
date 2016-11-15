@@ -184,6 +184,7 @@ function apcIntervalCallback (err, aggregateObj) {
 
 function fnDataAdded (err, aggObj) {
     let test = aggObj;
+    log.info ("fnDataAdded. " + JSON.stringify(aggObj));
 }
 
 APC.createStream = function (schedule, isSlidingWindow, fnPeriodComplete, fnDataAdded) {

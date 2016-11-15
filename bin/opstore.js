@@ -26,11 +26,12 @@ const logger = require("./logger");
 const log = logger().getLogger("opstore");
 const helpers = require("./helpers");
 
+/*
 let KafkaRest = require("kafka-rest");
 let kafka = new KafkaRest({"url": "http://ec2-52-211-70-204.eu-west-1.compute.amazonaws.com:8082"});
 //const logMemory = logger().getLogger("memory-usage");
 
-/* Just for testing
+ Just for testing
 kafka.topics.list(function (err, topics) {
     if (err) {
         log.error ("kafka.topics.list. Unable to list topics: " + err);
@@ -44,15 +45,13 @@ kafka.topics.list(function (err, topics) {
 
 // max number of events to store
 let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
-// some vars to keep track of Redis
 
-// used for storing data
-const redisStore = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const redisStore = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"); //Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 // used to receive subscription notifications
-const redisSubscriberClient = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const redisSubscriberClient = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"); //Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
 // used for testing
-const pub = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
-console.log ("Redis connect: " + JSON.stringify(redisStore));
+const pub = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"); //Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+log.info ("Redis connect: " + JSON.stringify(redisStore));
 
 let Store = {
     version:1.0
@@ -144,7 +143,7 @@ Store.createStreamFixedInterval = function (hashKey, groupByProps, addProps, tim
 
 function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
     this.Name               = hashKey;
-    this.count              = 0; // todo: implement count === number of events in stream
+    this.Count              = 0; // todo: implement count === number of events in stream
     this.intervalCompleted  = fnIntervalCompleted;
     this._dataAdded          = fnDataAdded;
     //this.bBlock             = false; //
@@ -243,6 +242,7 @@ FixedInterval.prototype.completeFixedIntervalAggregate = function () {
     this.aggObjLatest = this.aggObj;
     // reset aggObj
     this.aggObj = JSON.parse(JSON.stringify(this.aggObjTemplate));
+    this.Count = 0;
 }; // completeFixedIntervalAggregate ()
 
 FixedInterval.prototype.getFixedIntervalAggregate = function () {
@@ -294,7 +294,7 @@ function SlidingWindow (hashKey, groupByProps, addProps, length, callback) {
     this.timeWindowStart    = 0;
     this.timeWindowEnd      = 0;
     this.timeNow            = 0;
-    this.count              = 0;
+    this.Count              = 0;
     this.callback           = callback;
     this.bBlock             = false; // ensure we do not do calcSlidingWindowAggregate while still executing previous call
     this.addProps           = addProps;
@@ -393,7 +393,7 @@ SlidingWindow.prototype.calcSlidingWindowAggregate = function () {
             innermulti.hmget(km(k.apcEvents), minusEvents);
         }
 
-        self.count = self.count + addEvents.length - minusEvents.length;
+        self.Count = self.Count + addEvents.length - minusEvents.length;
 
         innermulti.exec(function (err, innerreply) {
             let arrHashes = [];
@@ -642,11 +642,13 @@ Store.saveCTSEvent = function (msgObject, callback) {
             multi.hset(km(k.ctsEvents), ctsPrefix + eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
             multi.zadd(km(k.ctsTimestamp), timestamp, ctsPrefix + eID); // sorted list of all events timestamp/eventID
 
+            /*
             kafka.topic("metro-cts").partition(0).produce([JSON.stringify(msgObject)], function (err, response) {
                 if (err) {
                     log.error("saveCTSEvent. Writing to Ruter Kafka failed: " + err);
                 }
             });
+            */
 
             if (msgObject.values.event === "ghost") {
                 //pub.publish("cts_ghost_train", JSON.stringify(msgObject));
@@ -732,6 +734,7 @@ Store.saveAPCEvent = function (msgObject, callback) {
 
         for (let j=0;j<arrIntervals.length;j++) {
             addEventToAggregate (arrIntervals[j].aggObj, apcEvent, arrIntervals[j].addProps);
+            arrIntervals[j].Count += 1;
         }
         log.info ("APC event: " + new Date(timestamp).toTimeString() + " Alight: " + apcEvent.Alight + " Board: " + apcEvent.Board + " Line: " + apcEvent.Line + " Station: " + apcEvent.Station);
 
@@ -763,12 +766,14 @@ Store.saveAPCEvent = function (msgObject, callback) {
                 multi.sadd(km(k.apcStationKeys), apcArray[i].value.station.stationCode);
                 multi.sadd(km(k.apcOwnModuleKeys), apcArray[i].value.passengers.OwnModuleNo);
 
+                /*
                 kafka.topic("metro-apc").partition(0).produce([JSON.stringify(apcArray[i])], function (err, response) {
                     if (err) {
                         let test = err;
                         log.error("saveAPCEvent. Writing to Ruter Kafka failed: " + err);
                     }
                 });
+                */
 
                 multi.exec(function (err, data) {
                     if (err)
@@ -848,6 +853,7 @@ Store.scanStore = function (from,to, callbackfn) {
     }); // redis zrange-callback
     */
 }; // scanStore()
+
 Store.redisFreeOldData = setInterval(function () {
     if (!Store.isMaster()) {
         return;
