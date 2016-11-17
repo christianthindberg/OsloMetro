@@ -160,7 +160,7 @@ CTSParser.parseCTSData = function (msgObject) {
         return msgObject;
     }
 
-    if (IsYellowTrain(trainNo)) {
+    if (IsYellowTrain(trainNo, msgObject.values.destination)) {
         msgObject.values.isYellow = true;
     }
 
@@ -389,9 +389,14 @@ function isSpecialCTSCode (code) {
 /**
  * @return {boolean}
  */
-function IsYellowTrain (trainNo) {
+function IsYellowTrain (trainNo, destination) {
     let tn = null;
     assert(typeof trainNo === "string");
+    assert(typeof destination === "string");
+
+    if (destination === "--00") {
+        return true;
+    }
 
     if (trainNo.charAt(0) === "*") { // "star-train"
         return false;

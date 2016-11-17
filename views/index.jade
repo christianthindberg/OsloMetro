@@ -360,6 +360,10 @@ body
 
         Projection = OM_ProjectionLayer.getProjection(); // used by transform below to convert between gps and screen
 
+        if (!OM_DrawLayer) {
+          return;
+        }
+
         /*
         if (drawBerths.arguments.length == 0) { // we were called by the google map due to resize or something
           OM_DrawLayer.selectAll("svg.ctsberth").each(transform);
@@ -437,6 +441,9 @@ body
 
       var colorOKBerths = function (reset) {
         // Color Berths
+        if (!OM_DrawLayer) {
+          retur;
+        }
         if (reset) {
            var circles = OM_DrawLayer.selectAll("circle.ctsberthcircle")
           .style("fill", function (d) { return d.trackDirectionCode < 0 ? "steelblue" : "burlywood"; });
@@ -838,11 +845,23 @@ body
       }; // drawTrainGhost()
 
       var drawTrainNumberChanged = function (data) {
-        var newTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].newTrainNo)).select("rect"); // remember trains have a group object as its top-level element...
-        var newBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data[0].values.to_infra_berth.Name));
-        var oldTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].values.address)).select("rect");
-        var oldTrainG = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].values.address));
-        var oldBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data[0].values.from_infra_berth.Name));
+
+        var newTrain = null;
+        var newBerth = null;
+        var oldTrain = null;
+        var oldTrainG = null;
+        var oldBerth = null;
+
+        if (!OM_DrawLayer) {
+          return;
+        }
+
+        newTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].newTrainNo)).select("rect"); // remember trains have a group object as its top-level element...
+        newBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data[0].values.to_infra_berth.Name));
+        oldTrain = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].values.address)).select("rect");
+        oldTrainG = OM_DrawLayer.select("#train_id" + getIDFromName(data[0].values.address));
+        oldBerth = OM_DrawLayer.select("#berth_id" + getIDFromName(data[0].values.from_infra_berth.Name));
+
 
         setBlinkAlarm([newTrain, oldTrain, oldBerth, newBerth]);
 
@@ -1790,8 +1809,13 @@ body
         */
       }; // DrawOwnModuleChart
 
-       var removeTrain = function (trainNo) {
-        var remTrain = OM_DrawLayer.select("#train_id" + getIDFromName(trainNo));
+      var removeTrain = function (trainNo) {
+        var remTrain = null;
+
+        if (!OM_DrawLayer) {
+           return;
+        }
+        remTrain = OM_DrawLayer.select("#train_id" + getIDFromName(trainNo));
         if (remTrain.empty()) {
           console.log("Tried to remove train " + trainNo + " , but it was not found.");
           return;
@@ -2416,15 +2440,19 @@ body
       //
       socket.on("history start", function (data) {
         console.log("history start: " + JSON.stringify(data));
-        bHistory = true;
-        OM_DrawLayer.selectAll(".train").remove();
+        if (OM_DrawLayer) {
+          bHistory = true;
+          OM_DrawLayer.selectAll(".train").remove();
+        }
       });
       socket.on("history stop", function (data) {
         console.log("history stop: " + data);
         //vis.selectAll(".train").remove();
       });
       socket.on("realtime", function (data) {
-        OM_DrawLayer.selectAll(".train").remove();
         console.log("realtime: " + data);
-        bHistory = false;
+        if (OM_DrawLayer) {
+          OM_DrawLayer.selectAll(".train").remove();
+          bHistory = false;
+        }
       });

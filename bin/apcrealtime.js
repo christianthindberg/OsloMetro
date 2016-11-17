@@ -187,20 +187,20 @@ function fnDataAdded (err, aggObj) {
     log.info ("fnDataAdded. " + JSON.stringify(aggObj));
 }
 
-APC.createStream = function (schedule, isSlidingWindow, fnPeriodComplete, fnDataAdded) {
-    assert (typeof schedule === "object");
+APC.createStream = function (Name, timeSchedule, isSlidingWindow, fnPeriodComplete, fnDataAdded) {
+    assert (typeof Name === "string");
+    assert (typeof timeSchedule === "object");
     assert (typeof isSlidingWindow === "boolean");
     assert (typeof fnPeriodComplete === "function");
     assert (typeof fnDataAdded === "function" || fnDataAdded === null);
 
     let Stream = null;
 
-
     if (isSlidingWindow) {
-        Stream = opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, schedule, fnPeriodComplete);
+        Stream = opstore.createStreamSlidingWindow (Name, ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, timeSchedule, fnPeriodComplete);
     }
     else {
-        Stream = opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], schedule, fnPeriodComplete, fnDataAdded);
+        Stream = opstore.createStreamFixedInterval (Name, ["Line", "Station", "Module"], ["Alight", "Board"], timeSchedule, fnPeriodComplete, fnDataAdded);
     }
     return Stream;
 }; // createStream()
@@ -339,7 +339,13 @@ function buildPassengerObject (items) {
 } // buildPassengerObject()
 
 let lastPaxUpdateTimeUnix = 0;
+
 function setLastPaxUpdateTime (DateAndTimeUnix) {
+    if (typeof DateAndTimeUnix !== "number") {
+        log.error("setLastPaxUpdateTime: Invalid number: " + DateAndTimeUnix);
+        return;
+    }
+
     if (DateAndTimeUnix > lastPaxUpdateTimeUnix) {
         lastPaxUpdateTimeUnix = DateAndTimeUnix;
     }

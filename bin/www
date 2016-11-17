@@ -265,7 +265,7 @@ function handleAPCEvent (msgObject) {
 
     io.to(realtime).emit("trains", msgObject.trains);
     io.to(realtime).emit("pax", msgObject.passengers); // todo: replace "pax" with "apc" (automatic passenger counting)
-    io.to(realtime).emit("LastPaxUpdateTime", msgObject.lastPaxUpdateTime);
+    io.to(realtime).emit("LastPaxUpdateTime", msgObject.updateTime);
 } // handlePAXEvent ()
 
 function saveAPCEvent (msgObject) {
@@ -280,7 +280,7 @@ function saveAPCEvent (msgObject) {
 
 function sendAPCSlidingWindow (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
-    //log.info("sendAPCSlidingWindows. " + JSON.stringify(aggregateObject));
+    log.info("sendAPCSlidingWindows. " + JSON.stringify(aggregateObject));
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) { // todo: move isEmpty() to opstore...
         io.to(realtime).emit("LineAggregateSlidingWindow", aggregateObject["Line"]);
     }
@@ -335,9 +335,9 @@ function APCStreams () {
     this.rule24hr.minute = 45;
     this.rule24hr.dayOfWeek = new schedule.Range(0,6);
 
-    this.streamAPCSlidingWindow = apcrealtime.createStream (this.rule10s, true, sendAPCSlidingWindow, null);
-    this.streamAPCFixedInterval1Hour = apcrealtime.createStream (this.rule1hr, false, sendAPCFixedInterval1Hour, null);
-    this.streamAPCFixedIntervalOperatingDay = apcrealtime.createStream (this.rule24hr, false, sendAPCFixedIntervalOperatingDay, sendAPCFixedIntervalOperatingDay);
+    this.streamAPCSlidingWindow = apcrealtime.createStream ("Rule10s", this.rule10s, true, sendAPCSlidingWindow, null);
+    this.streamAPCFixedInterval1Hour = apcrealtime.createStream ("Rule1hr", this.rule1hr, false, sendAPCFixedInterval1Hour, null);
+    this.streamAPCFixedIntervalOperatingDay = apcrealtime.createStream ("Rule24hr", this.rule24hr, false, sendAPCFixedIntervalOperatingDay, sendAPCFixedIntervalOperatingDay);
 } // setupAPCstreams()
 
 //

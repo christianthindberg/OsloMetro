@@ -614,7 +614,7 @@ body
 
                 //console.log("drawTrainTail, data.length: " + data.length + " Tog: " + data[0].values.address);
                 for (var index = 0; index < data.length; index++) {
-                    if (!data[index].values.hasOwnProperty(to_infra_berth)) {
+                    if (!data[index].values.hasOwnProperty("to_infra_berth")) {
                         continue;
                     }
                     var currentBerth = vis.select("#berth_id" + getIDFromName(data[index].values.to_infra_berth.Name)); //.split(" ")[0])); // throw away anything after " "

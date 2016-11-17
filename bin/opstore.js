@@ -46,13 +46,13 @@ kafka.topics.list(function (err, topics) {
 // max number of events to store
 let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
 
-const redisEndpointAWS = "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"; //oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com
+const redisEndpoint = os.platform() === "darwin" ? "" : "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"; //oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com
 
-const redisStore = os.platform() === "darwin" ? new Redis() : new Redis(6379, redisEndpointAWS);
+const redisStore = new Redis(6379, redisEndpoint);
 // used to receive subscription notifications
-const redisSubscriberClient = os.platform() === "darwin" ? new Redis() : new Redis(6379, redisEndpointAWS);
+const redisSubscriberClient = new Redis(6379, redisEndpoint);
 // used for testing
-const pub = os.platform() === "darwin" ? new Redis() : new Redis(6379, redisEndpointAWS);
+const pub = new Redis(6379, redisEndpoint);
 
 log.info ("Redis connect: " + JSON.stringify(redisStore));
 
@@ -71,13 +71,13 @@ Store.getMaxCTSEvents = function () {
 
 Store.getLastCTSEventID = function (callback) {
     assert.ok(typeof callback === "function");
-    redisStore.get("CTS_EVENT_ID", callback);
+    redisStore.get(k.ctsCounter, callback);
 }; // getLastCTSEventID()
 
 Store.countCTSEvents = function (callback) {
     assert.ok(typeof callback === "function");
 
-    redisStore.zcount(km(k.ctsTimestamp), "-inf", "+inf", function (err, count) {
+    redisStore.zcount(k.ctsTimestamp, "-inf", "+inf", function (err, count) {
        callback (err, count);
     });
 }; // countCTSEvents()
@@ -86,7 +86,7 @@ Store.getCTSEventByID = function (eventID, callback) {
     assert.ok(typeof callback === "function");
     assert.ok(typeof  eventID === "number");
 
-    redisStore.hget(km(k.ctsEvents), eventID, function (err, result) {
+    redisStore.hget(k.ctsEvents, eventID, function (err, result) {
         const flatmsgObject = JSON.parse(result);
         const msgObject = unflatten(flatmsgObject);
         callback (err, msgObject);
@@ -96,7 +96,7 @@ Store.getCTSEventByID = function (eventID, callback) {
 
 Store.getTrainNumbersLogical = function (callback) {
     assert.ok(typeof callback === "function");
-    redisStore.smembers(km(k.trainlogKeys), callback);
+    redisStore.smembers(k.trainlogKeys, callback);
 }; // getTrainNumbersLogical()
 
 Store.getFirstAndLastCTSEvent = function (callback) {
@@ -104,8 +104,8 @@ Store.getFirstAndLastCTSEvent = function (callback) {
 
     const multi = redisStore.multi();
 
-    multi.zrange(km(k.ctsTimestamp), 0, 0, "withscores");
-    multi.zrange(km(k.ctsTimestamp), -1, -1, "withscores");
+    multi.zrange(k.ctsTimestamp, 0, 0, "withscores");
+    multi.zrange(k.ctsTimestamp, -1, -1, "withscores");
     multi.exec(function (err, result) {
         callback(err,result);
     });
@@ -126,8 +126,8 @@ let arrStreams = [];
  */
 let countIntervalCreate = 0; // for debug
 
-Store.createStreamFixedInterval = function (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
-    assert (typeof hashKey === "string");
+Store.createStreamFixedInterval = function (Name, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
+    assert (typeof Name === "string");
     assert (Array.isArray(groupByProps));
     assert (Array.isArray(addProps));
     assert (typeof timeSchedule === "object");
@@ -139,14 +139,14 @@ Store.createStreamFixedInterval = function (hashKey, groupByProps, addProps, tim
     countIntervalCreate += 1;
     log.info ("createStreamFixedInterval called: " + countIntervalCreate);
 
-    let Stream = new FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded);
+    let Stream = new FixedInterval (Name, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded);
     arrIntervals.push(Stream);
     schedule.scheduleJob (timeSchedule, Stream.completeFixedIntervalAggregate.bind(Stream));
     return Stream;
 }; // createStreamFixedInterval()
 
-function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
-    this.Name               = hashKey;
+function FixedInterval (Name, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
+    this.Name               = Name;
     this.Count              = 0; // todo: implement count === number of events in stream
     this.intervalCompleted  = fnIntervalCompleted;
     this._dataAdded          = fnDataAdded;
@@ -176,56 +176,25 @@ function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnInterva
     return this;
 } // FixedInterval
 
-/**
- * prototype.addToFixedIntervalAggregate
- * adds new APC events to this.aggObj
- */
-/*
-FixedInterval.prototype.addToFixedIntervalAggregate = function (apcArray) {
-    aggregateEvents (this.aggObj, apcArray, this.addProps);
-}; // addToFixedIntervalAggregate
-*/
-/**
- * addToFixedInterval
- * iterates over the array of arrIntervals and adds new ACP events to
- * all of the interval objects
- *
- * @param apcArray
- */
-/*
-function addToFixedIntervals(apcArray) {
-    for (let i=0; i<arrIntervals.length; i++) {
-        arrIntervals[i].addToFixedIntervalAggregate(apcArray);
-    }
-} // addToFixedIntervals()
-*/
-/**
- * prototype.completeFixedIntervalAggregate
- *
- * The job of completeFixedIntervalAggregate is to
- * a) save the hourly aggregate to Redis
- * b) send the aggregate to callback intervalCompleted
- * c) keep a copy of the finished aggregate, ready for getLatestFixedInterval to retrieve it
- * d) reset the aggobj so it is ready for the next hour/fixed interval
- */
+
 FixedInterval.prototype.saveAPCAggregate = function () {
     let self = this; // avoid "loosing" this when doing async stuff
-    redisStore.incr(km(k.APCAggregateCounter, self.Name), function (err, eID) {
+    redisStore.incr(km(k.apcAggregateCounter, self.Name), function (err, eID) {
         if (err) {
             log.error("saveAPCAggregate. Unable to increment APCCounter: " + err.msg + "eID: " + eID);
             return;
         }
         else {
             let multi = redisStore.multi();
-            let test = self.timeSchedule;
-            let hr = self.timeSchedule.hour ? self.timeSchedule.hour : 0;
-            let min = self.timeSchedule.minute ? self.timeSchedule.minute: 0;
-            let sec = self.timeSchedule.second ? self.timeSchedule.second : 0;
-            let scheduleKey = hr.toString() + ":" + min.toString() + ":" + sec.toString();
+            //let test = self.timeSchedule;
+            //let hr = self.timeSchedule.hour ? self.timeSchedule.hour : 0;
+            //let min = self.timeSchedule.minute ? self.timeSchedule.minute: 0;
+            //let sec = self.timeSchedule.second ? self.timeSchedule.second : 0;
+            //let scheduleKey = hr.toString() + ":" + min.toString() + ":" + sec.toString();
             let timeNow = new Date ().getTime(); //.HrMinSecToMillis(hr, min, sec);
-            multi.hset(km(k.apcAggEvents, self.Name, scheduleKey), apcPrefix + eID, JSON.stringify(flatten(self.aggObj)));
+            multi.hset(km(k.apcAggEvents, self.Name), apcPrefix + eID, JSON.stringify(flatten(self.aggObj)));
             // secondary index for all aggregate events
-            multi.zadd(km(k.apcAggTimestamp, self.Name, scheduleKey), timeNow, apcPrefix + eID);
+            multi.zadd(km(k.apcAggTimestamp, self.Name), timeNow, apcPrefix + eID);
             multi.exec(function (err, reply) {
                 if (err) {
                     log.error("saveAPCAggregate. Error saving aggregate to Redis: " + err.message);
@@ -238,6 +207,15 @@ FixedInterval.prototype.saveAPCAggregate = function () {
     }); // save aggregate to Redis
 }; // saveAPCAggregate()
 
+/**
+ * prototype.completeFixedIntervalAggregate
+ *
+ * The job of completeFixedIntervalAggregate is to
+ * a) save the hourly aggregate to Redis
+ * b) send the aggregate to callback intervalCompleted
+ * c) keep a copy of the finished aggregate, ready for getLatestFixedInterval to retrieve it
+ * d) reset the aggobj so it is ready for the next hour/fixed interval
+ */
 FixedInterval.prototype.completeFixedIntervalAggregate = function () {
     // save to Redis
     this.saveAPCAggregate ();
@@ -265,7 +243,7 @@ FixedInterval.prototype.getOngoingAggregate = function () {
 /**
  * createStreamSlidingWindow: adds together properties over a "stream" (i.e. time window of f.ex 20 minutes, updated every 10 seconds)
  *
- * @param hashKey       : Redis key for the hash we want to aggregate over
+ * @param Name          : Redis key for the hash we want to store our aggregates into
  * @param groupByProps  : Array containing strings identical to the hash field/properties ("Line", "Station", ...) by which we want to group
  * @param addProps      : Array containing strings identical to the hash field/properties ("Alight", "Board") that we want to sum
  * @param length        : Length of the stream, i.e. 20 minutes
@@ -275,8 +253,8 @@ FixedInterval.prototype.getOngoingAggregate = function () {
  */
 let countStreamCreate = 0; // for debug
 
-Store.createStreamSlidingWindow = function (hashKey, groupByProps, addProps, length, timeSchedule, callback) {
-    assert (typeof hashKey === "string");
+Store.createStreamSlidingWindow = function (Name, groupByProps, addProps, length, timeSchedule, callback) {
+    assert (typeof Name === "string");
     assert (Array.isArray(groupByProps));
     assert (Array.isArray(addProps));
     assert (typeof length === "number");
@@ -286,7 +264,7 @@ Store.createStreamSlidingWindow = function (hashKey, groupByProps, addProps, len
     countStreamCreate += 1;
     log.info ("createStreamAggregator called: " + countStreamCreate);
 
-    let Stream = new SlidingWindow (hashKey, groupByProps, addProps, length, callback);
+    let Stream = new SlidingWindow (Name, groupByProps, addProps, length, callback);
     arrStreams.push(Stream);
     schedule.scheduleJob (timeSchedule, Stream.calcSlidingWindowAggregate.bind(Stream));
     return Stream;
@@ -295,14 +273,14 @@ Store.createStreamSlidingWindow = function (hashKey, groupByProps, addProps, len
 /**
  * Constructor SlidingWindow
  *
- * @param hashKey:          Name of the Redis hash set to retrieve data from. Not implemented at the moment. Only support for APC/passenger counting
+ * @param Name:             Name of the Redis hash set to retrieve data from. Not implemented at the moment. Only support for APC/passenger counting
  * @param groupByProps      Array of properties ["Line", "Station", "Module"] by which to aggregate data
  * @param addProps          Array of properties to add, i.e. ["Alight", "Board]
  * @param length            The length of the stream/sliding time window in milliseconds
  * @param callback          the function to serve the aggregated data back to the caller
  */
-function SlidingWindow (hashKey, groupByProps, addProps, length, callback) {
-    this.Name               = hashKey;
+function SlidingWindow (Name, groupByProps, addProps, length, callback) {
+    this.Name               = Name;
     this.length             = length; // sliding time window in milliseconds
     this.timeFirstCall      = 0;
     this.timeWindowStart    = 0;
@@ -372,7 +350,7 @@ SlidingWindow.prototype.calcSlidingWindowAggregate = function () {
     // Retrieve elements to subtract
     if (self.timeNow - self.length > self.timeWindowStart) {
         //multi.zrangebyscore(km(k.apcTimestamp), self.timeWindowStart, self.timeNow - self.length); // this will be the correct query once the APC deliver events in real time
-        multi.zrangebyscore(km(k.apcReceivedTimestamp), self.timeWindowStart, self.timeNow - self.length);
+        multi.zrangebyscore(k.apcReceivedTimestamp, self.timeWindowStart, self.timeNow - self.length);
     }
 
     multi.exec (function (err, reply) {
@@ -402,10 +380,10 @@ SlidingWindow.prototype.calcSlidingWindowAggregate = function () {
         }
 
         if (addEvents.length > 0) {
-            innermulti.hmget(km(k.apcEvents), addEvents);
+            innermulti.hmget(k.apcEvents, addEvents);
         }
         if (minusEvents.length > 0) {
-            innermulti.hmget(km(k.apcEvents), minusEvents);
+            innermulti.hmget(k.apcEvents, minusEvents);
         }
 
         self.Count = self.Count + addEvents.length - minusEvents.length;
@@ -484,11 +462,7 @@ function subtractAggObjects (aggObj, aggMinusObj, addProps) {
                         else {
                             log.error("subtractAggObjects. specificMinusObj[" + p + "] missing Count property.");
                         }
-                        // todo: get rid of hard-coded object properties
-                        //specificAggObj[p]["Board"] -= specificMinusObj[p]["Board"];
-                        //specificAggObj[p]["Alight"] -= specificMinusObj[p]["Alight"];
-                        //specificAggObj[p]["Count"] -= specificMinusObj[p]["Count"];
-                    }
+                    } // inner inner for
                 } // if
             } // inner for
         } // if
@@ -528,7 +502,7 @@ function aggregateEvents (aggObj, arrHashes, addProps) {
     // iterate the events list
     for (let i=0; i < arrHashes.length; i++) {
         let apcEvent = unflatten(JSON.parse(arrHashes[i]));
-        /*
+        /* This is the structure of the apcEvent:
          apcEvent = {
             "Alight": a,
             "Board": b,
@@ -648,14 +622,14 @@ Store.saveCTSEvent = function (msgObject, callback) {
 
     //logMemory.info ("test memory %d", process.memoryUsage().rss);
 
-    redisStore.incr(ctsCounter, function (err, eID) {
+    redisStore.incr(k.ctsCounter, function (err, eID) {
         var multi = redisStore.multi();
         if (err) {
             log.error("Store.saveCTSEvent. redis error: " + err);
         }
         else {
-            multi.hset(km(k.ctsEvents), ctsPrefix + eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
-            multi.zadd(km(k.ctsTimestamp), timestamp, ctsPrefix + eID); // sorted list of all events timestamp/eventID
+            multi.hset(k.ctsEvents, ctsPrefix + eID, JSON.stringify(flatten(msgObject))); //flatten(CTS_toBerthObject.Name
+            multi.zadd(k.ctsTimestamp, timestamp, ctsPrefix + eID); // sorted list of all events timestamp/eventID
 
             /*
             kafka.topic("metro-cts").partition(0).produce([JSON.stringify(msgObject)], function (err, response) {
@@ -667,11 +641,11 @@ Store.saveCTSEvent = function (msgObject, callback) {
 
             if (msgObject.values.event === "ghost") {
                 //pub.publish("cts_ghost_train", JSON.stringify(msgObject));
-                multi.zadd(km(k.ghost), timestamp, ctsPrefix + eID); // keep sorted set of timestamp/eventIDs per ghost train
+                multi.zadd(k.ghost, timestamp, ctsPrefix + eID); // keep sorted set of timestamp/eventIDs per ghost train
             }
             else if (msgObject.values.event === "trnochg") {
                 //pub.publish("cts_trainno_change", JSON.stringify(msgObject));
-                multi.zadd(km(k.trainnochange), timestamp, ctsPrefix + eID);
+                multi.zadd(k.trainnochange, timestamp, ctsPrefix + eID);
             }
             else if (msgObject.values.event === "special") {
                 //pub.publish("cts_special_code", JSON.stringify(msgObject));
@@ -710,7 +684,7 @@ function addIndexes (timestamp, eID, msgObject, multi) {
 
     if (msgObject.values.destination) {
         multi.zadd(km(k.destination, msgObject.values.destination), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
-        multi.sadd(km(k.destinationKeys), msgObject.values.destination); // keep a set containg all destinations
+        multi.sadd(k.destinationKeys, msgObject.values.destination); // keep a set containg all destinations
     }
     if (msgObject.values.Line) {
         multi.zadd(km(k.line, msgObject.values.Line), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train
@@ -719,10 +693,10 @@ function addIndexes (timestamp, eID, msgObject, multi) {
     if (msgObject.values.to_infra_berth && msgObject.values.to_infra_berth.Name) {
         multi.zadd(km(k.berth, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical berth
         multi.zadd(km(k.trainberth, trainNo, msgObject.values.to_infra_berth.Name), timestamp, eID); // one sorted set of timestamp/eventIDs per logical train AND berth
-        multi.sadd(km(k.berthKeys), msgObject.values.to_infra_berth.Name); // keep a set containg all berths
+        multi.sadd(k.berthKeys, msgObject.values.to_infra_berth.Name); // keep a set containg all berths
     }
     if (msgObject.values.isTrainJump) {
-        multi.zadd(km(k.trainjumps), timestamp, eID);
+        multi.zadd(k.trainjumps, timestamp, eID);
     }
 } // addIndexes()
 
@@ -757,17 +731,17 @@ Store.saveAPCEvent = function (msgObject, callback) {
             continue;
         }
 
-        redisStore.incr(APCcounter, function (err, eID) {
+        redisStore.incr(k.apcCounter, function (err, eID) {
             if (err) {
                 log.error("saveAPCEvent. Unable to increment APCCounter: " + err.msg + "eID: " + eID);
                 return;
             }
             else {
-                multi.hset(km(k.apcEvents), apcPrefix + eID, JSON.stringify(flatten(apcEvent)));
+                multi.hset(k.apcEvents, apcPrefix + eID, JSON.stringify(flatten(apcEvent)));
 
                 // secondary index for all events
-                multi.zadd(km(k.apcTimestamp), timestamp, apcPrefix + eID); // sorted list of all events timestamp/eventID according to when the event occured
-                multi.zadd(km(k.apcReceivedTimestamp), new Date().getTime(), apcPrefix + eID); // sorted list of all events timestamp/eventID according to when we received the event
+                multi.zadd(k.apcTimestamp, timestamp, apcPrefix + eID); // sorted list of all events timestamp/eventID according to when the event occured
+                multi.zadd(k.apcReceivedTimestamp, new Date().getTime(), apcPrefix + eID); // sorted list of all events timestamp/eventID according to when we received the event
                 // Note: until the APC deliver data for each station in real time, we must use the received timestamp for stream calculations
                 // Currently, the APC only deliver data at end stations, so it can take very long time between an alight/board event and the time we receive the event
 
@@ -777,9 +751,9 @@ Store.saveAPCEvent = function (msgObject, callback) {
                 multi.zadd(km(k.apcOwnModuleNo, apcArray[i].value.passengers.OwnModuleNo), timestamp, apcPrefix + eID);
 
                 // For all types of keys, keep sets of keys. Handy for debug and maybe handy in the future
-                multi.sadd(km(k.apcLineKeys), apcArray[i].value.passengers.LineNumber);
-                multi.sadd(km(k.apcStationKeys), apcArray[i].value.station.stationCode);
-                multi.sadd(km(k.apcOwnModuleKeys), apcArray[i].value.passengers.OwnModuleNo);
+                multi.sadd(k.apcLineKeys, apcArray[i].value.passengers.LineNumber);
+                multi.sadd(k.apcStationKeys, apcArray[i].value.station.stationCode);
+                multi.sadd(k.apcOwnModuleKeys, apcArray[i].value.passengers.OwnModuleNo);
 
                 /*
                 kafka.topic("metro-apc").partition(0).produce([JSON.stringify(apcArray[i])], function (err, response) {
@@ -806,7 +780,7 @@ Store.saveAPCEvent = function (msgObject, callback) {
 }; // saveAPCEvent()
 
 
-
+// experimental - not used
 Store.scanStore = function (from,to, callbackfn) {
     let count = 0;
     var stream = redisStore.zscanStream(km(k.ctsTimestamp), { match: "*", count: 100} );
@@ -873,43 +847,44 @@ Store.redisFreeOldData = setInterval(function () {
     if (!Store.isMaster()) {
         return;
     }
-    redisStore.zcount(km(k.ctsTimestamp), "-inf", "+inf", function (err, count) {
+    redisStore.zcount(k.ctsTimestamp, "-inf", "+inf", function (err, count) {
         if (err) {
             log.eror("Store.redisFreeOldData. Redis count error: " + err);
         }
         else if (count > maxCTS) {
             // get all events from the oldes (starting at index 0) and up to count-maxCTS
-            redisStore.zrange(km(k.ctsTimestamp), 0, count - maxCTS, function (err, ctsEventsToDelete) { // get all events to delete
+            redisStore.zrange(k.ctsTimestamp, 0, count - maxCTS, function (err, ctsEventsToDelete) { // get all events to delete
                 var i = 0;
                 var multi = redisStore.multi();
 
                 //console.log ("ctsEventsToDelete: " + ctsEventsToDelete);
-                multi.hdel(km(k.ctsEvents), ctsEventsToDelete);
-                multi.zrem(km(k.ctsTimestamp), ctsEventsToDelete);
-                multi.smembers(km(k.trainlogKeys));
+                multi.hdel(k.ctsEvents, ctsEventsToDelete);
+                multi.zrem(k.ctsTimestamp, ctsEventsToDelete);
+                multi.smembers(k.trainlogKeys);
                 multi.exec(function (err, replies) {
                     var trainKeys = [];
+                    var innerMulti = redisStore.multi();
                     if (err) {
-                        log.error("Store.redisFreeOldData. Unable to delete: " + err + " Reply: " + reply);
+                        log.error("Store.redisFreeOldData. Unable to delete: " + err);
                         return;
                     }
                     trainKeys = replies[2];
                     for (i = 0; i < trainKeys.length; i++) {
-                        multi.zrem(trainKeys[i], ctsEventsToDelete); // ... and remove the events we want to
+                        innerMulti.zrem(trainKeys[i], ctsEventsToDelete); // ... and remove the events we want to
                     }
-                    multi.exec(function (err, replies) {
+                    innerMulti.exec(function (err, replies) {
                         if (err) {
-                            log.error("Unable to delete: " + err + " Reply: " + reply);
+                            log.error("Unable to delete: " + err);
                             return;
                         }
                         // todo: iterate through replies and remove any smembers with no events?
                         //console.log (replies.toString());
-                    });
-                });
+                    }); // innerMulti.exec()
+                }); // outer multi.exec()
             }); // zrange
-        } // count > maxCTS
+        } // count > maxCTS?
     }); // zcount
-}, 1000 * 3); // check every 3rd second
+}, 1000 * 10); // check every 10th second
 
 Store.testSubscribe = function () {
     //assert.ok(typeof callback === "function", "Store.testSubscribe invalid callback");
@@ -928,18 +903,9 @@ Store.flushAll = function (callback) {
         //socket.emit("chat message", "Redis says: " + err + " " + succeeded); // will be true if successfull
     });
 }; //flushAll()
-/*
-Store.on("flushall", function(msg) {
-    console.log("success: " + msg);
-});
-
-Store.on("err_flushall", function(msg) {
-   console.log("error: " + msg);
-});
-*/
-//Store.on = eventEmitter.on;
 
 let bMaster = false;
+
 Store.isMaster = function () {
     return bMaster;
 };
@@ -947,6 +913,7 @@ Store.setMaster = function (bState) {
     assert.ok(typeof bState === "boolean");
     bMaster = bState;
 };
+
 Store.subscribe = function (topic) {
     assert.ok(typeof topic === "string");
     return redisSubscriberClient.subscribe(topic);
@@ -964,21 +931,12 @@ pub.on("subscribe", function (channel, message ) {
     //io.emit("chat message", "succesful subscribe to Redis " + channel + "  " + message);
     log.info("succesful subscribe to Redis: " + channel + " " + count);
 });
-/*
-Store.publish = function (topic, data) {
-    assert(typeof topic === "string");
-    assert(data);
-    pub.publish (topic, data);
-}; // publish()
-*/
 
 Store.on = function (topic, callbackfn) {
     console.log("Store.on. topic: " + topic);
     redisSubscriberClient.on (topic, callbackfn);
     //return redisSubscriberClient.on (event, callbackfn);
 };
-
-//pub.on("subscribe")
 
 Store.unsubscribe = function () {
     redisSubscriberClient.unsubscribe();
@@ -997,54 +955,45 @@ Store.getStoreCommands = function () {
     return redisStore.getBuiltinCommands().toString();
 }; // getStoreCommands
 
-/*
-redisSubscriberClient.on("error", function (err) {
-    console.log("redisSubscriberClient.on(error). Error: " + err);
-});
-redisStore.on("error", function (err) {
-    console.log("redisStore.on(error). Error: " + err);
-});
-*/
 // Key Management
 //
 let k = {};  // short for "Key Store"
 k.base = "om"; // short for "OsloMetro"
-k.users = km(k.base,'users'); //list
-k.status = km(k.base,'status'); //String, :userName
+k.users = km(k.base,"users"); //list
+k.status = km(k.base,"status"); //String, :userName
 
-const ctsCounter = "CTS_EVENT_ID";
 const ctsPrefix = "cts";
+k.ctsCounter = km(k.base, ctsPrefix, "COUNTER");
+k.ctsEvents = km(k.base, ctsPrefix);  // hash of all valid cts events
+k.ctsTimestamp = km(k.base, ctsPrefix, "timestamp"); // sorted list of cts-events
+k.berth = km(k.base, ctsPrefix, "berth");
+k.trainberth = km(k.base, ctsPrefix, "trainlognr", "berth");
+k.line = km(k.base, ctsPrefix, "line");
+k.destination = km(k.base, ctsPrefix, "destination");
 
-k.ctsEvents = km(k.base, "cts");  // hash of all valid cts events
-k.ctsTimestamp = km(k.base, "cts", "timestamp"); // sorted list of cts-events
-k.berth = km(k.base, "cts", "berth");
-k.trainberth = km(k.base, "cts", "trainlognr", "berth");
-k.line = km(k.base, "cts", "line");
-k.destination = km(k.base, "cts", "destination");
+k.trainnochange = km(k.base, ctsPrefix, "trnochg");
 
-k.trainnochange = km(k.base, "cts", "trnochg");
+k.trainLog = km(k.base, ctsPrefix,"trainlognr"); // sorted lists, one for each logical train number containing score timestamp, member ctsEventID
+k.trainlogKeys = km(k.base, ctsPrefix,"key","trainlognr"); // set of strings, each a logical train number
+k.trainjumps = km(k.base, ctsPrefix, "trainjump");
 
-k.trainLog = km(k.base, "cts","trainlognr"); // sorted lists, one for each logical train number containing score timestamp, member ctsEventID
-k.trainlogKeys = km(k.base, "cts","key","trainlognr"); // set of strings, each a logical train number
-k.trainjumps = km(k.base, "cts", "trainjump");
+k.destinationKeys = km(k.base, ctsPrefix, "key", "destination");
+k.berthKeys = km(k.base, ctsPrefix, "key", "berth");
 
-k.destinationKeys = km(k.base, "cts", "key", "destination");
-k.berthKeys = km(k.base, "cts", "key", "berth");
-
-const APCcounter = "APC_EVENT_ID";
-const APCAggregateCounter = "APC_AGGREGATE";
 const apcPrefix = "apc";
-k.apcEvents = km(k.base, "apc", "event");
-k.apcAggEvents = km(k.base, "apc", "agg");
-k.apcTimestamp = km(k.base, "apc", "ts"); // sorted list of cts-events
-k.apcReceivedTimestamp = km(k.base, "apc", "rec", "ts");
-k.apcAggTimestamp = km(k.base, "apc", "agg", "ts");
-k.apcLine = km(k.base, "apc", "line");
-k.apcStation = km(k.base, "apc", "station");
-k.apcOwnModuleNo = km(k.base, "apc","module"); // sorted lists, one for each physical 3-car-set number containing score timestamp, member ctsEventID
-k.apcLineKeys = km(k.base, "apc", "key","line");
-k.apcStationKeys = km(k.base, "apc", "key","station");
-k.apcOwnModuleKeys = km(k.base, "apc","key", "ownmoduleno"); // set of strings, each a physical 3-car-set number
+k.apcCounter = km(k.base, apcPrefix, "COUNTER");
+k.apcAggregateCounter = km(k.base, apcPrefix, "AGG_COUNTER");
+k.apcEvents = km(k.base, apcPrefix, "event");
+k.apcAggEvents = km(k.base, apcPrefix, "agg");
+k.apcTimestamp = km(k.base, apcPrefix, "ts"); // sorted list of cts-events
+k.apcReceivedTimestamp = km(k.base, apcPrefix, "rec", "ts");
+k.apcAggTimestamp = km(k.base, apcPrefix, "agg", "ts");
+k.apcLine = km(k.base, apcPrefix, "line");
+k.apcStation = km(k.base, apcPrefix, "station");
+k.apcOwnModuleNo = km(k.base, apcPrefix,"module"); // sorted lists, one for each physical 3-car-set number containing score timestamp, member ctsEventID
+k.apcLineKeys = km(k.base, apcPrefix, "key","line");
+k.apcStationKeys = km(k.base, apcPrefix, "key","station");
+k.apcOwnModuleKeys = km(k.base, apcPrefix,"key", "ownmoduleno"); // set of strings, each a physical 3-car-set number
 
 function km() {  // km - short for "Key Manager"
     return Array.prototype.slice.call(arguments).join(":");
