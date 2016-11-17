@@ -47,7 +47,7 @@ let socketAuth = function socketAuth(socket, next) {
 io.use(socketAuth);
 
 infrastructure.readMetroInfrastructure();
-setupAPCStreams();
+const Streams = new APCStreams();
 
 // send server time to all clients every second
 const emitTime = setInterval(function () {
@@ -87,7 +87,8 @@ io.on('connection', function (socket) {
     });
 
     if (apcrealtime.hasPassengers) {
-        socket.emit("pax", apcrealtime.getPassengerTable);
+        let test = apcrealtime.getPassengerTable();
+        socket.emit("pax", apcrealtime.getPassengerTable());
     }
     if (apcrealtime.hasSumPerLine()) {
         socket.emit("LineAggregate", apcrealtime.getSumPerLineTable());
@@ -98,7 +99,11 @@ io.on('connection', function (socket) {
     if (apcrealtime.hasSumPerOwnModule()) {
         socket.emit("OwnModuleAggregate", apcrealtime.getSumPerOwnModuleTable());
     }
+    let t1 = apcrealtime.getLastPaxUpdateTimeUnix();
+    let t2 = ctslivestatus.getLastCountTrainsInTraffic();
     socket.emit('LastPaxUpdateTime', apcrealtime.getLastPaxUpdateTimeUnix());
+    socket.emit("trainsintraffic", ctslivestatus.getLastCountTrainsInTraffic());
+
 
     socket.on('disconnect', function () {
         //console.log('user disconnected');
@@ -122,6 +127,17 @@ io.on('connection', function (socket) {
         log.error("Client Error: " + msg);
     });
 
+    socket.on("operatingdayownmodulerequest", function (msg, fn) { // msg; { }
+        const aggregateObject = Streams.streamAPCFixedIntervalOperatingDay.getOngoingAggregate();
+        assert (typeof aggregateObject === "object" && aggregateObject !== null);
+        if (aggregateObject.hasOwnProperty("Module") && !helpers.isEmpty(aggregateObject.Module)) {
+            fn (aggregateObject["Module"]);
+        }
+        else {
+            fn(null);
+        }
+    }); // operatingdayownmodulerequest
+
     // station, berth, trackswitch not implemented in clients for now
     socket.on("stationsrequest", function (msg, fn) { // msg; {}
         fn(infrastructure.getStationObject());
@@ -135,7 +151,6 @@ io.on('connection', function (socket) {
         fn(infrastructure.getTrackSwitchTable());
     }); //trackswitchrequest
 
-
     // send the "tail" of a train, i.e. list of latest berth-passings
     socket.on("tailrequest", function (msg, fn) { // msg; {trainNo: id, count: noOfBerthsToSend }
         fn(ctslivestatus.getTail(msg.trainNo, msg.noOfBerths));
@@ -143,6 +158,9 @@ io.on('connection', function (socket) {
 
     // send "tail" of all trains, i.e. array of lists of berth-passings
     socket.on("alltailsrequest", function (msg, fn) { // msg; {trainNo: id, maxBerths: max no Of Berths To Send for one train}
+        let test = msg;
+        let t1 = msg.maxBerths;
+        let t2 = ctslivestatus.getAllTails(msg.maxBerths);
         fn(ctslivestatus.getAllTails(msg.maxBerths));
     }); // alltailsrequest
 
@@ -262,7 +280,7 @@ function saveAPCEvent (msgObject) {
 
 function sendAPCSlidingWindow (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
-    log.info("sendAPCSlidingWindows. " + JSON.stringify(aggregateObject));
+    //log.info("sendAPCSlidingWindows. " + JSON.stringify(aggregateObject));
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) { // todo: move isEmpty() to opstore...
         io.to(realtime).emit("LineAggregateSlidingWindow", aggregateObject["Line"]);
     }
@@ -292,7 +310,7 @@ function sendAPCFixedInterval1Hour (err, aggregateObject) {
 function sendAPCFixedIntervalOperatingDay (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
 
-    log.info ("sendAPCFixedInterval. " + JSON.stringify (aggregateObject));
+    log.info ("sendAPCFixedIntervalOperatingDay. " + JSON.stringify (aggregateObject));
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
         io.to(realtime).emit("LineAggregateFixedIntervalOperatingDay", aggregateObject["Line"]);
     }
@@ -304,22 +322,22 @@ function sendAPCFixedIntervalOperatingDay (err, aggregateObject) {
     }
 } // sendAPCFixedIntervalOperatingDay ()
 
-function setupAPCStreams () {
-    let rule10s = new schedule.RecurrenceRule();
-    let rule1hr = new schedule.RecurrenceRule();
-    let rule24hr = new schedule.RecurrenceRule();
+function APCStreams () {
+    this.rule10s = new schedule.RecurrenceRule();
+    this.rule1hr = new schedule.RecurrenceRule();
+    this.rule24hr = new schedule.RecurrenceRule();
 
-    rule10s.second = new schedule.Range(0, 59, 10); // run job every 10th second
-    rule1hr.minute = 0; // every hour at 0 minutes past the hour
+    this.rule10s.second = new schedule.Range(0, 59, 10); // run job every 10th second
+    this.rule1hr.minute = 0; // every hour at 0 minutes past the hour
 
     // every 24hour period at 4.45 in the morning. The operating day at Sporveien starts at 5.00
-    rule24hr.hour = 4;
-    rule24hr.minute = 45;
-    rule24hr.dayOfWeek = new schedule.Range(0,6);
+    this.rule24hr.hour = 4;
+    this.rule24hr.minute = 45;
+    this.rule24hr.dayOfWeek = new schedule.Range(0,6);
 
-    apcrealtime.createStream (rule10s, true, sendAPCSlidingWindow, null);
-    apcrealtime.createStream (rule1hr, false, sendAPCFixedInterval1Hour, null);
-    apcrealtime.createStream (rule24hr, false, sendAPCFixedIntervalOperatingDay, sendAPCFixedIntervalOperatingDay);
+    this.streamAPCSlidingWindow = apcrealtime.createStream (this.rule10s, true, sendAPCSlidingWindow, null);
+    this.streamAPCFixedInterval1Hour = apcrealtime.createStream (this.rule1hr, false, sendAPCFixedInterval1Hour, null);
+    this.streamAPCFixedIntervalOperatingDay = apcrealtime.createStream (this.rule24hr, false, sendAPCFixedIntervalOperatingDay, sendAPCFixedIntervalOperatingDay);
 } // setupAPCstreams()
 
 //

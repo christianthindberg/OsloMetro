@@ -667,17 +667,23 @@ body
        }
        }
        */
-      // We receive an array of berths with newest berth at data[0]
+      // We receive an array of berths for 1 train with newest berth at data[0]
       var drawTrain = function (data) {
         var Projection = 0;
+
         if (!OM_ProjectionLayer || !OM_DrawLayer) {
           return;
         }
 
         Projection = OM_ProjectionLayer.getProjection(); // used by transform below to convert between gps and screen
 
-        if (drawTrain.arguments.length == 0) { // we were called by the google map due to resize or something
+        if (drawTrain.arguments.length === 0) { // we were called by the google map due to resize or something
           OM_DrawLayer.selectAll("svg.train").each(transform);
+          return;
+        }
+
+        // Valid to-berth?
+        if (!data[0].values.to_infra_berth) {
           return;
         }
 
@@ -1688,9 +1694,9 @@ body
         var groupWidth = parseInt(d3.select("#ownmodulediv").style("width")) - margin.left - margin.right;
 
         $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) { return d.value.Alight; } ).toString());
+        // Enable this when we get APC realtime
         //$("#nowPax").text("Passasjerer ombord: " + d3.sum(data, function (d) { return d.TotalBoarding - d.TotalAlighting; } ).toString());
-        // todo: only set this based on operating day fixed window
-        $("#nowAPC").text("Togsett med passasjertelling: " + data.filter(function(obj) { return obj.value.Board > 0; }).length.toString()); // Consider train to be in traffic if passengers have boarded
+        $("#nowAPC").text("Togsett med passasjertelling: " + data.length);
 
         var markerOwnModule = d3.select("#ownmodules");
         var ownmodulesHeight = margin.top + (data.length * (groupHeight + groupGap));
@@ -2158,16 +2164,20 @@ body
 
       // Inform user of the time when the newest passenger boarding/alighting actually took place, i.e. the time recorded by Siemens onboard the train
       var setLastPaxUpdateTime = function (timestamp) {
-        d3.select("#lastPaxReceived").text("Siste av/påstigning: " + new Date(timestamp).toTimeString().split(' ')[0]);
+        if (timestamp !== 0) {
+          d3.select("#lastPaxReceived").text("Siste av/påstigning: " + new Date(timestamp).toTimeString().split(' ')[0]);
+        }
       }; // setLastPaxUpdateTime()
+
       var setTrainsInTraffic = function (noTrains) {
-        d3.select("#nowTrains").text("Tog i trafikk nå: " + noTrains);
+        if (noTrains !== 0) {
+          d3.select("#nowTrains").text("Tog i trafikk nå: " + noTrains);
+        }
       }; // setTrainsInTraffic()
 
       //
       // Helpers
       //
-
 
 
       //
@@ -2185,10 +2195,11 @@ body
       // Socket.io section, i.e. receive data from server
       //
 
+
       var socket = io();
 
       window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
-        socket.emit("Client Error", errorMsg + " Script: " + url + " Line: " + lineNumber
+        socket.emit("client error", errorMsg + " Script: " + url + " Line: " + lineNumber
                 + " Column: " + column + " StackTrace: " + errorObj);
         console.log("onerror onerror oneror: --" + errorMsg + " Script: " + url + " Line: " + lineNumber
                 + " Column: " + column + " StackTrace: " + errorObj);
@@ -2198,26 +2209,59 @@ body
       socket.on("connect", function (data) {
         d3.select("#clockTime").style("background-color", "whitesmoke");
         console.log("connect: " + JSON.stringify(data));
-      });
-      socket.on("id", function (data) {
-        console.log("id: " + data);
-      });
-      socket.on("ip", function (data) {
-        console.log("ip: " + data);
+
+        socket.emit("operatingdayownmodulerequest", {}, function (data) {
+          var dataArr = null;
+          if (data) {
+            dataArr = d3.entries(data);
+            DrawOwnModuleChart(dataArr);
+          }
+        });  // emit
+        /* TODO: Code below Not working since Google Map layers are still not "onAdd" at this time
+            must rewrite so that drawTrain, drawStations etc request data from server on their own
+
+        // Ask server for trains, i.e. array with lists of berth passings
+        socket.emit("alltailsrequest", {"maxBerths": 1}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths berths
+          if (data  && data.length > 0) {
+            for (var i = 0; i < data.length; i++) {
+              drawTrain(data[i]); // array of berths for 1 train
+            } // for-loop
+          }
+        });  // emit
+        */
       });
 
       socket.on("reconnect", function (data) {
         console.log("reconnect: " + JSON.stringify(data));
         d3.selectAll(".train").remove();
-        // Ask server for trains, i.e. array with lists of berth passings
-        socket.emit("alltailsrequest", {"maxBerths": 10}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths berths
-          if (!data || data.length == 0) {
-            return;
+
+        socket.emit("operatingdayownmodulerequest", {}, function (data) {
+          var dataArr = null;
+          if (data) {
+            dataArr = d3.entries(data);
+            DrawOwnModuleChart(dataArr);
           }
-          for (var i = 0; i < data.length; i++) {
-            //drawTrain(data[i]); // array of berths for 1 train
-          } // for-loop
-        });  // emit-function()
+        });  // emit
+
+        /* TODO: Code below Not working since Google Map layers are still not "onAdd" at this time
+         must rewrite so that drawTrain, drawStations etc request data from server on their own
+
+         // Ask server for trains, i.e. array with lists of berth passings
+        socket.emit("alltailsrequest", {"maxBerths": 1}, function (data) { // object with one attribute per train. Each attribute is an array containing up to maxBerths berths
+          if (data && data.length > 0) {
+            for (var i = 0; i < data.length; i++) {
+              drawTrain(data[i]); // array of berths for 1 train
+            } // for-loop
+          }
+        });  // emit
+        */
+      });
+
+      socket.on("id", function (data) {
+        console.log("id: " + data);
+      });
+      socket.on("ip", function (data) {
+        console.log("ip: " + data);
       });
 
       socket.on("disconnect", function (data) {

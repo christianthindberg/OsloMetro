@@ -614,6 +614,9 @@ body
 
                 //console.log("drawTrainTail, data.length: " + data.length + " Tog: " + data[0].values.address);
                 for (var index = 0; index < data.length; index++) {
+                    if (!data[index].values.hasOwnProperty(to_infra_berth)) {
+                        continue;
+                    }
                     var currentBerth = vis.select("#berth_id" + getIDFromName(data[index].values.to_infra_berth.Name)); //.split(" ")[0])); // throw away anything after " "
                     var currentBerthColor, currentBerthText, currentBerthTrack;
 
@@ -823,10 +826,13 @@ body
                 } // else-clause
             }; //toggleFollowTrainMode()
 
-            // We receive an array of berths with newest berth at data[0]
+            // We receive an array of berths for 1 train with newest berth at data[0]
             var drawTrain = function (data) {
                 if (!data || Object.keys(data).length == 0) { // should never happen
                     console.error("drawTrain: Received trains without data");
+                    return;
+                }
+                if (!data[0].values.to_infra_berth) {
                     return;
                 }
 
@@ -1948,7 +1954,9 @@ body
             var bHistory = false;
 
             window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
-                socket.emit("Client Error", errorMsg + " Script: " + url + " Line: " + lineNumber
+                socket.emit("client error", errorMsg + " Script: " + url + " Line: " + lineNumber
+                        + " Column: " + column + " StackTrace: " + errorObj);
+                console.log("onerror onerror oneror: --" + errorMsg + " Script: " + url + " Line: " + lineNumber
                         + " Column: " + column + " StackTrace: " + errorObj);
                 return false;
             }

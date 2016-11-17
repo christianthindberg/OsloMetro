@@ -46,11 +46,14 @@ kafka.topics.list(function (err, topics) {
 // max number of events to store
 let maxCTS = os.platform() === "darwin" ? 5000 : 300000;
 
-const redisStore = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"); //Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const redisEndpointAWS = "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"; //oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com
+
+const redisStore = os.platform() === "darwin" ? new Redis() : new Redis(6379, redisEndpointAWS);
 // used to receive subscription notifications
-const redisSubscriberClient = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"); //Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const redisSubscriberClient = os.platform() === "darwin" ? new Redis() : new Redis(6379, redisEndpointAWS);
 // used for testing
-const pub = os.platform() === "darwin" ? new Redis() : new Redis(6379, "oslometro-redis.ezuesa.ng.0001.euw1.cache.amazonaws.com"); //Redis(6379, "oslometro-redis-001.ezuesa.0001.euw1.cache.amazonaws.com");
+const pub = os.platform() === "darwin" ? new Redis() : new Redis(6379, redisEndpointAWS);
+
 log.info ("Redis connect: " + JSON.stringify(redisStore));
 
 let Store = {
@@ -108,7 +111,7 @@ Store.getFirstAndLastCTSEvent = function (callback) {
     });
 }; // getFirstAndLastCTSEvent()
 
-// Each element holds the data and function to handle a the corresponding stream or aggregate
+// Each element holds the data and function to handle the corresponding stream or aggregate
 let arrIntervals = [];
 let arrStreams = [];
 
@@ -139,6 +142,7 @@ Store.createStreamFixedInterval = function (hashKey, groupByProps, addProps, tim
     let Stream = new FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded);
     arrIntervals.push(Stream);
     schedule.scheduleJob (timeSchedule, Stream.completeFixedIntervalAggregate.bind(Stream));
+    return Stream;
 }; // createStreamFixedInterval()
 
 function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnIntervalCompleted, fnDataAdded) {
@@ -169,6 +173,7 @@ function FixedInterval (hashKey, groupByProps, addProps, timeSchedule, fnInterva
     this.aggObjTemplate = JSON.parse(JSON.stringify(this.aggObj));
     // make a copy of the groupByObj so that getFixedIntervalAggregate always returns an aggObj, even though it is initially empty
     this.aggObjLatest = JSON.parse(JSON.stringify(this.aggObj));
+    return this;
 } // FixedInterval
 
 /**
@@ -245,9 +250,17 @@ FixedInterval.prototype.completeFixedIntervalAggregate = function () {
     this.Count = 0;
 }; // completeFixedIntervalAggregate ()
 
-FixedInterval.prototype.getFixedIntervalAggregate = function () {
+FixedInterval.prototype.getLastCompletedAggregate = function () {
     return this.aggObjLatest;
-}; // getFixedInteralAggregate
+}; // getLastCompletedAggregate
+
+FixedInterval.prototype.getCount = function () {
+    return this.Count;
+}; // getCount()
+
+FixedInterval.prototype.getOngoingAggregate = function () {
+    return this.aggObj;
+}; // getOngoingAggregate()
 
 /**
  * createStreamSlidingWindow: adds together properties over a "stream" (i.e. time window of f.ex 20 minutes, updated every 10 seconds)
@@ -276,6 +289,7 @@ Store.createStreamSlidingWindow = function (hashKey, groupByProps, addProps, len
     let Stream = new SlidingWindow (hashKey, groupByProps, addProps, length, callback);
     arrStreams.push(Stream);
     schedule.scheduleJob (timeSchedule, Stream.calcSlidingWindowAggregate.bind(Stream));
+    return Stream;
 }; // createStreamAggregator()
 
 /**
@@ -308,6 +322,7 @@ function SlidingWindow (hashKey, groupByProps, addProps, length, callback) {
     }
     // make a copy of the groupByObj to use as a template for calculating data leaving the stream
     this.aggMinusObjTemplate = JSON.parse(JSON.stringify(this.aggObj));
+    return this;
 } // SlidingWindow
 
 // Beware of nesting...

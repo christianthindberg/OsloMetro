@@ -193,13 +193,16 @@ APC.createStream = function (schedule, isSlidingWindow, fnPeriodComplete, fnData
     assert (typeof fnPeriodComplete === "function");
     assert (typeof fnDataAdded === "function" || fnDataAdded === null);
 
+    let Stream = null;
+
 
     if (isSlidingWindow) {
-        opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, schedule, fnPeriodComplete);
+        Stream = opstore.createStreamSlidingWindow ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], 20*60*1000, schedule, fnPeriodComplete);
     }
     else {
-        opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], schedule, fnPeriodComplete, fnDataAdded);
+        Stream = opstore.createStreamFixedInterval ("APC", ["Line", "Station", "Module"], ["Alight", "Board"], schedule, fnPeriodComplete, fnDataAdded);
     }
+    return Stream;
 }; // createStream()
 
 APC.parsePassengerData = function (room, channel, msgObject) {

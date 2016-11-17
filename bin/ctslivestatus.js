@@ -122,6 +122,7 @@ CTSLiveStatus.getAllTails = function (maxBerths) {
     trainsToSend.sort(function (a, b) {
         return Date.parse(a[0].values.time_stamp) - Date.parse(b[0].values.time_stamp);
     });
+    return trainsToSend;
 }; // getAllTails()
 
 CTSLiveStatus.getGhosts = function () {
@@ -131,6 +132,8 @@ CTSLiveStatus.getGhosts = function () {
 const trainsInTraffic = setInterval(function () {
     io.to("realtime").emit("trainsintraffic", countTrainsInTraffic());
 }, 1000*20);
+
+let lastCountTrainsInTraffic = 0;
 
 function countTrainsInTraffic() {
     let count = 0; let timeTrain = 0, timeDiff = 0;
@@ -149,8 +152,13 @@ function countTrainsInTraffic() {
         }
         count += 1;
     }
+    lastCountTrainsInTraffic = count;
     return count;
 } // countTrainsInTraffic()
+
+CTSLiveStatus.getLastCountTrainsInTraffic = function () {
+    return lastCountTrainsInTraffic;
+}; // getLastCountTrainsInTraffic()
 
 // trains change their number. Since CTS do not give us these changes we will just assume that
 // trains that have not had any movement for some time are no longer valid and we alert the clients
