@@ -206,7 +206,7 @@ function getTrains (cmdArray, socket) {
 
     opstore.getTrainNumbersLogical(function (err, trainNumbers) { // get all logical train keys
         if (err) {
-            socket.emit('chat message', "Unable to retrive train numbers. Error: " + err);
+            socket.emit("chat message", "Unable to retrive train numbers. Error: " + err);
             log.warn("getTrains. smembers error: " + err);
         }
         else {
@@ -252,7 +252,7 @@ function setMaxCTSEvents (cmdArray, socket) {
         return;
     }
     newMax = opstore.setMaxCTSEvents(newMax);
-    socket.emit('chat message', "OsloMetro - max number of records to track in Redis changed. Old max " + currentMax +
+    socket.emit("chat message", "OsloMetro - max number of records to track in Redis changed. Old max " + currentMax +
         " New max: " + newMax);
 } // setMaxCTSEvents ()
 

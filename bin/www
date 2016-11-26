@@ -91,13 +91,13 @@ io.on('connection', function (socket) {
         socket.emit("pax", apcrealtime.getPassengerTable());
     }
     if (apcrealtime.hasSumPerLine()) {
-        socket.emit("LineAggregate", apcrealtime.getSumPerLineTable());
+        //socket.emit("LineAggregate", apcrealtime.getSumPerLineTable());
     }
     if (apcrealtime.hasSumPerStation()) {
-        socket.emit("StationAggregate", apcrealtime.getSumPerStationTable());
+        //socket.emit("StationAggregate", apcrealtime.getSumPerStationTable());
     }
     if (apcrealtime.hasSumPerOwnModule()) {
-        socket.emit("OwnModuleAggregate", apcrealtime.getSumPerOwnModuleTable());
+        //socket.emit("OwnModuleAggregate", apcrealtime.getSumPerOwnModuleTable());
     }
     let t1 = apcrealtime.getLastPaxUpdateTimeUnix();
     let t2 = ctslivestatus.getLastCountTrainsInTraffic();
@@ -280,7 +280,7 @@ function saveAPCEvent (msgObject) {
 
 function sendAPCSlidingWindow (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
-    log.info("sendAPCSlidingWindows. " + JSON.stringify(aggregateObject));
+    //log.info("sendAPCSlidingWindows. " + JSON.stringify(aggregateObject));
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) { // todo: move isEmpty() to opstore...
         io.to(realtime).emit("LineAggregateSlidingWindow", aggregateObject["Line"]);
     }
@@ -295,7 +295,7 @@ function sendAPCSlidingWindow (err, aggregateObject) {
 function sendAPCFixedInterval1Hour (err, aggregateObject) {
     assert(typeof aggregateObject === "object");
 
-    log.info ("sendAPCFixedInterval. " + JSON.stringify (aggregateObject));
+    log.info ("sendAPCFixedInterval1Hour. " + JSON.stringify (aggregateObject));
     if (aggregateObject.hasOwnProperty("Line") && !helpers.isEmpty(aggregateObject.Line)) {
         io.to(realtime).emit("LineAggregateFixedInterval1Hour", aggregateObject["Line"]);
     }
