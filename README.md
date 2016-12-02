@@ -67,17 +67,17 @@ Web-server nodejs server running on AWS ElasticBeanstalk. Dependent on Redis as 
 
 
 Server Modules
-    app
-    www
-    ctsparser
-    ctslivestatus
-    ctshistory
-    apcrealtime
-    infrastructure
-    commands
-    opstore
-    helpers
-    logger
+    app             - web-routes setup
+    www             - main program, handle incoming data and client communications
+    ctsparser       - parse incoming CTS (train movement) data
+    ctslivestatus   - keep track of the most recent train movements
+    ctshistory      - enable play-back of historic train movemements
+    apcrealtime     - parse incoming APC (automatic passenger counting) data
+    infrastructure  - provide information on tracks, berths, track switches, stations
+    commands        - command line interface
+    opstore         - operational data store, interface to Redis
+    helpers         - misc. helper functions
+    logger          - logger configuration and function
 
 Client Modules
 
@@ -209,6 +209,7 @@ In module CTSHISTORY
     "realtime"
     "aggregatehistory"
 
-
+------
+    What to document next:
     Look at trains, trainsintraffic and OwnModuleAggregateFixedIntervalOperatingDay
 

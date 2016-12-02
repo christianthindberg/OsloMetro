@@ -109,7 +109,8 @@ body
 
 
             // D3 scales, i.e variables that will point to conversion functions from "real world" coordinates (in our case gps) to screen pixels
-            var x = null, y = null;
+            // The higher the latitude, the closer to the North Pole...
+            var LongitudeToScreenX = null, LatitudeToScreenY = null;
 
             // D3 variables that will point to functions for drawing the axis
             var xAxis = null, yAxis = null;
@@ -170,31 +171,45 @@ body
                     return; // have not received Berths or Stations yet
 
                 // Set up the scales
-                x = d3.scale.linear()
+                /*
+                LongitudeToScreenX = d3.scale.linear()
                     .domain([minLng, maxLng])
                     .range([0, wCanvas]);
 
-                y = d3.scale.linear()
+                LatitudeToScreenY = d3.scale.linear()
                     .domain([minLat, maxLat])
                     .range([hCanvas, 0]);
+                */
 
+                // The greater the Latitude, the closer to the north pole, i.e. latitude is the LatitudeToScreenY-axis
+                // The greter the Longitude, the further east
+                LongitudeToScreenX = d3.scale.linear()
+                        .domain([minLng, maxLng])
+                        .range([0, wCanvas]);
+
+                LatitudeToScreenY = d3.scale.linear()
+                        .domain([minLat, maxLat])
+                        .range([hCanvas, 0]); // reverse since LatitudeToScreenY=0 is at the top of the screen
+
+
+                /*
                 // Set up the axis
                 xAxis = d3.svg.axis()
-                    .scale(x)
+                    .scale(LongitudeToScreenX)
                     .orient("bottom")
                     .tickSize(-hCanvas);
 
                 yAxis = d3.svg.axis()
-                        .scale(y)
+                        .scale(LatitudeToScreenY)
                         .orient("left")
                         .ticks(5)
                         .tickSize(-wCanvas);
-
+                */
                 // Set up what will happen when zooming
 
                 zoom = d3.behavior.zoom()
-                        .x(x) // ajdusts the domain upon zooming
-                        .y(y)
+                        .x(LongitudeToScreenX) // ajdusts the domain upon zooming
+                        .y(LatitudeToScreenY)
                         //.scaleExtent([1, 10])
                         .on("zoom", zoomed)
                         .on("zoomstart", zoomstart);
@@ -299,6 +314,7 @@ body
                 centerLng = minLng+(maxLng-minLng)/2;
                 centerLat = minLat+(maxLat-minLat)/2;
                 setScales();
+                //drawTest ();
                 drawBerths(data.berths);
                 drawEndBerths(data.endberths);
                 drawTrackSwitches(data.trackswitches);
@@ -323,23 +339,68 @@ body
 
             }; // drawInfrastructure ()
 
+            /**
+             * Put up a circle in each corner with min/max values
+             * Useful for testing that the scales are right
+             */
+            /*
+            var drawTest = function () {
+                var data = [
+                    {"x" : minLng, "y": minLat, "txt": "minmin"},
+                    {"x" : minLng, "y": maxLat, "txt": "minmax"},
+                    {"x" : maxLng, "y": minLat, "txt": "maxmin"},
+                    {"x" : maxLng, "y": maxLat, "txt": "maxmax"}
+                ];
+
+                var testsG = vis.selectAll("g.test")
+                    .data(data, function (d) { return d.txt; });
+
+                var newTestsG = testsG.enter().append("svg:g")
+                        .attr("class", "test")
+                        .style("visibility", "visible");
+
+                newTestsG.append("svg:circle")
+                        .attr("class", "test")
+                        .attr("cx", 0)
+                        .attr("cy", 0)
+                        .attr("r", "80")
+                        .style("stroke", 'black')
+                        .style("fill", "grey") //'#ffffff')
+                        .style("opacity", 0.5);
+
+                newTestsG.append("svg:text")
+                        .attr("class", "test")
+                        .attr("text-anchor", "middle")
+                        .attr("x", 0) //function(d) { return 10 + LongitudeToScreenX(d.lng); })
+                        .attr("y", 0) //function(d) { return LatitudeToScreenY(d.lat); })
+                        .attr("font-size", stationsFontSize)
+                        .style("fill", "black")
+                        .style("font-weight", "bold")
+                        .text(function (d) { return d.x + "/" + d.y + "/" + d.txt; });
+
+                testsG.attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.x) + "," + LatitudeToScreenY(d.y) + ")"; });
+            }; // drawTest()
+            */
+
+
             var drawBerths = function (data) {
                 var berths = vis.selectAll("circle.berth")
                     .data(data, function (d) { return getIDFromName(d.itemCode); })
                     .enter().append("svg:circle")
                         .attr("class", "berth")
                         .style("visibility", function (d) { return d3.select("#berthchbox").property('checked') ? "visible" : "hidden"; })
-                        .attr("id", function (d) { return "berth_id"+getIDFromName(d.itemCode);})
+                        .attr("id", function (d) { return "berth_id" + getIDFromName(d.itemCode);})
                         //.attr("stroke-linecap", 'round')
                         .attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); }) // todo check if lat/lng is switched...  Track is -1 for even, 1 for Odd
-                        .attr("cy", 0) //function(d) { return y(d.lat); })
+                        .attr("cy", 0) //function(d) { return LatitudeToScreenY(d.lat); })
                         .attr("r", "4")
                         .attr("title", function(d) { return d.itemName + " " + d.itemCode; })
                         .style("stroke", "black")
                         .style("stroke-width", 1)
                         .style("fill", function (d) { return d.trackDirectionCode < 0 ? "steelblue":"burlywood"; });
 
-                berths.attr("transform", function (d) { return "translate(" +  x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+                //berths.attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; });
+                berths.attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; });
                 berths.on("mouseenter", handleMouse);
                 berths.on("mouseleave", handleMouse);
             }; // drawBerths()
@@ -380,10 +441,8 @@ body
                             return "berth_id" + getIDFromName(d.itemCode);
                         })
                         //.attr("stroke-linecap", 'round')
-                        .attr("x", function (d) {
-                            return trackOffset * d.trackDirectionCode * zoom.scale();
-                        }) // todo check if lat/lng is switched...  Track is -1 for even, 1 for Odd
-                        .attr("y", 0) //function(d) { return y(d.lat); })
+                        .attr("x", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); }) // todo check if lat/lng is switched...  Track is -1 for even, 1 for Odd
+                        .attr("y", 0) //function(d) { return LatitudeToScreenY(d.lat); })
                         .attr("width", "8")
                         .attr("height", "8")
                         .attr("title", function (d) {
@@ -391,11 +450,9 @@ body
                         })
                         .style("stroke", "black")
                         .style("stroke-width", 1)
-                        .style("fill", function (d) {
-                            return d.trackDirectionCode < 0 ? "steelblue" : "burlywood";
-                        });
+                        .style("fill", function (d) { return d.trackDirectionCode < 0 ? "steelblue" : "burlywood"; });
 
-                berths.attr("transform", function (d) { return "translate(" + x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+                berths.attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; });
                 berths.on("mouseenter", handleMouse);
                 berths.on("mouseleave", handleMouse);
             }; // drawEndBerths()
@@ -419,8 +476,8 @@ body
 
             // Function to draw tracks
             var lineFunction = d3.svg.line()
-                    .x(function (d) { return trackOffset * d.trackDirectionCode * zoom.scale() + x(d.Startlng); }) //*zoom.scale()
-                    .y(function (d) {  return y(d.Startlat); })
+                    .x(function (d) { return trackOffset * d.trackDirectionCode * zoom.scale() + LongitudeToScreenX(d.Startlng); }) //*zoom.scale()
+                    .y(function (d) {  return LatitudeToScreenY(d.Startlat); })
                     .interpolate("linear");
 
             function drawTrainAggregateMove (data) {
@@ -441,8 +498,8 @@ body
 
             // Function to draw the aggregate movement
             var aggFunction = d3.svg.line()
-                    .x(function (d) { return (d.Count + x(d.values.to_infra_berth.StartLatitude)); }) // + trackOffset) * d.trackDirectionCode * zoom.scale()
-                    .y(function (d) { return y(d.values.to_infra_berth.StartLongitude); })
+                    .x(function (d) { return (d.Count + LongitudeToScreenX(d.values.to_infra_berth.StartLongitude)); }) // + trackOffset) * d.trackDirectionCode * zoom.scale()
+                    .y(function (d) { return LatitudeToScreenY(d.values.to_infra_berth.StartLatitude); })
                     .interpolate("linear"); // cardinal-closed, linear, ...
 
             var areaFromAggregate = function (data) {
@@ -468,7 +525,7 @@ body
                         .style("visibility", function (d) { return d3.select("#trackswitchchbox").property('checked') ? "visible" : "hidden"; })
                         .attr("id", function (d) { return "trackswitch_id"+getIDFromName(d.itemCode);})
                         //.attr("stroke-linecap", 'round')
-                        //.attr("transform", function (d) { return "translate(" +  x(d.Startlng) + "," + y(d.Startlat) + ")"; })
+                        //.attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; })
                         .attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); })  //todo check if lat/lng is switched...  trackOffset*d.Track +
                         .attr("cy", 0)
                         .attr("r", "3")
@@ -476,7 +533,7 @@ body
                         .style("stroke", 'black')
                         .style("fill", function (d) { return d.trackDirectionCode < 0 ? "orange":"sandybrown"; });
 
-                trackswitches.attr("transform", function (d) { return "translate(" +  x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+                trackswitches.attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; });
 
                 trackswitches.on("mouseenter", handleMouse);
                 trackswitches.on("mouseleave", handleMouse);
@@ -490,14 +547,14 @@ body
                         .attr("class", function (d) { return "station" + " " + getIDFromName(d.trackName); }) // also make class per trackname, makes it possible to manipulate each røabane, kolsåsbane etc later
                         .attr("id", function(d) { return 'station_id'+ getIDFromName(d.stationName) + "_" + d.trackDirectionCode; })
                         .style("visibility", function () { return d3.select("#stationschbox").property('checked') ? "visible" : "hidden"; })
-                         //.attr("transform", function (d) { return "translate(" + x(d.platformlng) + "," + y(d.platformlat) + ")"; })
+                         //.attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.platformlng) + "," + LatitudeToScreenY(d.platformlat) + ")"; })
                          .on("mouseover", function (d) { this.parentNode.appendChild(this); }); // trick to make station appear on top of all other elements on mouseover
 
                 newStations.append("svg:circle")
                         .attr("class", "station")
                         .attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); })
                         .attr("cy", 0)
-                        .attr("r", "8")
+                        .attr("r", "5")
                         .attr("title", function(d) { return d.stationName + " " + d.trackDirectionName; })
                         .style("stroke", 'black')
                         .style("fill", "grey") //'#ffffff')
@@ -506,26 +563,26 @@ body
                 newStations.append("svg:text")
                         .attr("class", "station")
                         .attr("text-anchor", "start")
-                        .attr("x", 10) //function(d) { return 10 + x(d.lng); })
-                        .attr("y", 0) //function(d) { return y(d.lat); })
+                        .attr("x", 10) //function(d) { return 10 + LongitudeToScreenX(d.lng); })
+                        .attr("y", 0) //function(d) { return LatitudeToScreenY(d.lat); })
                         .attr("font-size", stationsFontSize)
                         .style("fill", "black")
                         .style("font-weight", "bold")
                         .text(function (d) { return d.trackDirectionCode == 1 ? d.stationName : ""; });
 
-                stations.attr("transform", function (d) { return "translate(" +  x(d.platformlng) + "," + y(d.platformlat) + ")"; });
+                stations.attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.platformlng) + "," + LatitudeToScreenY(d.platformlat) + ")"; });
                 //stations.on("mouseenter", showToolTip);
                 //stations.on("mouseleave", hideToolTip);
                 /*
                 // Adding axis
                 vis.append("g")
-                    .attr("class", "x axis")
+                    .attr("class", "LongitudeToScreenX axis")
                     .attr("transform", "translate(0," + hCanvas + ")")
                     .style("stroke", "grey")
                     .call(xAxis);
 
                 vis.append("g")
-                    .attr("class", "y axis")
+                    .attr("class", "LatitudeToScreenY axis")
                     .style("stroke", "grey")
                     .call(yAxis);
                 */
@@ -566,55 +623,14 @@ body
 
             // parameter: array of cts-messages
             var drawTrainTail = function (data) {
-
-                /* NOT performant, will be deleted
-                var berthsandswitches = vis.selectAll(".berth, .trackswitch").filter(function (d,i) { return propertyInArray(getIDFromName(d.itemCode), ["values", "to_infra_berth", "Name"], data) > -1; }).each(updateDatum); // rewrite delalyBerthColor?
-
-                function propertyInArray (valueToFind, propertyList, objArray) {
-                    var i=0,j=0;
-                    var tmp=0;
-
-                    if (!Array.isArray(propertyList) || !Array.isArray(objArray) || !valueToFind)
-                        return -1;
-
-                    for (i=0; i<objArray.length; i++) {
-                        tmp = objArray[i][propertyList[0]];
-                        //console.log("tmp outer: " + tmp);
-                        if (!tmp)
-                            break;
-                        for (j = 1; j < propertyList.length; j++) {
-                            tmp = tmp[propertyList[j]];
-                            //console.log("tmp inner: " + tmp);
-                            if (!tmp)
-                                break;
-                        }
-                        if (valueToFind === tmp) {
-                            //console.log("iii: " + i);
-                            return i;
-                        }
-                    }
-                    //console.log("minus one!" + i);
-                    return -1;
-                } // propertyInArray()
-
-                function updateDatum (d,i) {
-                    var element = d3.select(this);
-                    console.log("updateDatum d: " + d + " i: " +i + "this: " + this);
-                    var dd = element.datum();
-                    dd.cts = d;
-                    element.datum(dd);
-                }
-                */
-
-                //console.log("drawTrainTail: " + JSON.stringify(data));
                 if (!data || !(Object.prototype.toString.call(data) === '[object Array]')) {
                     console.log ("drawTrainTail called with illegal data: " + JSON.stringify(data));
                     return;
                 }
 
-                //console.log("drawTrainTail, data.length: " + data.length + " Tog: " + data[0].values.address);
                 for (var index = 0; index < data.length; index++) {
-                    if (!data[index].values.hasOwnProperty("to_infra_berth") || !data[index].values.to_infra_berth.hasOwnProperty("Name")) {
+
+                    if (data[index].values.event !== "event") { // only normal (i.e "event" events are events where the train is moving somewhere - to_infra_berth exist. We ignore cts_special, cts_trnochg...
                         continue;
                     }
                     let currentBerth = vis.select("#berth_id" + getIDFromName(data[index].values.to_infra_berth.Name)); //.split(" ")[0])); // throw away anything after " "
@@ -808,8 +824,6 @@ body
 
                     // draw tail on followed Train
                     socket.emit("tailrequest", {"trainNo": keyFollowTrain, "noOfBerths": 300}, function(data) { // array of cts-messages for this trainNo
-                        var b = data.map(function (obj) { return obj.values.to_infra_berth.Name;});
-                        //console.log("toggle: " + JSON.stringify((b)));
                         drawTrainTail(data);
                     });
                 }
@@ -858,7 +872,7 @@ body
                         .on("mouseleave", handleMouse)
                         .attr("width", trainWidth)
                         .attr("height", trainHeight)
-                        .attr("rx", 4 + "px")         // set the x corner curve radius
+                        .attr("rx", 4 + "px")         // set the LongitudeToScreenX corner curve radius
                         .attr("ry", 4 + "px")
                         .style("stroke-width", 4)
                         .style("stroke-dasharray", function (d) { return d.values.isYellow ? ("4,4") : null; }) // "null" removes the property
@@ -883,8 +897,8 @@ body
                 train
                     .transition()
                     .duration(3000)
-                    //.attr("transform", "translate(" + x(centerLat) + "," + y(centerLng) + ")");
-                    .attr("transform", function (d) { return "translate(" +  x(d.values.to_infra_berth.StartLatitude) + "," + y(d.values.to_infra_berth.StartLongitude) + ")"; });
+                    //.attr("transform", "translate(" + LongitudeToScreenX(centerLat) + "," + LatitudeToScreenY(centerLng) + ")");
+                    .attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.values.to_infra_berth.StartLongitude) + "," + LatitudeToScreenY(d.values.to_infra_berth.StartLatitude) + ")"; });
                 train.select("rect")
                     .attr("title", function(d) { return d.values.to_infra_berth.Name + "\nTog: " + d.values.address + "\nAvvik: " + d.values.delay; })
                     .style("stroke-dasharray", function (d) { return d.values.isYellow ? ("4,4") : null; }) // We set this property here is becaues of the Special codes (EXIT, NOTD, INTERP etc. As soon as the train start moving we remove the dasharray stroke
@@ -1036,23 +1050,23 @@ body
                 //console.log ("translate: " + zoom.translate() + "scale: " + zoom.scale());
 
                 // recall that on startup of the client we call setScales, that enable the "magic"
-                //... x = d3.scale.linear().domain([minLng, maxLng]).range([0, wCanvas]);
-                // ...zoom = d3.behavior.zoom().x(x).y(y)
+                //... LongitudeToScreenX = d3.scale.linear().domain([minLng, maxLng]).range([0, wCanvas]);
+                // ...zoom = d3.behavior.zoom().LongitudeToScreenX(LongitudeToScreenX).LatitudeToScreenY(LatitudeToScreenY)
                 //        .on("zoom", zoomed);
 
 
                 // the berths are offset to split the tracks so we must also adjust cx with the new scale
                 var berthsandswitches = vis.selectAll("circle.berth, circle.trackswitch, rect.endberth")
-                    .attr("transform", function (d) { return "translate(" + x(d.Startlng) + "," + y(d.Startlat) + ")"; }) // prøv scale zoom.scale...?
+                    .attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; }) // prøv scale zoom.scale...?
                     .attr("cx", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
 
                 var stations = vis.selectAll("g.station");
                 stations.select("circle").attr("cx", function(d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
                 stations.select("text").attr("x", 10);
-                stations.attr("transform", function (d) { return "translate(" + x(d.platformlng) + "," + y(d.platformlat) + ")"; });
+                stations.attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.platformlng) + "," + LatitudeToScreenY(d.platformlat) + ")"; });
 
 
-                // "g" objects do not have x,y cx... attributes so we can not do the same as with berths and swithces: attr("cx", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
+                // "g" objects do not have LongitudeToScreenX,LatitudeToScreenY cx... attributes so we can not do the same as with berths and swithces: attr("cx", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
 
                 var tracks = vis.selectAll("path.trackline")
                     .attr("stroke-width", 6/zoom.scale())
@@ -1061,10 +1075,10 @@ body
                 // Rescale trains. Trains consist of the "g" element, a "rect" and a "text
                 // First we transform the "g" element...
                 var trains = vis.selectAll("g.train")
-                    .attr("transform", function (d) { return "translate(" + x(d.values.to_infra_berth.StartLatitude) + "," +
-                                y(d.values.to_infra_berth.StartLongitude) + ")"; //scale(" + zoom.scale() + ")";
+                    .attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.values.to_infra_berth.StartLongitude) + "," +
+                                LatitudeToScreenY(d.values.to_infra_berth.StartLatitude) + ")"; //scale(" + zoom.scale() + ")";
                         });
-                // .. then we adjust the x attribute of the rect
+                // .. then we adjust the LongitudeToScreenX attribute of the rect
                 trains.selectAll("rect.train, .traininfo")
                         .attr("x", function (d) { return calcTrainRectX(d);});
                 // ... and the text
@@ -1081,16 +1095,16 @@ body
                 wCanvas = Math.max(w - margin.left - margin.right, 0);
                 hCanvas = Math.max(h - margin.top - margin.bottom,0);
                 // Adjust the scales
-                x.range([0, wCanvas]);
-                y.range([hCanvas, 0]);
+                LongitudeToScreenX.range([0, wCanvas]);
+                LatitudeToScreenY.range([hCanvas, 0]);
                 // Make zoom aware that range is changed
-                zoom.x(x); zoom.y(y);
+                zoom.x(LongitudeToScreenX); zoom.y(LatitudeToScreenY);
 
                 var bertshandswitches = vis.selectAll("circle.trackswitch, circle.berth, rect.endberth")
-                        .attr("transform", function (d) { return "translate(" + x(d.Startlng) + "," + y(d.Startlat) + ")"; });
+                        .attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; });
 
                 var stations = vis.selectAll("g.station")
-                   .attr("transform", function (d) { return "translate(" + x(d.platformlng) + "," + y(d.platformlat) + ")"; });
+                   .attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.platformlng) + "," + LatitudeToScreenY(d.platformlat) + ")"; });
 
                 // this seems to to the trick, but not quite sure why.
                 var tracks = vis.selectAll("path.trackline")
@@ -1099,8 +1113,8 @@ body
                 //.attr("transform", "translate(" + zoom.translate() + ")scale(" + zoom.scale() + ")");
 
                 var train = vis.selectAll("g.train")
-                        .attr("transform", function (d) { return "translate(" +  x(d.values.to_infra_berth.StartLatitude) + "," +
-                                y(d.values.to_infra_berth.StartLongitude) + ")"; });
+                        .attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.values.to_infra_berth.StartLatitude) + "," +
+                                LatitudeToScreenY(d.values.to_infra_berth.StartLongitude) + ")"; });
                 train.selectAll("rect.train, .traininfo")
                         .attr("x", function (d) { return calcTrainRectX(d);});
                 train.select("text.train")
@@ -1211,8 +1225,8 @@ body
                  .classed("module", true)
                  .style("stroke", "black")
                  .style("stroke-width", 1)
-                 .attr("x", 0)  // trainRectX (parent)...
-                 .attr("y", 0);
+                 .attr("LongitudeToScreenX", 0)  // trainRectX (parent)...
+                 .attr("LatitudeToScreenY", 0);
                  }
                  moduleInfo.text (string);
                  }
@@ -1280,6 +1294,37 @@ body
             }; // DrawOwnModulePassengers()
 
 
+            var UpdateOwnModulePaxOnboard = function (data) {
+                let markerOwnModule = d3.select("#ownmodules");
+                let CE = markerOwnModule.selectAll("g");
+                let trainStatus = CE.selectAll("rect.trainstatus");
+                var margin = {top: 2, right: 5, bottom: 0, left: 5};
+                var groupWidth = parseInt(d3.select("#ownmodulediv").style("width")) - margin.left - margin.right;
+
+                console.log ("UpdateOwnModulePaxOnboard data: " + JSON.stringify(data, undefined, 2));
+
+                /*
+                trainStatus
+                        .attr("width", function (d) { console.log (JSON.stringify(d)); return data.hasOwnProperty(d.key) ? (((data[d.key].Alight - data[d.key].Board)/400) * groupWidth) + "px" : 0; }); // should divide by 1200, max pax onboard
+                */
+
+                d3.select("#ownmodules").selectAll("rect.trainstatus")
+                        .attr("width", function (d) { console.log (data.hasOwnProperty(d.key) ? d.key + " Width: " + Math.min(1, Math.abs( (data[d.key].Alight - data[d.key].Board) / 400)) * groupWidth : "no property: " + d.key);
+                                                                                 return data.hasOwnProperty(d.key) ? Math.min(1, Math.abs( (data[d.key].Alight - data[d.key].Board) / 400)) * groupWidth + "px" : 0; }); // should divide by 1200, max pax onboard
+
+                /*
+                 Module = Object
+                     3009 = Object
+                         Alight = 80
+                         Board = 54
+                         Count = 12
+                     3013 = Object
+                         Alight = 63
+                         Board = 60
+                         Count = 25
+                */
+
+            }; // UpdateOwnModulePaxOnboard()
 
             // Draw panel of physical train 3-car set. Adds an entry for each 3-car set that we have received PIDAS data from
             // almost identical to corresponding function in index.jade, so we keep the name the same...
@@ -1287,24 +1332,27 @@ body
             // Called at
             //    - initinfrastructure/connect : data === latest passengerObject all APC trains
             //    - trains: latest passengerObject one train
-            //    - OwnModuleAggregateFixedIntervalOperatingDay  -- aggregate moduleID, alight, board, count
             var DrawOwnModuleChart = function (data) {
                 /*
                 data is an array of
                 key: OwnModuleID,
-                value: Object  {
-                    Alight
-                    Board
-                    Count
-                    -------
-                    LineNumber: x
-                    TogNumber: x
-                    ModuleConfig: x
-                    CoupledModuleNo: x
-                    CurrentStationID: x
-                    DateAndTimeUnix: x // the time the last alight/board event occured
-                    DateAndTimeUnixDataReceived: x  // the time we actually receive the data
-                };
+                value:
+                    CoupledModuleNo = 0
+                    CurrentStationID = 6
+                    DataInvalid = 0
+                    DateAndTimeUnix = 1480284635000
+                    DateAndTimeUnixDataReceived = 1480285370982
+                    EndStationID = 6
+                    LeadingOrGuided = 1
+                    LineNumber = 4
+                    ModuleConfig = 1
+                    OwnModuleNo = 3009
+                    RouteCodeID = 23
+                    SensorDiagnoseError = 0
+                    StartStationID = 85
+                    TogNumber = 409
+                    TotalAlighting = 5
+                    TotalBoarding = 0
                 */
                 var margin = {top: 2, right: 5, bottom: 0, left: 5};
                 var imageHeight = 20;
@@ -1314,17 +1362,8 @@ body
                 // set with equal to the widht of the options-box
                 var groupWidth = parseInt(d3.select("#ownmodulediv").style("width")) - margin.left - margin.right;
 
-                /*
-                $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) {
-                            return d.TotalAlighting;
-                        }).toString());
-                $("#nowPax").text("Passasjerer ombord: " + d3.sum(data, function (d) {
-                            return d.TotalBoarding - d.TotalAlighting;
-                        }).toString());
-                $("#nowAPC").text("Tog i trafikk: " + data.filter(function (obj) {
-                            return obj.TotalBoarding > 0;
-                        }).length.toString()); // Consider train to be in traffic if passengers have boarded
-                */
+                console.log("DrawOwnModuleChart data: " + JSON.stringify(data, undefined, 2));
+
 
                 data = d3.entries(data); // transform trainObject to key,value array
                 var markerOwnModule = d3.select("#ownmodules");
@@ -1334,7 +1373,7 @@ body
                 // If train already exist, update existingData with the new data
                 for (var i=0; i<data.length; i++) {
                     // check if train exist already
-                    var pos = existingData.map(function(obj) { return obj.key; }).indexOf('data[i].key');
+                    var pos = existingData.map(function(obj) { return obj.key; }).indexOf(data[i].key);
 
                     if (pos < 0) {
                         existingData.unshift(data[i]); // add new data to the beginning of existingData
@@ -1409,7 +1448,7 @@ body
 
                 // Update AND Enter section
                 g.select("rect.trainstatus")   // transfer updated data to the rects
-                        .attr("width", function (d) { return (Math.abs(100/200) * groupWidth) + "px";})
+                        //.attr("width", function (d) { return (Math.abs(100/200) * groupWidth) + "px";})
                         .style("fill", "steelblue") // Siemens sometimes report less than zero people onboard
                         .filter(function (d) { return d.key > 30000 })
                             .style("fill", "red"); // Siemens sometimes report less than zero people onboard
@@ -1679,7 +1718,7 @@ body
                         .attr("width", 20 + "px")
                         .attr("xlink:href", "ghost.png");
 
-                g.attr("transform", function (d) { return "translate(" + x(d.StartLatitude) + "," + y(d.StartLongitude) + ")"; });
+                g.attr("transform", function (d) { return "translate(" + LongitudeToScreenX(d.StartLongitude) + "," + LatitudeToScreenY(d.StartLatitude) + ")"; });
                 g.on("mouseenter", handleMouse);
                 g.on("mouseleave", handleMouse);
 
@@ -1725,23 +1764,17 @@ body
                     selection = vis.selectAll("circle.berth, circle.trackswitch")
                             .transition()
                             .duration(1000)
-                            .attr("cx", function (d) {
-                                return trackOffset * d.trackDirectionCode * zoom.scale();
-                            });         // todo check if lat/lng is switched...  Track is -1 for even, 1 for Odd
+                            .attr("cx", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
                     selection = vis.selectAll("rect.endberth")
                             .transition()
                             .duration(1000)
-                            .attr("x", function (d) {
-                                return trackOffset * d.trackDirectionCode * zoom.scale();
-                            });
+                            .attr("x", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
 
                     selection = vis.selectAll("g.station");
                     selection.select("circle")
                             .transition()
                             .duration(1000)
-                            .attr("cx", function (d) {
-                                return trackOffset * d.trackDirectionCode * zoom.scale();
-                            });
+                            .attr("cx", function (d) { return trackOffset * d.trackDirectionCode * zoom.scale(); });
                     selection.select("text")
                             .attr("x", 10);
 
@@ -1755,15 +1788,11 @@ body
                     selection = vis.selectAll("rect.train, .traininfo")
                             .transition()
                             .duration(1000)
-                            .attr("x", function (d) {
-                                return calcTrainRectX(d);
-                            });
+                            .attr("x", function (d) { return calcTrainRectX(d); });
                     selection = vis.selectAll("text.train")
                             .transition()
                             .duration(1000)
-                            .attr("x", function (d) {
-                                return calcTrainTextX(d);
-                            });
+                            .attr("x", function (d) { return calcTrainTextX(d); });
 
                     //drawBerths();
                 }
@@ -2081,7 +2110,7 @@ body
                 console.log("destination: " + showDestination);
             });
 
-            // The physical strain still exist:-) but the TrainNo the server has had no CTS signals from the logical train
+            // The physical train still exists:-) but the TrainNo the server has had no CTS signals from the logical train
             // for so long that the server has decided that the train has changed its logical number
             // since the cts do not inform us about this as it happens, our only soloution for the time beeing is to
             // remove the logical trains after a server-decided time limit...
@@ -2089,7 +2118,29 @@ body
                 removeTrain(msg);
             });
 
-            // Received information about physical trains
+            /* Received passenger info from one or more physical trains. The msg-object contains the last APC record received for each train:
+
+            msg = Object
+                3009 = Object
+                    CoupledModuleNo = 0
+                    CurrentStationID = 6
+                    DataInvalid = 0
+                    DateAndTimeUnix = 1480284635000
+                    DateAndTimeUnixDataReceived = 1480285370982
+                    EndStationID = 6
+                    LeadingOrGuided = 1
+                    LineNumber = 4
+                    ModuleConfig = 1
+                    OwnModuleNo = 3009
+                    RouteCodeID = 23
+                    SensorDiagnoseError = 0
+                    StartStationID = 85
+                    TogNumber = 409
+                    TotalAlighting = 5
+                    TotalBoarding = 0
+                3028
+                    ...
+            */
             socket.on ("trains", function (msg) {
                 DrawOwnModuleChart(msg) // todo: change the name of this function ...drawAPCinfo...
             });
@@ -2110,13 +2161,13 @@ body
 
             socket.on("LineAggregateSlidingWindow", function (msg) {
                 //console.log ("LineAggregateSlidingWindow");
-                //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
-                DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
+                //LongitudeToScreenX.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
+                //DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
             });
             socket.on("StationAggregateSlidingWindow", function (msg) {
                 //console.log("StationAggregateSlidingWindow");
-                DrawStationsBarChart(d3.entries(msg));
-                addHeatmapData(d3.entries(msg));
+                //DrawStationsBarChart(d3.entries(msg));
+                //addHeatmapData(d3.entries(msg));
             });
             socket.on("OwnModuleAggregateSlidingWindow", function (msg) {
                 //console.log("OwnModuleAggregateSlidingWindow");
@@ -2124,33 +2175,34 @@ body
             });
 
             socket.on("LineAggregateFixedInterval1Hour", function (msg) {
-                //x.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
-                console.log("LineAggregateFixedInterval1Hour " + new Date().toTimeString());
+                //LongitudeToScreenX.domain([1, 2, 3, 4, 5, 6]);  // The metro lines
+                //console.log("LineAggregateFixedInterval1Hour " + new Date().toTimeString());
                 //DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
             });
             socket.on("StationAggregateFixedInterval1Hour", function (msg) {
-                console.log("StationAggregateFixedInterval1Hour " + new Date().toTimeString());
+                //console.log("StationAggregateFixedInterval1Hour " + new Date().toTimeString());
                 //DrawStationsBarChart(d3.entries(msg));
                 //addHeatmapData(d3.entries(msg));
             });
             socket.on("OwnModuleAggregateFixedInterval1Hour", function (msg) {
-                console.log("OwnModuleAggregateFixedInterval1Hour " + new Date().toTimeString());
+                //console.log("OwnModuleAggregateFixedInterval1Hour " + new Date().toTimeString());
                 //DrawOwnModuleChart(d3.entries(msg));
             });
 
             socket.on("LineAggregateFixedIntervalOperatingDay", function (msg) {
-                console.log("LineAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
+                //console.log("LineAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
                 //DrawLinesBarChart(d3.entries(msg)); // d3.entries - convert from object to array
             });
             socket.on("StationAggregateFixedIntervalOperatingDay", function (msg) {
-                console.log("StationAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
+                //console.log("StationAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
                 //DrawStationsBarChart(d3.entries(msg));
                 //addHeatmapData(d3.entries(msg));
             });
             socket.on("OwnModuleAggregateFixedIntervalOperatingDay", function (msg) {
                 console.log("OwnModuleAggregateFixedIntervalOperatingDay " + new Date().toTimeString());
                 var data = d3.entries(msg);
-                DrawOwnModuleChart(data);
+                //DrawOwnModuleChart(data);
+                UpdateOwnModulePaxOnboard (msg);
                 $("#sumPax").text("Passasjerer i dag: " + d3.sum(data, function (d) { return d.value.Alight; }).toString());
                 $("#nowAPC").text("Togsett med passasjertelling: " + data.length);
             });
@@ -2180,7 +2232,7 @@ body
             });
 
             // Todos
-            // Select train + show x nearest trains at any time
+            // Select train + show LongitudeToScreenX nearest trains at any time
 
             // Count down at station
             // Add real-time speed and ghost-train

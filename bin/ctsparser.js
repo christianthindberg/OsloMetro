@@ -394,7 +394,7 @@ function IsYellowTrain (trainNo, destination) {
     assert(typeof trainNo === "string");
     assert(typeof destination === "string");
 
-    if (destination === "--00") {
+    if (destination === "--00") { // add test: && ! (number > 100 && number < 600)
         return true;
     }
 

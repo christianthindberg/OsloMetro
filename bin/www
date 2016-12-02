@@ -261,11 +261,12 @@ function handleAPCEvent (msgObject) {
         log.error("opstore.on-apc. Invalid msgObject");
         return;
     }
-    saveAPCEvent (msgObject);
 
     io.to(realtime).emit("trains", msgObject.trains);
     io.to(realtime).emit("pax", msgObject.passengers); // todo: replace "pax" with "apc" (automatic passenger counting)
     io.to(realtime).emit("LastPaxUpdateTime", msgObject.updateTime);
+
+    saveAPCEvent (msgObject); // todo: remove side effect? - save also updates aggregates
 } // handlePAXEvent ()
 
 function saveAPCEvent (msgObject) {

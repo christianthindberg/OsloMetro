@@ -753,7 +753,7 @@ body
 
         function transform(d) {
           //var dGeoFrom = new google.maps.LatLng(d.values.to_infra_berth.StartLongitude, d.values.to_infra_berth.StartLatitude);
-          var dGeoTo = new google.maps.LatLng(d.values.to_infra_berth.StartLongitude, d.values.to_infra_berth.StartLatitude);
+          var dGeoTo = new google.maps.LatLng(d.values.to_infra_berth.StartLatitude, d.values.to_infra_berth.StartLongitude);
           //var dScreenFrom = Projection.fromLatLngToDivPixel(dGeoFrom);
           var dScreenTo = Projection.fromLatLngToDivPixel(dGeoTo);
 
@@ -1957,7 +1957,7 @@ body
         setBlinkAlarm([newImages]);
 
         function transform(d) {
-          var LatLng = new google.maps.LatLng(d.StartLongitude, d.StartLatitude); // new google.maps.LatLng(d.StartLatitude, d.StartLongitude);
+          var LatLng = new google.maps.LatLng(d.StartLatitude, d.StartLongitude); // new google.maps.LatLng(d.StartLatitude, d.StartLongitude);
           var pixel = Projection.fromLatLngToDivPixel(LatLng);
           return d3.select(this)
                   .style("left", (pixel.x - padding) + "px") // pixel.x
