@@ -11,7 +11,7 @@ const http = require('http');
 const util = require('util');
 const assert = require("assert");
 const logger = require('./logger');
-const log = logger().getLogger('wwww');
+const log = logger().getLogger('www');
 const infrastructure = require("./infrastructure");
 const helpers = require("./helpers");
 const opstore = require("./opstore");  // opstore: short for Operational Store, in this case Redis
@@ -180,6 +180,7 @@ io.on('connection', function (socket) {
 // Subscribe to operational data store (i.e Redis) topics
 opstore.subscribe("CTS");
 opstore.subscribe("PAX");
+opstore.subscribe("RPI");
 opstore.subscribe("LineAggregate");
 opstore.subscribe("StationAggregate");
 opstore.subscribe("OwnModuleAggregate");
@@ -189,7 +190,15 @@ opstore.subscribe("Error");
 
 // Handle data from Redis
 opstore.on("message", function (channel, msg) {
-    let msgObject = JSON.parse(msg);
+    let msgObject = null;
+
+    try {
+        msgObject = JSON.parse(msg);
+    }
+    catch (err) {
+        log.error("opstore.on - message - JSON.parse. Not valid JSON-data in msg. Error message " + err.message);
+        return;
+    }
     //log.info("channel: " + channel);
     //log.info("msg: " + msg);
     //io.to(room).emit("cts_train_jump", msgObject);
@@ -202,6 +211,11 @@ opstore.on("message", function (channel, msg) {
     else if (channel === "PAX") {
         msgObject = apcrealtime.parsePassengerData(realtime, channel, msgObject);
         handleAPCEvent(msgObject);
+    }
+    else if (channel === "RPI") {
+        //msgObject = apcrealtime.parsePassengerData(realtime, channel, msgObject);
+        //handleAPCEvent(msgObject);
+        io.to(realtime).emit(channel, msgObject);
     }
     else if (channel === "LineAggregate") {
         msgObject = apcrealtime.parseSumPerLine(realtime, channel, msgObject);

@@ -2231,6 +2231,15 @@ body
                 drawTrainAggregateMove (data);
             });
 
+
+            //
+            // RPI
+            //
+
+            socket.on("RPI", function (msg) {
+                console.log("RPI: " + JSON.stringify(msg));
+            });
+
             // Todos
             // Select train + show LongitudeToScreenX nearest trains at any time
 

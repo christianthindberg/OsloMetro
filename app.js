@@ -10,6 +10,8 @@ var routes = require('./routes/index');
 var driver = require("./routes/driver");
 var users = require('./routes/users');
 var log = require("./routes/log");
+var rpi = require("./routes/rpi");
+
 var cmd = require("./routes/cmd");
 var data = require("./routes/data");
 var london = require("./routes/london");
@@ -36,6 +38,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 app.use("/log", log);
+app.use("/rpi", rpi);
 app.use("/cmd", cmd);
 app.use("/data", data);
 app.use("/driver", driver);

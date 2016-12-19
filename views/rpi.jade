@@ -1,0 +1,74 @@
+extends layout
+
+head
+
+body
+      block content
+        div.head
+          h1= title
+          p Welcome to #{title}
+        div#rpi
+            svg#svgrpi
+        script.
+
+          var socket = io();
+
+          var vis = d3.select("#svgrpi");
+          var width = vis.style("width");
+          var height = vis.style("height");
+
+          // todo: recompute on window resize
+          var centerX = parseInt(width)/2;
+          var centerY = parseInt(height)/2;
+
+          socket.on("RPI", function (msg) {
+            console.log("RPI: " + JSON.stringify(msg));
+            drawRPI(msg.Acc); // todo: rewrite so that msg is an array directly, i.e. remove "Acc"
+          });
+
+          var drawRPI = function (data) {
+            // Note: the variables RPI, newRPI_Elements and exitRPI_Elements are not required
+            // they are only there to enable us to debug their value
+
+            var RPI = vis.selectAll("ellipse.rpielem")
+                    .data(data, function (d) { return (d.TRAINID); });
+
+
+            // This is the UPDATE section
+            // perform modifications to already existing elements
+            // We have only one element, the one train with accelerometer data
+            // make the radius, color etc vary to reflect the accelerometerdata
+            RPI.transition() // This makes the changes in rx, ry and fill to occur smoothly over the the time specified in duration, rather than instantly
+                .duration(1*1000) // transition lasts 1 second
+                .attr("rx", function (d) { console.log ("rx: " + Math.abs(d.Acc_X) * 10000); return Math.abs(d.Acc_X) * 10000; })
+                .attr("ry", function (d) { console.log ("ry: " + Math.abs(d.Acc_Y) * 10000); return Math.abs(d.Acc_Y) * 10000; })
+                .style("stroke", function (d) { return d.Acc_X < 0 || d.Acc_Y < 0 || d.Acc_Z < 0 ? "red" : "blue"; })
+                .style("fill", function (d) { return d.Acc_Z < 0 ? "steelblue" : "burlywood"; });
+
+            var newRPI_Elements = RPI.enter().append("svg:ellipse")
+                      // This is ENTER section
+                      // add new elements
+                      .attr("class", "rpielem")
+                      .style("stroke", "black")
+                      .style("stroke-width", 1)
+                      .attr("cx", centerX)
+                      .attr("cy", centerY)
+                      .attr("rx", function (d) { console.log ("rx: " + Math.abs(d.Acc_X) * 10000); return Math.abs(d.Acc_X) * 10000; })
+                      .attr("ry", function (d) { console.log ("ry: " + Math.abs(d.Acc_Y) * 10000); return Math.abs(d.Acc_Y) * 10000; })
+                      .style("fill", function (d) { return d.Acc_Z < 0 ? "steelblue" : "burlywood"; });
+
+            var exitRPI_Elements = RPI.exit()
+                    // This is the EXIT section
+                    // maybe perform some animations on elements before they are removed?
+                    // for now, we never enter here since we always receive data for the same train...
+                    .remove();
+
+            //berths.attr("transform", function (d) { return "translate(" +  LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")"; });
+            /*
+            berths.attr("transform", function (d) {
+              return "translate(" + LongitudeToScreenX(d.Startlng) + "," + LatitudeToScreenY(d.Startlat) + ")";
+            });
+            berths.on("mouseenter", handleMouse);
+            berths.on("mouseleave", handleMouse);
+            */
+          }; // drawBerths()

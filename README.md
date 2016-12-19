@@ -18,7 +18,11 @@ Producers - can be written in any language, and the data can be in any format. T
     - AiS (aktivitet i sporet/activities on the railroad tracks) (not implemented)
     - Beacon positioning: signals from beacons for train positioning outside area covered by CTS (i.e. at Ryen)
 
-    The producers are standard Kinesis producers that send their data to a designated AWS Kinesis stream. See aws documentation on github for details.
+    The producers are standard Kinesis producers that send their data to a d
+
+
+
+    3esignated AWS Kinesis stream. See aws documentation on github for details.
     Producers should be kept as basic as possible, but with an emphasis of fault tolerance
 
 Consumers   Nodejs/multilang daemon on AWS Elastic Beanstalk

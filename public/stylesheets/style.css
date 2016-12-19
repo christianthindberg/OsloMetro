@@ -21,6 +21,7 @@ button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px;
 .station { background: antiquewhite; padding: 3px; position:static; top: 0; right: 0; width: 98%; }
 #stations, #boarding, #alighting { display: block; width: 70%; background-color: #dddddd }
 .section { float:left; width:100%; height:80vh; overflow: auto}
+.sectionrpi { float:left; width:100%; height:50%; overflow: auto}
 .sectionx { float:left; width:100%; height:100vh; overflow: auto}
 
 .tooltip {
@@ -112,6 +113,22 @@ html, body, #map, #svgdriver {
     padding: 0;
 }
 #map {background-color: ivory}  /* #00d6b2} */
+
+#rpi {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: grey;
+}
+
+#svgrpi {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: ivory;
+}
 
 .ctsberth, .train, .passengers, .stations, .ghost { /* , .stations svg .passengers svg*/
     position: absolute;
