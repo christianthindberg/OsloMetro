@@ -1,0 +1,81 @@
+extends layout
+
+head
+
+body
+      block content
+        div.head
+          h1= title
+          p Welcome to #{title}
+        div#rpi
+            svg#svgrpi
+        script.
+
+          (function() { // wrap code in anonymous function to avoid globals
+
+            const socket = io();
+
+            // Define Object for drawing RPI values
+            function Draw (svgCanvas) {
+
+              this.vis = d3.select(svgCanvas);
+              this.width = this.vis.style("width");
+              this.height = this.vis.style("height");
+
+              // todo: recompute on window resize
+              this.centerX = parseInt(this.width) / 2;
+              this.centerY = parseInt(this.height) / 2;
+            } // End of Object Draw
+
+            Draw.prototype.drawEllipse = function (data) {
+              // Note: the variables RPI, newRPI_Elements, exitRPI_Elements are not required
+              // they are only there to enable us to debug their value
+
+              let self = this; // Ensure we are able to refer to Draw.this even inside functions below
+
+              let RPI = this.vis.selectAll("ellipse.rpielem")
+                .data(data, function (d) { return (d.TRAINID); });
+
+              // This is the UPDATE section
+              // perform modifications to already existing elements
+              // We have only one element, the one train with accelerometer data
+              // make the radius, color etc vary to reflect the accelerometerdata
+
+              RPI.transition() // .transition makes the changes in rx, ry etc occur smoothly over the the time specified in duration, rather than instantly
+                .duration(1 * 1000) // transition lasts 1 second
+                .attr("rx", function (d) { console.log("d.Acc_Z: " + d.Acc_Z); return d.Acc_Z > 1 || d.Acc_Z < -1 ? (Math.abs(d.Acc_Z)-1) * 10000 : Math.abs(d.Acc_Z) * 1000; })
+                .attr("ry", function (d) { return Math.abs(d.Acc_Z) * 200; })
+                .attr("cx", function (d) { console.log("d.Acc_X: " + d.Acc_X); return (self.centerX + (d.Acc_X*10000)); })
+                .attr("cy", function (d) { console.log("d.Acc_Y: " + d.Acc_Y); return (self.centerY + (d.Acc_Y*10000)); })
+                .style("stroke", function (d) { return d.Acc_X < 0 || d.Acc_Y < 0 || d.Acc_Z < 0 ? "red" : "blue"; })
+                .style("fill", function (d) { return d.Acc_Z < 0 ? "steelblue" : "burlywood"; });
+
+              // This is ENTER section
+              // add new elements
+              let newRPI_Elements = RPI.enter().append("svg:ellipse")
+                .attr("class", "rpielem")
+                .style("stroke", "black")
+                .style("stroke-width", 1)
+                .attr("cx", this.centerX)
+                .attr("cy", this.centerY)
+                .attr("rx", function (d) { return Math.abs(d.Acc_X) * 10000; })
+                .attr("ry", function (d) { return Math.abs(d.Acc_Y) * 10000; })
+                .style("fill", function (d) { return d.Acc_Z < 0 ? "steelblue" : "burlywood"; });
+
+              let exitRPI_Elements = RPI.exit()
+              // This is the EXIT section
+              // maybe perform some animations on elements before they are removed?
+              // for now, we never enter here since we always receive data for the same train...
+                      .remove();
+            }; // drawEllipse()
+
+
+            const DrawRPI = new Draw ("#svgrpi");
+
+            socket.on("RPI", function (msg) {
+              //console.log("RPI: " + JSON.stringify(msg));
+              DrawRPI.drawEllipse([msg]); // msg is an object, convert to array by enclosing in brackets []
+            });
+
+
+          })(); // end of anonymous function wrap, ref. avoiding globals

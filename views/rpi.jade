@@ -38,6 +38,10 @@ body
             // perform modifications to already existing elements
             // We have only one element, the one train with accelerometer data
             // make the radius, color etc vary to reflect the accelerometerdata
+            RPI
+              .attr("rx", function (d) { return Math.abs(d.Acc_X) * 15000; })
+              .attr("ry", function (d) { return Math.abs(d.Acc_Y) * 15000; });
+
             RPI.transition() // This makes the changes in rx, ry and fill to occur smoothly over the the time specified in duration, rather than instantly
                 .duration(1*1000) // transition lasts 1 second
                 .attr("rx", function (d) { console.log ("rx: " + Math.abs(d.Acc_X) * 10000); return Math.abs(d.Acc_X) * 10000; })

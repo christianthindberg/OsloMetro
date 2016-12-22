@@ -196,7 +196,7 @@ opstore.on("message", function (channel, msg) {
         msgObject = JSON.parse(msg);
     }
     catch (err) {
-        log.error("opstore.on - message - JSON.parse. Not valid JSON-data in msg. Error message " + err.message);
+        log.error("opstore.on - message - JSON.parse. Not valid JSON-data in msg. Error message: " + err.message + " . msg: " + msg);
         return;
     }
     //log.info("channel: " + channel);
