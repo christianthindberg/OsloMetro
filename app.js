@@ -12,7 +12,7 @@ var users = require('./routes/users');
 var log = require("./routes/log");
 var rpi = require("./routes/rpi");
 var rpidemo = require("./routes/rpidemo");
-
+var dashboard = require("./routes/dashboard");
 
 var cmd = require("./routes/cmd");
 var data = require("./routes/data");
@@ -42,6 +42,7 @@ app.use('/users', users);
 app.use("/log", log);
 app.use("/rpi", rpi);
 app.use("/rpidemo", rpidemo);
+app.use("/dashboard", dashboard);
 app.use("/cmd", cmd);
 app.use("/data", data);
 app.use("/driver", driver);

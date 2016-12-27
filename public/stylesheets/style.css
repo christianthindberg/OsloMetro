@@ -122,12 +122,21 @@ html, body, #map, #svgdriver {
     background-color: grey;
 }
 
-#svgrpi {
+.svgrpi {
     width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
     background-color: ivory;
+}
+
+.row.match-my-cols { /* Bootstrap equal column height trick https://scotch.io/bar-talk/different-tricks-on-how-to-make-bootstrap-columns-all-the-same-height*/
+    overflow: hidden;
+}
+
+.row.match-my-cols [class*="col-"]{  /* Bootstrap equal column height trick https://scotch.io/bar-talk/different-tricks-on-how-to-make-bootstrap-columns-all-the-same-height*/
+    margin-bottom: -99999px;
+    padding-bottom: 99999px;
 }
 
 .ctsberth, .train, .passengers, .stations, .ghost { /* , .stations svg .passengers svg*/

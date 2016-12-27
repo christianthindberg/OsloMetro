@@ -248,7 +248,7 @@ FixedInterval.prototype.getOngoingAggregate = function () {
  * @param addProps      : Array containing strings identical to the hash field/properties ("Alight", "Board") that we want to sum
  * @param length        : Length of the stream, i.e. 20 minutes
  * @param timeSchedule  : timedelta, i.e. how often we update the stream data (ex every 10 seconds
- * @param callback      : function to call to serve aggregated data back to caller
+ * @param callback      : function to call to serve aggregated data back  to caller
  *
  */
 let countStreamCreate = 0; // for debug

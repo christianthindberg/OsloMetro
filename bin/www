@@ -186,6 +186,7 @@ opstore.subscribe("StationAggregate");
 opstore.subscribe("OwnModuleAggregate");
 opstore.subscribe("Log");
 opstore.subscribe("Error");
+log.info("subscribed");
 
 
 // Handle data from Redis
@@ -205,10 +206,12 @@ opstore.on("message", function (channel, msg) {
 
 
     if (channel === "CTS") {
+        log.info ("message === CTS: " + JSON.stringify(msgObject));
         msgObject = ctsparser.parseCTSData(msgObject); // parses the event and calles opstore.saveCTS which in turn publish one of the events below
         handleCTSEvent(msgObject);
     }
     else if (channel === "PAX") {
+        log.info ("message === PAX: " + JSON.stringify(msgObject));
         msgObject = apcrealtime.parsePassengerData(realtime, channel, msgObject);
         handleAPCEvent(msgObject);
     }

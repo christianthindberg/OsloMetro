@@ -35,6 +35,7 @@ let endberthTable = []; // gps coordinates etc for "special" berths at the end o
 
 let stationObject = {}; // same as stationTable, but "assosiative array", i.e. object with properties. Easier handling for parseCTSData-function
 let tracksObject = {}; // keep track of "Centrumsbanen", "Kolsåsbanen" etc
+let arrLines = [5]; // All infrastructure elements split per line, sorted from west to east
 let infraObject = {}; // one property for each berth, switch etc holding the number of the train that last passed this element
 
 let Infrastructure = {
@@ -271,6 +272,7 @@ Infrastructure.getNumInfraElements = function () {
  * stationObject = {}; // same as stationTable, but "assosiative array", i.e. object with properties. Easier handling for parseCTSData-function
  * tracksObject = {}; // keep track of "Centrumsbanen", "Kolsåsbanen" etc
  * infraObject = {}; // All elements in the infrastructure
+ * Todo: implement linesObjectorArray...
  */
 
 Infrastructure.readMetroInfrastructure = function () {
@@ -313,14 +315,15 @@ Infrastructure.readMetroInfrastructure = function () {
             platformlng: parseFloat(items[19], 10), // lng
             CurrentStationID: parseInt(items[20], 10), // PIDAS ID
             TrainNumber: 0 // The train that was last passing onto this infrastructure object
-        };
+        }; // infraObj
         infraObj.trackDirectionCode = infraObj.trackDirectionName === "Vestover" ? 1 : -1; // easier visualization code.. see driver.jade
         infraObj.Lines = calculateLines(infraObj);
         tmpInfraTable.push(infraObj);
-        if (infraObj.stationCode) {
-            let t = infraObj;
-        }
-        infraObject[infraObj.itemCode] = infraObj; //infraObj; // during operation the value will be set to the number of the train that passed most recently
+        // just testing
+        //if (infraObj.stationCode) {
+        //    let t = infraObj;
+        //}
+        infraObject[infraObj.itemCode] = infraObj; // during operation the value will be set to the number of the train that passed most recently
 
         // Build tmp object that has a property for each trackname. The property holds an array of all berth elements for that trackname
         if (infraObj.trackName === null || infraObj.trackName === undefined || infraObj.trackName === "NULL")
@@ -363,7 +366,7 @@ Infrastructure.readMetroInfrastructure = function () {
             tracksObject[track + "-east"] = east;
         }
     }
-    // split data into the letious elements (stations, berths, trackswitches...)
+    // split data into the various elements (stations, berths, trackswitches...)
     tmpStationTable = tmpInfraTable
         .filter(function (obj) {
             return obj && obj.stationName && obj.stationName !== "NULL" && helpers.MyIsNumber(parseFloat(obj.platformlat)) && helpers.MyIsNumber(parseFloat(obj.platformlng));

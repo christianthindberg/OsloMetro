@@ -14,9 +14,9 @@ body
         .container-fluid
           +nav("OsloMetro", "dropdown_menu", "default")
             +nav_item( "/", "active" ) Kart
-            +nav_item( "dashboard" ) Dashbord
             +nav_item( "driver" ) Infrastruktur
-            +nav_item( "rpidemo" ) Akselerometer
+            +nav_item( "cmd" ) Kommando
+            +nav_item( "dashboard" ) Dashbord
             +nav_item_dropdown( "#" )( label="Innstillinger" )
               +nav_item( "#" ) Action
               +nav_item( "#" ) Another action
@@ -25,16 +25,62 @@ body
               +nav_header Nav header
               +nav_item( "#" ) Separated link
               +nav_item( "#" ) One more separated link
-          .row
-            .col-md-12
+          //.row
+            //.col-md-12
               //div.head
-              h1= title
-              p Welcome to #{title}
+              //h1= title
+              //p Welcome to #{title}
           .row
-            - const factors = ["1", "10", "25", "50", "100", "250","500", "1000", "2500", "5000", "10000", "25000"]
-            each factor in factors
-              .col-lg-2.col-md-4.col-sm-6.col-xs-12="Faktor " + factor
-                svg.svgrpi(id="view" + factor)
+            - const lines = ["1", "2", "3", "4", "5", "6"]
+            each line in lines
+              .col-lg-4.col-md-4.col-sm-6.col-xs-12
+                h4="Linje "+ line
+                //(style={"border-style": "solid", "border-width": "thin"})
+                .row
+                  //.row-flex.row-flex-wrap
+                  .col-lg-4.col-md-4.col-sd-3.col-xs-12 Kart
+                    svg.svgrpi(id="Line"+line style="height:200px")
+                  .col-lg-8.col-md-8.col-sd-9.col-xs-12 Forsinkelser
+                    div.table-responsive
+                      table.table.table-bordered.table-hover(id="Table"+line style="height:200px")
+                        .thead
+                          tr
+                            th Delay
+                            th Train
+                            th Destination
+                            th Next Station
+                            th Direction
+                        .tbody
+                          tr.danger
+                            td 3.10
+                            td 104
+                            td Frognerseteren
+                            td Frøen
+                            td Vest
+                          tr
+                            td.warning 2.49
+                            td.info 401
+                            td.info Bergkrystallen
+                            td.info Stortinget
+                            td.info Øst
+                          tr.info
+                            td 2.10
+                            td 203
+                            td Furuset
+                            td Storo
+                            td Øst
+                          tr.info
+                            td 2.10
+                            td 203
+                            td Furuset
+                            td Storo
+                            td Øst
+                          tr.info
+                            td 2.10
+                            td 203
+                            td Furuset
+                            td Storo
+                            td Øst
           script.
 
             (function() { // wrap code in anonymous function to avoid globals
@@ -45,7 +91,6 @@ body
               function Draw (svgCanvas) {
 
                 this.vis = d3.select(svgCanvas)
-                this.factor = parseInt(svgCanvas);
                 this.width = this.vis.style("width");
                 this.height = this.vis.style("height");
 
@@ -70,10 +115,10 @@ body
 
                 RPI.transition() // .transition makes the changes in rx, ry etc occur smoothly over the the time specified in duration, rather than instantly
                   .duration(1 * 1000) // transition lasts 1 second
-                  .attr("rx", function (d) { console.log("d.Acc_Z: " + d.Acc_Z); return d.Acc_Z > 1 || d.Acc_Z < -1 ? (Math.abs(d.Acc_Z)-1) * factor : Math.abs(d.Acc_Z) * factor; })
-                  .attr("ry", function (d) { return d.Acc_Z > 1 || d.Acc_Z < -1 ? (Math.abs(d.Acc_Z)-1) * factor : Math.abs(d.Acc_Z) * factor; })
-                  .attr("cx", function (d) { console.log("d.Acc_X: " + d.Acc_X); return (self.centerX + (d.Acc_X*factor)); })
-                  .attr("cy", function (d) { console.log("d.Acc_Y: " + d.Acc_Y); return (self.centerY + (d.Acc_Y*factor)); })
+                  .attr("rx", function (d) { console.log("d.Acc_Z: " + d.Acc_Z); return d.Acc_Z > 1 || d.Acc_Z < -1 ? (Math.abs(d.Acc_Z)-1) * 10000 : Math.abs(d.Acc_Z) * 1000; })
+                  .attr("ry", function (d) { return Math.abs(d.Acc_Z) * 200; })
+                  .attr("cx", function (d) { console.log("d.Acc_X: " + d.Acc_X); return (self.centerX + (d.Acc_X*10000)); })
+                  .attr("cy", function (d) { console.log("d.Acc_Y: " + d.Acc_Y); return (self.centerY + (d.Acc_Y*10000)); })
                   .style("stroke", function (d) { return d.Acc_X < 0 || d.Acc_Y < 0 || d.Acc_Z < 0 ? "red" : "blue"; })
                   .style("fill", function (d) { return d.Acc_Z < 0 ? "steelblue" : "burlywood"; });
 
@@ -85,8 +130,8 @@ body
                   .style("stroke-width", 1)
                   .attr("cx", this.centerX)
                   .attr("cy", this.centerY)
-                  .attr("rx", function (d) { return Math.abs(d.Acc_X) * factor; })
-                  .attr("ry", function (d) { return Math.abs(d.Acc_Y) * factor; })
+                  .attr("rx", function (d) { return Math.abs(d.Acc_X) * 10000; })
+                  .attr("ry", function (d) { return Math.abs(d.Acc_Y) * 10000; })
                   .style("fill", function (d) { return d.Acc_Z < 0 ? "steelblue" : "burlywood"; });
 
                 let exitRPI_Elements = RPI.exit()
@@ -103,9 +148,15 @@ body
 
               socket.on("RPI", function (msg) {
                 //console.log("RPI: " + JSON.stringify(msg));
-                for (let i=0; i<arrDraw.length; i++) {
-                  arrDraw[i].drawEllipse([msg]); // msg is an object, convert to array by enclosing in brackets []
-                }
+                //arrDraw[0].DrawRPI.drawEllipse([msg]); // msg is an object, convert to array by enclosing in brackets []
               });
+
+              socket.on("cts_event", function (msg) {
+                let Line = msg[0].values.Line;
+                let Values = msg[0].values;
+                arrDraw[Line-1].DrawEllipse([msg]);
+                  //drawTrainTable(msg); // array of berths for 1 train
+              });
+
 
             })(); // end of anonymous function wrap, ref. avoiding globals
